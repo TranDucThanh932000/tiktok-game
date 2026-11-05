@@ -1,7 +1,10 @@
-import { BANK_BOTTOM, BANK_TOP, FONT, RIVER, TRACK, WATER, laneHeight, outlinedText, roundRect } from './layout.js';
+import { BANK_BOTTOM, BANK_TOP, FONT, H, RIVER, TRACK, W, WATER, laneHeight, outlinedText, roundRect } from './layout.js';
 
 // The river: banks, moving water, lane ropes, start and finish, plus the big community scenes
 // (wind, tsunami, cheering stands, gift storm). Static art is painted once into offscreen canvases.
+// How fast the scenery rushes backwards during a close-up, in river pixels per second.
+const RUSH = 520;
+
 const rand = (seed) => {
   let s = seed;
   return () => ((s = (s * 16807) % 2147483647) - 1) / 2147483646;
@@ -70,7 +73,8 @@ function bankArt(top) {
   const h = (top ? BANK_TOP : BANK_BOTTOM) + 12;
   return offscreen(RIVER.w, h, (ctx, w) => {
     const r = rand(top ? 7 : 13);
-    const edge = (x, inset) => (top ? h - 8 - inset - Math.sin(x / 47) * 4 : 8 + inset + Math.sin(x / 47) * 4);
+    const wave = (x) => Math.sin((x / w) * Math.PI * 2 * Math.round(w / 295)) * 4;
+    const edge = (x, inset) => (top ? h - 8 - inset - wave(x) : 8 + inset + wave(x));
     const shape = (inset) => {
       ctx.beginPath();
       ctx.moveTo(0, top ? 0 : h);
@@ -101,6 +105,30 @@ function bankArt(top) {
   });
 }
 
+// The grass below the river, where TikTok shows comments and gift buttons on top of the stream.
+function groundArt() {
+  const top = RIVER.y + RIVER.h;
+  return offscreen(W, H - top, (ctx, w, h) => {
+    const r = rand(23);
+    const g = ctx.createLinearGradient(0, 0, 0, h);
+    g.addColorStop(0, '#51cf66');
+    g.addColorStop(1, '#2b8a3e');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, w, h);
+    for (let i = 0; i < 500; i++) {
+      ctx.fillStyle = r() > 0.5 ? 'rgba(47,158,68,0.35)' : 'rgba(255,255,255,0.14)';
+      ctx.fillRect(r() * w, r() * h, 3, 7);
+    }
+    for (let i = 0; i < 16; i++) {
+      const x = r() * w;
+      const y = 50 + r() * (h - 60);
+      const kind = r();
+      if (kind < 0.4) tree(ctx, x, y, 1.1 + r() * 0.5, r());
+      else bush(ctx, x, y, 1.2, r() > 0.4);
+    }
+  });
+}
+
 function waterTile() {
   return offscreen(256, 256, (ctx) => {
     const r = rand(42);
@@ -126,17 +154,21 @@ export class RiverRenderer {
     this.ctx = ctx;
     this.top = bankArt(true);
     this.bottom = bankArt(false);
+    this.ground = groundArt();
     this.tile = ctx.createPattern(waterTile(), 'repeat');
     const r = rand(99);
     this.waves = Array.from({ length: 110 }, () => ({ x: r() * RIVER.w, y: WATER.y + 10 + r() * (WATER.h - 20), len: 14 + r() * 26, ph: r() * 6 }));
     this.flow = 0;
-    this.crowd = Array.from({ length: 70 }, (_, i) => ({ x: 14 + i * 21 + r() * 6, hue: Math.floor(r() * 360), ph: r() * 6 }));
+    this.scroll = 0;
+    this.crowd = Array.from({ length: 50 }, (_, i) => ({ x: 14 + (i * (RIVER.w - 28)) / 50 + r() * 6, hue: Math.floor(r() * 360), ph: r() * 6 }));
   }
 
   draw(t, dt, scene) {
     const ctx = this.ctx;
     const speed = scene.sprint ? 70 : 38;
-    this.flow += dt * speed * (scene.wind ? 2.2 : 1);
+    const rush = (scene.rush ?? 0) * RUSH;
+    this.flow += dt * (speed * (scene.wind ? 2.2 : 1) - rush);
+    this.scroll = (this.scroll + dt * rush) % RIVER.w;
 
     // Water body.
     const g = ctx.createLinearGradient(0, WATER.y, 0, WATER.y + WATER.h);
@@ -163,8 +195,9 @@ export class RiverRenderer {
     ctx.lineCap = 'round';
     ctx.beginPath();
     for (const w of this.waves) {
-      w.x += dt * speed * (scene.wind ? 2.4 : 1.2);
+      w.x += dt * (speed * (scene.wind ? 2.4 : 1.2) - rush);
       if (w.x > RIVER.w + 40) w.x = -40;
+      if (w.x < -40) w.x = RIVER.w + 40;
       const y = w.y + Math.sin(t * 2 + w.ph) * 3;
       const a = (Math.sin(t * 1.5 + w.ph) + 1) / 2;
       const len = w.len * (0.6 + a * 0.4);
@@ -174,11 +207,13 @@ export class RiverRenderer {
     ctx.stroke();
 
     this.drawLaneRopes(t, scene.lanes);
-    this.drawMarkers(scene);
+    if (!scene.rush || scene.rush < 0.3) this.drawMarkers(scene);
 
     // Banks with foam along the waterline.
-    ctx.drawImage(this.top, 0, RIVER.y);
-    ctx.drawImage(this.bottom, 0, WATER.y + WATER.h - 12);
+    for (const x of [-this.scroll, RIVER.w - this.scroll]) {
+      ctx.drawImage(this.top, x, RIVER.y);
+      ctx.drawImage(this.bottom, x, WATER.y + WATER.h - 12);
+    }
     this.drawFoam(t, WATER.y + 4, 1);
     this.drawFoam(t, WATER.y + WATER.h - 4, -1);
 
@@ -186,6 +221,11 @@ export class RiverRenderer {
     this.drawStartFinish(t);
     if (scene.storm > 0) this.drawStorm(t, scene.storm);
     if (scene.wind > 0) this.drawWind(t, scene.wind);
+  }
+
+  // Outside the river, so the camera does not touch it.
+  drawGround() {
+    this.ctx.drawImage(this.ground, 0, RIVER.y + RIVER.h);
   }
 
   drawFoam(t, y, dir) {
@@ -211,7 +251,10 @@ export class RiverRenderer {
       ctx.moveTo(TRACK.start - 30, y);
       ctx.lineTo(TRACK.end + 30, y);
       ctx.stroke();
-      for (let x = TRACK.start - 20, k = 0; x < TRACK.end + 30; x += 46, k++) {
+      // The floats slide backwards with the rest of the scenery during a close-up.
+      const slide = this.scroll % 92;
+      for (let x = TRACK.start - 20 - slide, k = 0; x < TRACK.end + 30; x += 46, k++) {
+        if (x < TRACK.start - 26) continue;
         ctx.fillStyle = k % 2 ? 'rgba(255,255,255,0.85)' : 'rgba(255,107,107,0.85)';
         ctx.beginPath();
         ctx.ellipse(x, y + Math.sin(t * 2 + x / 60 + i) * 1.5, 6, 4, 0, 0, Math.PI * 2);
@@ -304,11 +347,11 @@ export class RiverRenderer {
         const jump = Math.abs(Math.sin(t * 7 + p.ph)) * 9 * dir;
         const y = y0 + 26 - jump + (1 - rise) * 40;
         ctx.fillStyle = `hsl(${p.hue} 70% 55%)`;
-        roundRect(ctx, p.x * (RIVER.w / 1490) - 8, y, 16, 18, 6);
+        roundRect(ctx, p.x - 8, y, 16, 18, 6);
         ctx.fill();
         ctx.fillStyle = '#ffd8a8';
         ctx.beginPath();
-        ctx.arc(p.x * (RIVER.w / 1490), y - 6, 8, 0, Math.PI * 2);
+        ctx.arc(p.x, y - 6, 8, 0, Math.PI * 2);
         ctx.fill();
         if ((p.hue | 0) % 3 === 0) {
           ctx.strokeStyle = `hsl(${(p.hue + 180) % 360} 80% 60%)`;

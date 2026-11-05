@@ -1,0 +1,16 @@
+{
+  "tiktokUsername": "nguynx.chi.vn",
+  "port": 3003,
+  "testMode": true,
+  "phases": { "registration": 15, "race": 60, "sprint": 30, "finish": 15 },
+  "autoNextRound": true,
+  "maxDucks": 300,
+  "lanes": 8,
+  "lateJoin": "pack-tail",
+  "trackFactor": 1.6,
+  "sound": true,
+  "notifications": true,
+  "maxNotifications": 4,
+  "maxEventAgeSeconds": 60,
+  "likeGapToCommunity": true
+}

@@ -3,7 +3,7 @@
 //   waiting       registration open, countdown starts with the first duck
 //   registration  ducks gather at the start line
 //   race          main race
-//   sprint        final stretch: more obstacles, stronger currents, top 3 shown, leftover energy is used
+//   sprint        final stretch: more obstacles, stronger currents, top 3 shown
 //   finish        results, fireworks, then a new round
 export const RACING = new Set(['race', 'sprint']);
 export const JOINABLE = new Set(['waiting', 'registration', 'race', 'sprint']);

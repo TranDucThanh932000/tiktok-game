@@ -1,0 +1,19 @@
+﻿{
+  "name": "tha-vit",
+  "version": "1.0.0",
+  "private": true,
+  "description": "THáº¢ Vá»ŠT â€“ Äáº I CHIáº¾N DÃ’NG SÃ”NG: game Ä‘ua vá»‹t tÆ°Æ¡ng tÃ¡c TikTok LIVE (like, comment, share, gift)",
+  "type": "module",
+  "scripts": {
+    "start": "node --env-file-if-exists=.env server.js",
+    "test": "node --test \"tests/*.test.js\"",
+    "window": "start \"\" msedge --app=http://127.0.0.1:3003/ --window-size=1280,760 --window-position=0,0 --user-data-dir=D:\\tiktok-cache\\tha-vit-window --disable-component-update --no-first-run --no-default-browser-check --autoplay-policy=no-user-gesture-required --disable-backgrounding-occluded-windows --disable-renderer-backgrounding --disable-background-timer-throttling --disable-features=CalculateNativeWinOcclusion"
+  },
+  "engines": {
+    "node": ">=22.9"
+  },
+  "dependencies": {
+    "express": "^5.3.0",
+    "tiktok-live-connector": "^2.5.0"
+  }
+}

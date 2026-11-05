@@ -1,8 +1,9 @@
 import path from 'node:path';
 import { readJson, writeJson } from '../config/loadConfig.js';
 
-// Round results and the all-time wins table, kept in data/results.json so they survive a restart.
-// TEST MODE rounds are stored too but flagged, and their wins go to a separate table.
+// Round results, the all-time wins table and everyone's duck skin, kept in data/results.json so they survive a
+// restart until the streamer resets the game. TEST MODE rounds are stored too but flagged, and their wins go to a
+// separate table.
 export class ResultStore {
   constructor(dir, { persist = true } = {}) {
     this.file = path.join(dir, 'results.json');
@@ -11,13 +12,28 @@ export class ResultStore {
     this.wins = saved.wins ?? {};
     this.testWins = saved.testWins ?? {};
     this.rounds = saved.rounds ?? [];
+    this.skins = saved.skins ?? {};
+  }
+
+  skinOf(userId) {
+    return this.skins[userId]?.id ?? null;
+  }
+
+  setSkin(userId, id, source) {
+    this.skins[userId] = { id, source };
+    this.save();
+  }
+
+  dropTestSkins() {
+    for (const [userId, skin] of Object.entries(this.skins)) if (skin.source === 'mock') delete this.skins[userId];
+    this.save();
   }
 
   record(result) {
     this.rounds.push(result);
     if (this.rounds.length > 100) this.rounds.splice(0, this.rounds.length - 100);
     const winner = result.top[0];
-    if (winner) {
+    if (winner && winner.source !== 'bot') {
       const table = winner.source === 'mock' ? this.testWins : this.wins;
       const entry = table[winner.userId] ?? { name: winner.name, count: 0 };
       entry.name = winner.name;
@@ -38,13 +54,14 @@ export class ResultStore {
     this.wins = {};
     this.testWins = {};
     this.rounds = [];
+    this.skins = {};
     this.save();
   }
 
   save() {
     if (!this.persist) return;
     try {
-      writeJson(this.file, { wins: this.wins, testWins: this.testWins, rounds: this.rounds });
+      writeJson(this.file, { wins: this.wins, testWins: this.testWins, rounds: this.rounds, skins: this.skins });
     } catch (err) {
       console.error(`[Kết quả] Không lưu được: ${err.message}`);
     }

@@ -1,4 +1,5 @@
-import { FONT, roundRect } from './layout.js';
+import { FONT, RIVER, roundRect } from './layout.js';
+import { drawSkinBack, drawSkinFront, skinInfo } from './SkinRenderer.js';
 
 // Procedural cartoon ducks. The body, head, eye and beak are painted once per colour into a sprite; the wing,
 // paddling feet, ripples and every buff effect are drawn live so the duck is always animated.
@@ -128,6 +129,7 @@ export function makeLabel(name, hue, test) {
   const c = document.createElement('canvas');
   const ctx = c.getContext('2d');
   const font = `800 30px ${FONT}`;
+  const sharp = 2; // Painted at twice the size, so the name stays crisp when the camera zooms in.
   ctx.font = font;
   const text = Array.from(name).slice(0, 16).join('');
   const tag = test ? 'TEST' : '';
@@ -135,8 +137,9 @@ export function makeLabel(name, hue, test) {
   const tagW = tag ? ctx.measureText(tag).width + 14 : 0;
   ctx.font = font;
   const w = Math.ceil(ctx.measureText(text).width + 30 + tagW);
-  c.width = w + 8;
-  c.height = 50;
+  c.width = (w + 8) * sharp;
+  c.height = 50 * sharp;
+  ctx.scale(sharp, sharp);
   ctx.font = font;
   roundRect(ctx, 4, 4, w, 40, 20);
   ctx.fillStyle = 'rgba(255,255,255,0.94)';
@@ -157,7 +160,31 @@ export function makeLabel(name, hue, test) {
     ctx.font = `800 16px ${FONT}`;
     ctx.fillText(tag, x + 4, 26);
   }
-  return { canvas: c, w: c.width, h: c.height };
+  return { canvas: c, w: w + 8, h: 50 };
+}
+
+// A duck giving it everything: lowered brows over narrowed eyes, red cheeks, a beak open and gasping.
+function effortFace(ctx, t, amount) {
+  ctx.globalAlpha = Math.min(1, amount * 1.5);
+  ctx.fillStyle = 'rgba(255, 70, 90, 0.75)';
+  ctx.beginPath();
+  ctx.ellipse(15, -29, 6, 4, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#7a1f1f';
+  ctx.beginPath();
+  ctx.moveTo(30, -29);
+  ctx.quadraticCurveTo(38, -27, 43, -27);
+  ctx.quadraticCurveTo(38, -23 + Math.sin(t * 22) * 1.5, 30, -24);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = '#212529';
+  ctx.lineWidth = 3.5;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(14, -48);
+  ctx.lineTo(29, -42.5);
+  ctx.stroke();
+  ctx.globalAlpha = 1;
 }
 
 function bolt(ctx, x, y, s, color = '#ffd43b') {
@@ -208,17 +235,20 @@ function angelWing(ctx, flap, front) {
   ctx.restore();
 }
 
-// d: { hue, x, y, scale, anim, flags, mult, energy, combo, tier, label, place, finished, test }
+// d: { hue, x, y, scale, anim, flags, mult, label, place, finished, hot, effort, skin, test }
 export function drawDuck(ctx, d, t, F) {
   const s = d.scale;
   const flying = d.flags & F.WINGS;
+  const skin = skinInfo(d.skin);
+  const airborne = flying || skin.airborne;
   const slowed = d.flags & F.SLOW;
-  const turbo = d.flags & (F.ENERGY_TURBO | F.TURBO | F.COMBO_TURBO | F.ROCKET | F.BOOST_ZONE);
+  const effort = d.effort ?? 0;
+  const turbo = d.flags & F.TURBO || effort > 0.3;
   const superTurbo = d.flags & F.SUPER_TURBO;
   const rainbow = d.flags & F.RAINBOW_BOOST;
   const flap = Math.sin(d.anim);
-  const bob = Math.sin(d.anim * 0.5) * 2.2 * s;
-  const lift = flying ? (16 + Math.sin(t * 4) * 4) * s : 0;
+  const bob = Math.sin(d.anim * 0.5) * 2.2 * s + Math.sin(t * 26) * 2.4 * s * effort;
+  const lift = (flying ? (16 + Math.sin(t * 4) * 4) * s : 0) + (skin.lift + (skin.airborne ? Math.sin(t * 3 + d.hue) * 1.5 : 0)) * s;
   const x = d.x;
   const y = d.y + bob - lift;
 
@@ -252,10 +282,10 @@ export function drawDuck(ctx, d, t, F) {
     }
   }
   // Wake.
-  if (!flying && d.racing) {
+  if (!airborne && d.racing) {
     ctx.strokeStyle = 'rgba(255,255,255,0.6)';
     ctx.lineWidth = 2.5 * s;
-    const spread = (6 + (d.mult - 1) * 30) * s;
+    const spread = (6 + Math.min(d.mult - 1, 0.6) * 30) * s;
     for (const k of [1, 2]) {
       ctx.beginPath();
       ctx.moveTo(x - 26 * s * k, y + 2 * s - spread * k * 0.4);
@@ -263,13 +293,13 @@ export function drawDuck(ctx, d, t, F) {
       ctx.stroke();
     }
   }
-  if ((d.flags & F.ENERGY_TURBO) || superTurbo) {
-    const r = (46 + d.tier * 8) * s * (1 + Math.sin(t * 10) * 0.06);
-    ctx.globalAlpha = 0.45 + d.tier * 0.1;
+  if (superTurbo) {
+    const r = 70 * s * (1 + Math.sin(t * 10) * 0.06);
+    ctx.globalAlpha = 0.75;
     ctx.drawImage(glow(), x - r, y - 22 * s - r, r * 2, r * 2);
     ctx.globalAlpha = 1;
   }
-  if (flying) {
+  if (airborne) {
     ctx.fillStyle = 'rgba(0,40,80,0.25)';
     ctx.beginPath();
     ctx.ellipse(x, d.y + 6 * s, 30 * s, 7 * s, 0, 0, Math.PI * 2);
@@ -278,11 +308,11 @@ export function drawDuck(ctx, d, t, F) {
 
   ctx.translate(x, y);
   ctx.scale(s, s);
-  const tilt = slowed ? -0.18 + Math.sin(t * 9) * 0.06 : d.racing ? Math.min(0.12, (d.mult - 1) * 0.6) : 0;
+  const tilt = slowed ? -0.18 + Math.sin(t * 9) * 0.06 : d.racing ? Math.min(0.12, (d.mult - 1) * 0.6) + effort * (0.13 + Math.sin(t * 30) * 0.03) : 0;
   ctx.rotate(tilt);
   const c = duckColors(d.hue);
 
-  if (!flying) {
+  if (!airborne && !skin.seated) {
     // Paddling feet under the surface.
     ctx.fillStyle = 'rgba(255,146,43,0.65)';
     for (const ph of [0, Math.PI]) {
@@ -292,12 +322,17 @@ export function drawDuck(ctx, d, t, F) {
       ctx.fill();
     }
   }
+  // Squash and stretch with every stroke while straining.
+  ctx.save();
+  const stretch = Math.sin(t * 24) * 0.07 * effort;
+  ctx.scale(1 + stretch, 1 - stretch);
+  drawSkinBack(ctx, d.skin, t, flap);
   if (flying) angelWing(ctx, flap, false);
   ctx.drawImage(duckSprite(d.hue), -OX, -OY, SW, SH);
   // Wing.
   ctx.save();
   ctx.translate(-6, -9);
-  ctx.rotate(-0.25 - flap * 0.35);
+  ctx.rotate(-0.25 - flap * 0.35 * (1 + effort * 1.8));
   ctx.fillStyle = c.shade;
   ctx.strokeStyle = c.line;
   ctx.lineWidth = 2.5;
@@ -315,7 +350,10 @@ export function drawDuck(ctx, d, t, F) {
   ctx.stroke();
   ctx.restore();
   if (flying) angelWing(ctx, flap, true);
-  if (!flying) {
+  if (effort > 0.05) effortFace(ctx, t, effort);
+  drawSkinFront(ctx, d.skin, t, flap);
+  ctx.restore();
+  if (!airborne && !skin.seated) {
     // The water hides the bottom of the body.
     ctx.fillStyle = 'rgba(56, 170, 220, 0.55)';
     ctx.beginPath();
@@ -369,18 +407,32 @@ export function drawDuck(ctx, d, t, F) {
   ctx.restore();
 }
 
-// Drawn in a second pass, after every duck, so a name is never hidden behind the duck in the lane below.
-export function drawDuckLabel(ctx, d, t, F, minY) {
+// A duck standing still with its skin on, for the podium. (x, y) is where the sprite's top left corner goes.
+export function drawPosedDuck(ctx, hue, skin, x, y, scale, t) {
+  ctx.save();
+  ctx.translate(x + OX * scale, y + OY * scale);
+  ctx.scale(scale, scale);
+  const flap = Math.sin(t * 9);
+  drawSkinBack(ctx, skin, t, flap);
+  ctx.drawImage(duckSprite(hue), -OX, -OY, SW, SH);
+  drawSkinFront(ctx, skin, t, flap);
+  ctx.restore();
+}
+
+// Drawn in a second pass, after every duck. The name sits in front of the duck, on its own row, so it never covers
+// the duck in the lane above; near the finish there is no room in front, so it moves behind the duck.
+export function drawDuckLabel(ctx, d, F) {
   if (!d.label) return;
   const s = d.scale;
-  const slowed = d.flags & F.SLOW;
   const lift = d.flags & F.WINGS ? 18 * s : 0;
   const x = d.x;
-  const ls = Math.max(0.5, Math.min(0.85, s * 0.82));
+  // Whoever just did something gets a bigger name, so they can spot their own duck in the crowd.
+  const ls = Math.max(0.6, Math.min(1.05, s * 1.1)) * (d.hot ? 1.2 : 1);
   const lw = d.label.w * ls;
   const lh = d.label.h * ls;
-  const lx = x - lw / 2 + 6 * s;
-  const ly = Math.max(minY + (d.combo >= 2 ? 22 * ls : 0), d.y - lift - 70 * s - lh - (slowed ? 6 : 0));
+  const front = x + 44 * s;
+  const lx = front + lw > RIVER.w - 6 ? x - 44 * s - lw : front;
+  const ly = d.y - lift - 20 * s - lh / 2;
   ctx.drawImage(d.label.canvas, lx, ly, lw, lh);
   if (d.place && d.place <= 3) {
     const medal = ['#ffd43b', '#ced4da', '#e8590c'][d.place - 1];
@@ -396,30 +448,5 @@ export function drawDuckLabel(ctx, d, t, F, minY) {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(String(d.place), lx + 2, ly + lh / 2 + 1);
-  }
-  // Energy bar.
-  const bw = Math.max(46, Math.min(lw - 16, 90 * ls));
-  const bx = x - bw / 2 + 6 * s;
-  const by = ly + lh - 2;
-  ctx.fillStyle = 'rgba(0,0,0,0.45)';
-  roundRect(ctx, bx, by, bw, 8, 4);
-  ctx.fill();
-  if (d.energy > 0) {
-    const e = Math.min(1, d.energy / 100);
-    ctx.fillStyle = e >= 0.25 ? '#ffd43b' : '#74c0fc';
-    roundRect(ctx, bx, by, bw * e, 8, 4);
-    ctx.fill();
-  }
-  if (d.combo >= 2) {
-    ctx.font = `900 ${22 * ls}px ${FONT}`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'bottom';
-    ctx.lineWidth = 5;
-    ctx.strokeStyle = '#862e9c';
-    const cx = x + 6 * s;
-    const cy = ly - 2 + Math.sin(t * 8) * 2;
-    ctx.strokeText(`COMBO x${d.combo}`, cx, cy);
-    ctx.fillStyle = '#ffec99';
-    ctx.fillText(`COMBO x${d.combo}`, cx, cy);
   }
 }

@@ -84,7 +84,8 @@ test('the same payload delivered twice gets the same id', () => {
 test('gift tiers come from the id mapping first, then the diamond value', () => {
   const gifts = structuredClone(baseConfig().gifts);
   assert.equal(resolveGiftTier({ giftId: 'x', diamonds: 1 }, gifts), 'small');
-  assert.equal(resolveGiftTier({ giftId: 'x', diamonds: 99 }, gifts), 'medium');
+  assert.equal(resolveGiftTier({ giftId: 'x', diamonds: 5 }, gifts), 'medium');
+  assert.equal(resolveGiftTier({ giftId: 'x', diamonds: 98 }, gifts), 'large');
   assert.equal(resolveGiftTier({ giftId: 'x', diamonds: 5000 }, gifts), 'special');
   gifts.byId.x = 'large';
   assert.equal(resolveGiftTier({ giftId: 'x', diamonds: 1 }, gifts), 'large');

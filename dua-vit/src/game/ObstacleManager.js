@@ -62,6 +62,8 @@ export class ObstacleManager {
     const out = [];
     for (const o of this.items) {
       if (o.consumed || o.lane !== duck.lane || now < o.armedAt || o.hits.has(duck.id)) continue;
+      // Pickups are for viewers: a bot swims past them, but it does bump into obstacles like everyone else.
+      if (duck.isBot && o.kind !== 'obstacle') continue;
       if (prev < o.pos + halfWidth && next >= o.pos - halfWidth) {
         o.hits.add(duck.id);
         if (o.kind === 'pickup') {

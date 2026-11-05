@@ -1,4 +1,4 @@
-import { FONT } from './layout.js';
+import { FONT, RIVER } from './layout.js';
 
 // Particles and floating text come from fixed pools: nothing is allocated per effect, so a long stream with
 // thousands of splashes never stutters on garbage collection. When a pool is full the oldest slot is reused.
@@ -53,7 +53,7 @@ export class Effects {
 
   firework(x, y) {
     const hue = Math.floor(Math.random() * 360);
-    const r = this.emit('rocket', x, 1080, { vx: (Math.random() - 0.5) * 80, vy: -(900 + Math.random() * 200), g: 500, life: 1, size: 4, hue });
+    const r = this.emit('rocket', x, RIVER.y + RIVER.h, { vx: (Math.random() - 0.5) * 80, vy: -(900 + Math.random() * 200), g: 500, life: 1, size: 4, hue });
     r.targetY = y;
   }
 
@@ -101,7 +101,8 @@ export class Effects {
     this.burst('spark', p.x, p.y, 70, { speed: 420, g: 160, life: 1.4, size: 4, drag: 0.96, colors });
   }
 
-  draw() {
+  // textScale keeps floating text a sensible size while the camera is zoomed in.
+  draw(textScale = 1) {
     const ctx = this.ctx;
     ctx.save();
     for (const p of this.p) {
@@ -209,8 +210,8 @@ export class Effects {
       const k = t.life / t.max;
       const pop = k > 0.85 ? 1 + (k - 0.85) * 3 : 1;
       ctx.globalAlpha = Math.min(1, k * 3);
-      ctx.font = `900 ${t.size * pop}px ${FONT}`;
-      ctx.lineWidth = Math.max(4, t.size / 5);
+      ctx.font = `900 ${t.size * pop * textScale}px ${FONT}`;
+      ctx.lineWidth = Math.max(4, t.size / 5) * textScale;
       ctx.strokeStyle = t.stroke;
       ctx.strokeText(t.str, t.x, t.y);
       ctx.fillStyle = t.color;

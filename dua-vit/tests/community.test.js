@@ -4,7 +4,10 @@ import { CommunityManager } from '../src/game/CommunityManager.js';
 import { baseConfig } from './helpers.js';
 
 const { balance } = baseConfig();
-const rules = balance.community;
+// Only the tsunami is on by default; the other three can be switched on from the admin panel, so they are tested on.
+const rules = structuredClone(balance.community);
+for (const id of ['wind', 'tsunami', 'cheer', 'giftStorm']) rules[id].enabled = true;
+rules.tsunami.bonus = 0.05;
 const triggers = (out) => out.filter((h) => h.kind === 'trigger').map((h) => h.id);
 
 test('wind needs 5 different sharers inside 30 s', () => {
@@ -22,13 +25,23 @@ test('shares older than the window do not count', () => {
   assert.deepEqual(triggers(c.update(31, rules)), []);
 });
 
-test('tsunami fires at 5000 likes, with milestones on the way', () => {
+test('tsunami fires at the configured likes, with milestones on the way', () => {
   const c = new CommunityManager();
-  c.addLikes(2500, 1);
+  const step = rules.tsunami.milestoneLikes;
+  c.addLikes(step * 2, 1);
   assert.deepEqual(c.update(1, rules).map((h) => [h.kind, h.n]), [['milestone', 2]]);
-  c.addLikes(2500, 2);
+  c.addLikes(rules.tsunami.likes - step * 2, 2);
   assert.deepEqual(triggers(c.update(2, rules)), ['tsunami']);
   assert.equal(c.value('tsunami'), 0, 'the window restarts after firing');
+});
+
+test('out of the box only the tsunami fires', () => {
+  const c = new CommunityManager();
+  ['a', 'b', 'c', 'd', 'e'].forEach((u) => c.addShare(u, 0));
+  c.addLikes(balance.community.tsunami.likes, 0);
+  for (let i = 0; i < 100; i++) c.addComment(`u${i % 20}`, 0);
+  c.addGifts(100, 0);
+  assert.deepEqual(triggers(c.update(0, balance.community)), ['tsunami']);
 });
 
 test('cheer needs 100 comments from enough different accounts', () => {
@@ -61,7 +74,7 @@ test('community events have a cooldown and a lifetime', () => {
 test('all four together stay under the 8% community cap', () => {
   const c = new CommunityManager();
   ['a', 'b', 'c', 'd', 'e'].forEach((u) => c.addShare(u, 0));
-  c.addLikes(5000, 0);
+  c.addLikes(rules.tsunami.likes, 0);
   for (let i = 0; i < 100; i++) c.addComment(`u${i % 20}`, 0);
   c.addGifts(100, 0);
   assert.equal(triggers(c.update(0, rules)).length, 4);

@@ -1,6 +1,6 @@
 import { MOCK_GIFTS, mockUser } from './MockAdapter.js';
 
-const COMMENTS = ['GO', 'Vịt ơi', 'cố lên', 'TURBO', 'chạy đi', 'gooo', 'vịt ơi cố lên!!'];
+const COMMENTS = ['chào cả nhà', '1', 'vịt ơi', 'cố lên', 'hihi', 'gooo', 'có ai không?'];
 const pick = (list) => list[Math.floor(Math.random() * list.length)];
 
 // TEST MODE scenarios from the spec (section 16). Each returns a short description for the admin log.
@@ -22,7 +22,7 @@ export function createScenarios(mock, engine) {
       run() {
         const u = mockUser('likebot');
         spread(Array.from({ length: 40 }), 8000, () => mock.like(u, 15));
-        return 'likebot gửi 600 like trong 8 giây (tối đa 20 năng lượng từ like)';
+        return 'likebot gửi 600 like trong 8 giây (+120m, thả ra có giới hạn tốc độ)';
       },
     },
     commentSpam: {
@@ -30,14 +30,14 @@ export function createScenarios(mock, engine) {
       run() {
         const u = mockUser('chatbot');
         spread(Array.from({ length: 30 }), 30_000, () => mock.comment(u, 'GO GO'));
-        return 'chatbot comment mỗi giây trong 30 giây (cooldown 5 giây, combo, tối đa 15 năng lượng)';
+        return 'chatbot comment mỗi giây trong 30 giây (chỉ tính 1 comment mỗi 3 giây)';
       },
     },
     shareBurst: {
       label: 'Nhiều người Share cùng lúc',
       run() {
         spread(users(0, 6), 2000, (u) => mock.share(u));
-        return '6 người share trong 2 giây → Gió Thuận';
+        return '6 người share trong 2 giây: mỗi người +20m và mọc cánh';
       },
     },
     giftBurst: {
@@ -45,7 +45,7 @@ export function createScenarios(mock, engine) {
       run() {
         const kinds = Object.keys(MOCK_GIFTS);
         spread(users(0, 24), 1500, (u, i) => mock.gift(u, MOCK_GIFTS[kinds[i % kinds.length]], 1));
-        return '24 quà trong 1,5 giây → Cơn Bão Gift';
+        return '24 quà trong 1,5 giây';
       },
     },
     giftCombo: {
@@ -56,7 +56,7 @@ export function createScenarios(mock, engine) {
       },
     },
     twoTurbo: {
-      label: 'Hai người cùng kích hoạt Turbo',
+      label: 'Hai người cùng lao lên',
       run() {
         mock.gift(mockUser('minh123'), MOCK_GIFTS.large, 1);
         mock.gift(mockUser('lananh'), MOCK_GIFTS.large, 1);
@@ -64,12 +64,11 @@ export function createScenarios(mock, engine) {
       },
     },
     communityPersonal: {
-      label: 'Community Buff + Personal Buff',
+      label: 'Sóng Thần + quà đặc biệt',
       run() {
-        spread(users(0, 5), 1000, (u) => mock.share(u));
         mock.gift(mockUser(0), MOCK_GIFTS.special, 1);
-        spread(Array.from({ length: 10 }), 2000, () => mock.anonymousLikes(520));
-        return '5 share (Gió Thuận) + 5.200 like cộng đồng (Sóng Thần) + quà đặc biệt cho minh123';
+        spread(Array.from({ length: 10 }), 2000, () => mock.anonymousLikes(320));
+        return '3.200 like cộng đồng (Sóng Thần) + quà đặc biệt';
       },
     },
     duplicates: {
@@ -104,14 +103,6 @@ export function createScenarios(mock, engine) {
         return 'Tự chuyển: bắt đầu → nước rút → kết thúc → vòng mới';
       },
     },
-    cheer: {
-      label: 'Đại hội cổ vũ (100 comment)',
-      run() {
-        const list = users(0, 25);
-        spread(Array.from({ length: 110 }), 20_000, (_, i) => mock.comment(list[i % list.length], pick(COMMENTS)));
-        return '110 comment từ 25 người trong 20 giây';
-      },
-    },
     bots: {
       label: 'Bot tự chơi (bật/tắt)',
       run() {
@@ -128,7 +119,7 @@ export function createScenarios(mock, engine) {
           if (roll < 0.55) mock.like(u, 5 + Math.floor(Math.random() * 20));
           else if (roll < 0.85) mock.comment(u, pick(COMMENTS));
           else if (roll < 0.93) mock.share(u);
-          else mock.gift(u, MOCK_GIFTS[pick(['small', 'small', 'small', 'medium', 'large', 'special'])], 1);
+          else mock.gift(u, MOCK_GIFTS[pick(['small', 'small', 'small', 'medium', 'large', 'special', 'skin', 'skin'])], 1);
         }, 350);
         return '14 bot like/comment/share/gift ngẫu nhiên';
       },

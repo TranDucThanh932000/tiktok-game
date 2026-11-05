@@ -1,17 +1,37 @@
 {
   "tiers": {
-    "small": { "label": "Quà nhỏ", "energy": 15, "skill": "TURBO" },
-    "medium": { "label": "Quà vừa", "energy": 30, "skill": "SHIELD" },
-    "large": { "label": "Quà lớn", "energy": 50, "skill": "SUPER_TURBO" },
-    "special": { "label": "Quà đặc biệt", "energy": 50, "skill": "RAINBOW_BOOST" }
+    "small": { "label": "Quà nhỏ", "meters": 8 },
+    "medium": { "label": "Quà vừa", "meters": 40, "skill": "SHIELD" },
+    "large": { "label": "Quà lớn", "meters": 80, "skill": "SUPER_TURBO" },
+    "special": { "label": "Quà đặc biệt", "meters": 400, "skill": "RAINBOW_BOOST" },
+    "skin": { "label": "Đổi skin ngẫu nhiên", "meters": 20, "randomSkin": true }
   },
+  "list": [
+    { "tier": "small", "label": "Hoa hồng", "names": ["Rose", "Hoa hồng"], "icon": "assets/gifts/rose.webp", "coins": 1 },
+    { "tier": "medium", "label": "Bắn tim", "names": ["Finger Heart", "Bắn tim"], "icon": "assets/gifts/finger-heart.webp", "coins": 5 },
+    { "tier": "large", "label": "Heo may mắn", "names": ["Lucky Pig", "Piggy", "Pig", "Heo", "Heo may mắn"], "icon": "assets/gifts/lucky-pig.webp", "coins": 10 },
+    { "tier": "special", "label": "Hộp quà", "names": ["Gift Box", "Hộp quà"], "icon": "assets/gifts/gift-box.webp", "coins": 100 },
+    { "tier": "skin", "label": "Cỏ ba lá", "names": ["Treasure Clover", "Clover", "Lucky Clover", "Three Leaf Clover", "Four Leaf Clover", "Cỏ ba lá", "Cỏ bốn lá"], "icon": "assets/gifts/clover.webp", "coins": 10 }
+  ],
+  "skins": [
+    { "id": "helicopter", "label": "TRỰC THĂNG!" },
+    { "id": "swan", "label": "CÁNH THIÊN NGA!" },
+    { "id": "skateboard", "label": "VÁN TRƯỢT!" },
+    { "id": "rocket", "label": "TÊN LỬA!" },
+    { "id": "outboard", "label": "ĐỘNG CƠ CA NÔ!" },
+    { "id": "basin", "label": "THAU NHÔM!" },
+    { "id": "toilet", "label": "BỒN CẦU!" },
+    { "id": "balloons", "label": "BÓNG BAY!" },
+    { "id": "shades", "label": "DÂN CHƠI!" },
+    { "id": "conicalHat", "label": "NÓN LÁ!" }
+  ],
   "byId": {},
   "defaultTier": "small",
   "byDiamonds": [
     { "min": 1, "tier": "small" },
-    { "min": 10, "tier": "medium" },
-    { "min": 100, "tier": "large" },
-    { "min": 500, "tier": "special" }
+    { "min": 5, "tier": "medium" },
+    { "min": 10, "tier": "large" },
+    { "min": 99, "tier": "special" }
   ],
   "maxRepeatPerEvent": 99
 }

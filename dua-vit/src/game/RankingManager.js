@@ -3,7 +3,7 @@
 //   2. then farthest position;
 //   3. equal position: whoever reached it first (posReachedAt);
 //   4. still equal: whoever joined first.
-// Gifts or contribution never decide the race order.
+// Only the distance swum decides the race order.
 export function compareRace(a, b) {
   if (a.isFinished !== b.isFinished) return a.isFinished ? -1 : 1;
   if (a.isFinished) return a.finishTime - b.finishTime || a.joinSeq - b.joinSeq;

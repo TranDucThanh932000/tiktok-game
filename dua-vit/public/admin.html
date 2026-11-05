@@ -34,6 +34,7 @@
     .tag { display: inline-block; padding: 0 6px; border-radius: 6px; font-size: 11px; font-weight: 700; }
     .tag.mock { background: #8a4b08; }
     .tag.live { background: #9c1c2c; }
+    .tag.bot { background: #3a5a7a; }
     #log { min-height: 1.4em; color: #ffe08a; margin: 0; }
     .grid2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
     .stat { background: #0f1f2d; border-radius: 8px; padding: 8px 10px; }
@@ -83,12 +84,12 @@
         </div>
         <div class="row">
           <button data-sim="like">❤ Like ×số lượng</button>
-          <input id="sim-text" value="GO" style="width:120px" title="Nội dung comment">
+          <input id="sim-text" value="chào cả nhà" style="width:120px" title="Nội dung comment">
           <button data-sim="comment">💬 Comment</button>
           <button data-sim="share">↗ Share</button>
         </div>
         <div class="row">
-          <select id="sim-tier"><option value="small">Quà nhỏ (1💎)</option><option value="medium">Quà vừa (30💎)</option><option value="large">Quà lớn (199💎)</option><option value="special">Quà đặc biệt (1000💎)</option></select>
+          <select id="sim-tier"><option value="small">Hoa hồng (1 xu)</option><option value="medium">Bắn tim (5 xu)</option><option value="large">Heo may mắn (10 xu)</option><option value="special">Hộp quà (100 xu)</option><option value="skin">Cỏ ba lá: đổi skin (10 xu)</option></select>
           <label><input type="checkbox" id="sim-streak"> combo streak</label>
           <button data-sim="gift">🎁 Tặng quà ×số lượng</button>
           <button data-sim="communityLikes">❤ Like cộng đồng (ẩn danh) ×số lượng</button>
@@ -103,8 +104,8 @@
       </section>
 
       <section>
-        <h2>Cấu hình Gift (gán quà thật → nhóm kỹ năng)</h2>
-        <p class="muted" style="margin-top:0">Quà chưa gán sẽ được chia nhóm theo số kim cương TikTok gửi (gifts.byDiamonds). Quà nhận được trong phiên sẽ hiện ở đây để gán theo gift ID.</p>
+        <h2>Cấu hình Gift (gán quà thật → nhóm số mét)</h2>
+        <p class="muted" style="margin-top:0">Quà trong danh sách trên màn hình khai báo ở gifts.list. Quà khác được chia nhóm theo số kim cương TikTok gửi (gifts.byDiamonds). Quà nhận được trong phiên sẽ hiện ở đây để gán theo gift ID.</p>
         <div class="scroll"><table id="gifts"></table></div>
       </section>
     </div>

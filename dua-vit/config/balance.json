@@ -1,58 +1,31 @@
 {
   "baseSpeed": 100,
   "minSpeedMultiplier": 0.6,
-  "maxPersonalBonus": 0.25,
   "maxCommunityBonus": 0.08,
-  "maxTotalBonus": 0.3,
-  "secondBuffWeight": 0.5,
 
-  "energy": {
-    "max": 100,
-    "likesPerEnergy": 10,
-    "comment": {
-      "amount": 3,
-      "cooldownSeconds": 5,
-      "comboWindowSeconds": 15,
-      "combo": [
-        { "count": 2, "multiplier": 1.2 },
-        { "count": 3, "multiplier": 1.5 }
-      ],
-      "turboComboAt": 5
-    },
-    "share": { "amount": 10 },
-    "freeCaps": { "like": 20, "comment": 15, "share": 10 },
-    "pickupCap": 20,
-    "turboTiers": [
-      { "energy": 25, "bonus": 0.05, "seconds": 3 },
-      { "energy": 50, "bonus": 0.1, "seconds": 4 },
-      { "energy": 75, "bonus": 0.15, "seconds": 5 },
-      { "energy": 100, "bonus": 0.2, "seconds": 6 }
-    ],
-    "chargeDelaySeconds": 1.5,
-    "turboCooldownSeconds": 1,
-    "sprintDump": { "secondsLeft": 10, "minEnergy": 10, "bonus": 0.05, "seconds": 3 }
+  "rewards": {
+    "likesPerMeter": 5,
+    "commentMeters": 5,
+    "commentCooldownSeconds": 3,
+    "shareMeters": 20,
+    "maxDashBonus": 1.5
   },
 
   "skills": {
-    "TURBO": { "label": "TURBO", "bonus": 0.12, "seconds": 5, "cooldownSeconds": 0 },
-    "SHIELD": { "label": "LÁ CHẮN", "seconds": 25, "cooldownSeconds": 0 },
-    "SUPER_TURBO": { "label": "SIÊU TURBO", "bonus": 0.18, "seconds": 5, "cooldownSeconds": 0 },
-    "RAINBOW_BOOST": { "label": "CẦU VỒNG", "bonus": 0.2, "seconds": 6, "cooldownSeconds": 20 },
-    "WINGS": { "label": "CÁNH THIÊN THẦN", "bonus": 0.08, "seconds": 5, "cooldownSeconds": 0 },
-    "COMBO_TURBO": { "label": "TURBO COMBO", "bonus": 0.08, "seconds": 4, "cooldownSeconds": 10 },
-    "ROCKET": { "label": "TÊN LỬA", "bonus": 0.12, "seconds": 3, "cooldownSeconds": 0 },
-    "RAINBOW_PICKUP": { "label": "CẦU VỒNG", "bonus": 0.15, "seconds": 4, "cooldownSeconds": 0 },
-    "BOOST_ZONE": { "label": "DÒNG CHẢY XIẾT", "bonus": 0.1, "seconds": 2, "cooldownSeconds": 0 }
+    "SHIELD": { "label": "LÁ CHẮN", "seconds": 25 },
+    "SUPER_TURBO": { "label": "SIÊU TURBO", "seconds": 6 },
+    "RAINBOW_BOOST": { "label": "CẦU VỒNG", "seconds": 8 },
+    "WINGS": { "label": "CÁNH THIÊN THẦN", "seconds": 6 }
   },
 
   "currents": { "amplitude": 0.02, "sprintAmplitude": 0.04, "periodSeconds": 14 },
 
   "community": {
     "enabled": true,
-    "wind": { "enabled": true, "uniqueSharers": 5, "windowSeconds": 30, "bonus": 0.03, "seconds": 5, "cooldownSeconds": 30 },
-    "tsunami": { "enabled": true, "likes": 5000, "windowSeconds": 120, "milestoneLikes": 1000, "bonus": 0.05, "seconds": 5, "push": 0.02, "cooldownSeconds": 60 },
-    "cheer": { "enabled": true, "comments": 100, "minUsers": 10, "windowSeconds": 30, "bonus": 0.03, "seconds": 5, "cooldownSeconds": 45 },
-    "giftStorm": { "enabled": true, "gifts": 20, "windowSeconds": 30, "bonus": 0.03, "seconds": 5, "cooldownSeconds": 60 }
+    "wind": { "enabled": false, "uniqueSharers": 5, "windowSeconds": 30, "bonus": 0.03, "seconds": 5, "cooldownSeconds": 30 },
+    "tsunami": { "enabled": true, "likes": 3000, "windowSeconds": 120, "milestoneLikes": 1000, "bonus": 0, "seconds": 5, "push": 0.06, "cooldownSeconds": 30 },
+    "cheer": { "enabled": false, "comments": 100, "minUsers": 10, "windowSeconds": 30, "bonus": 0.03, "seconds": 5, "cooldownSeconds": 45 },
+    "giftStorm": { "enabled": false, "gifts": 20, "windowSeconds": 30, "bonus": 0.03, "seconds": 5, "cooldownSeconds": 60 }
   },
 
   "obstacles": {
@@ -71,15 +44,12 @@
       "whirlpool": { "kind": "obstacle", "weight": 1.5, "slow": 0.35, "seconds": 1.4 },
       "waterfall": { "kind": "obstacle", "weight": 1, "slow": 0.2, "seconds": 1.8, "sprintOnly": true },
       "seaweed": { "kind": "obstacle", "weight": 2, "slow": 0.15, "seconds": 1.8 },
-      "boost": { "kind": "zone", "weight": 2, "skill": "BOOST_ZONE" },
-      "coin": { "kind": "pickup", "weight": 3, "energy": 5 },
-      "rocket": { "kind": "pickup", "weight": 1, "skill": "ROCKET" },
+      "boost": { "kind": "zone", "weight": 2, "meters": 10 },
+      "coin": { "kind": "pickup", "weight": 3, "meters": 5 },
+      "rocket": { "kind": "pickup", "weight": 1, "meters": 15 },
       "shield": { "kind": "pickup", "weight": 1, "skill": "SHIELD" },
-      "star": { "kind": "pickup", "weight": 1.2, "points": 10 },
-      "rainbow": { "kind": "pickup", "weight": 0.5, "skill": "RAINBOW_PICKUP" }
+      "star": { "kind": "pickup", "weight": 1.2, "meters": 10 },
+      "rainbow": { "kind": "pickup", "weight": 0.5, "meters": 25, "skill": "RAINBOW_BOOST" }
     }
-  },
-
-  "contribution": { "perLike": 0.1, "comment": 2, "share": 10, "perDiamond": 1 },
-  "communityPoints": { "perLike": 0.1, "comment": 1, "share": 5, "gift": 3 }
+  }
 }

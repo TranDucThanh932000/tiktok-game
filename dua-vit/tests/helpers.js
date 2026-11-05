@@ -19,6 +19,7 @@ export const player = (overrides = {}) =>
 export function makeEngine(mutate) {
   const config = structuredClone(baseConfig());
   config.game.testMode = true;
+  config.game.bots.enabled = false; // Tests turn bots on when they are what is being tested.
   mutate?.(config);
   let wall = 1_700_000_000_000;
   let seq = 0;

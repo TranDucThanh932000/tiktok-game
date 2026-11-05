@@ -1,27 +1,20 @@
-// Personal buffs live on player.activeBuffs as { id, kind, bonus, slow, startedAt, endsAt, charges }.
-//   kind 'speed'  – adds `bonus` to the speed multiplier
-//   kind 'slow'   – an obstacle hit, subtracts `slow`
+// Timed states live on player.activeBuffs as { id, kind, slow, startedAt, endsAt, charges }.
+//   kind 'look'   – only changes how the duck is drawn, or lets it fly (WINGS)
+//   kind 'slow'   – an obstacle hit, subtracts `slow` from the speed multiplier
 //   kind 'shield' – absorbs one obstacle (charges)
-// Times are game-clock seconds. Re-applying a buff with the same id refreshes it instead of stacking it, and the
-// sum of different speed buffs has diminishing returns plus a hard cap, so nobody can buy unlimited speed.
+// Times are game-clock seconds. Re-applying a buff with the same id refreshes it instead of stacking it.
 
-export function addBuff(player, { id, kind = 'speed', bonus = 0, slow = 0, seconds, charges = 0 }, now) {
+export function addBuff(player, { id, kind = 'look', slow = 0, seconds, charges = 0 }, now) {
   const existing = player.activeBuffs.find((b) => b.id === id);
   if (existing) {
     existing.endsAt = Math.max(existing.endsAt, now + seconds);
-    existing.bonus = Math.max(existing.bonus, bonus);
     existing.slow = Math.max(existing.slow, slow);
     existing.charges = Math.max(existing.charges, charges);
     return { buff: existing, refreshed: true };
   }
-  const buff = { id, kind, bonus, slow, startedAt: now, endsAt: now + seconds, charges };
+  const buff = { id, kind, slow, startedAt: now, endsAt: now + seconds, charges };
   player.activeBuffs.push(buff);
   return { buff, refreshed: false };
-}
-
-export function removeBuff(player, id) {
-  const i = player.activeBuffs.findIndex((b) => b.id === id);
-  if (i >= 0) player.activeBuffs.splice(i, 1);
 }
 
 export const hasBuff = (player, id) => player.activeBuffs.some((b) => b.id === id);
@@ -37,25 +30,15 @@ export function expireBuffs(player, now) {
   return ended;
 }
 
-// Strongest speed buff counts fully, every other one at `secondBuffWeight`; the total stops at maxPersonalBonus.
-// Slows do not stack either: only the worst one applies.
-export function personalBonus(player, balance) {
-  const bonuses = player.activeBuffs.filter((b) => b.kind === 'speed').map((b) => b.bonus).sort((a, b) => b - a);
-  const weight = balance.secondBuffWeight ?? 0.5;
-  const raw = bonuses.reduce((sum, bonus, i) => sum + (i === 0 ? bonus : bonus * weight), 0);
-  const slow = player.activeBuffs.reduce((worst, b) => (b.kind === 'slow' ? Math.max(worst, b.slow) : worst), 0);
-  return { boost: Math.min(raw, balance.maxPersonalBonus), slow };
-}
+// Slows do not stack: only the worst one applies.
+export const worstSlow = (player) => player.activeBuffs.reduce((worst, b) => (b.kind === 'slow' ? Math.max(worst, b.slow) : worst), 0);
 
 export function communityBonus(effects, balance) {
   const sum = effects.reduce((total, effect) => total + effect.bonus, 0);
   return Math.min(sum, balance.maxCommunityBonus);
 }
 
-// finalSpeed = baseSpeed × multiplier, with
-// multiplier = 1 + min(personal + community, maxTotalBonus) + current − slow, clamped to [minSpeedMultiplier, 1 + maxTotalBonus].
-export function speedMultiplier({ boost = 0, slow = 0, community = 0, current = 0 }, balance) {
-  const bonus = Math.min(boost + community, balance.maxTotalBonus);
-  const multiplier = 1 + bonus + current - slow;
-  return Math.min(1 + balance.maxTotalBonus, Math.max(balance.minSpeedMultiplier, multiplier));
+// Swimming speed before any dash: baseSpeed × (1 + community + current − slow), never below minSpeedMultiplier.
+export function speedMultiplier({ slow = 0, community = 0, current = 0 }, balance) {
+  return Math.max(balance.minSpeedMultiplier, 1 + community + current - slow);
 }

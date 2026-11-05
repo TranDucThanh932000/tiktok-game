@@ -3,6 +3,7 @@ import { RiverRenderer } from './render/RiverRenderer.js';
 import { drawDuck, drawDuckLabel, makeLabel } from './render/DuckRenderer.js';
 import { Effects } from './render/EffectsRenderer.js';
 import { drawObstacles } from './render/ObstacleRenderer.js';
+import { CameraDirector } from './render/Camera.js';
 import { UIManager } from './render/UIManager.js';
 import { Sound } from './sound.js';
 
@@ -14,6 +15,7 @@ const river = new RiverRenderer(ctx);
 const fx = new Effects(ctx);
 const ui = new UIManager(ctx);
 const sound = new Sound();
+const camera = new CameraDirector();
 
 const METERS = 500;
 const COMMUNITY_BANNERS = {
@@ -23,14 +25,13 @@ const COMMUNITY_BANNERS = {
   giftStorm: ['CƠN BÃO GIFT!', '#e599f7'],
 };
 const SKILL_TEXT = {
-  TURBO: ['TURBO!', '#ffd43b'], SUPER_TURBO: ['SIÊU TURBO!', '#ff8787'], RAINBOW_BOOST: ['CẦU VỒNG!', '#e599f7'],
-  SHIELD: ['LÁ CHẮN!', '#66d9e8'], WINGS: ['CÁNH THIÊN THẦN!', '#ffffff'], COMBO_TURBO: ['TURBO COMBO!', '#b197fc'],
-  ROCKET: ['TÊN LỬA!', '#ff6b6b'], RAINBOW_PICKUP: ['CẦU VỒNG!', '#e599f7'], BOOST_ZONE: ['DÒNG CHẢY XIẾT!', '#66d9e8'],
+  SUPER_TURBO: ['SIÊU TURBO!', '#ff8787'], RAINBOW_BOOST: ['CẦU VỒNG!', '#e599f7'],
+  SHIELD: ['LÁ CHẮN!', '#66d9e8'], WINGS: ['CÁNH THIÊN THẦN!', '#ffffff'],
 };
 
 const state = {
-  settings: { lanes: 10, keywords: [], flags: {}, phases: {} },
-  frame: { phase: 'idle', round: 0, left: 0, paused: false, track: 10000, base: 100, players: 0, community: { bonus: 0, active: [], progress: [] }, totals: { likes: 0, comments: 0, shares: 0, gifts: 0 }, ducks: [], time: 0 },
+  settings: { lanes: 10, flags: {}, phases: {} },
+  frame: { phase: 'idle', round: 0, left: 0, paused: false, track: 10000, base: 100, players: 0, community: { bonus: 0, active: [], progress: [] }, ducks: [], time: 0 },
   frameAt: performance.now(),
   rank: { race: [] },
   obstacles: [],
@@ -50,7 +51,7 @@ function addDuck(entry) {
     ...entry,
     hue: entry.color,
     label: makeLabel(entry.name, entry.color, entry.test),
-    pos: 0, target: 0, speed: 0, mult: 1, energy: 0, flags: 0, combo: 0, tier: 0,
+    pos: 0, target: 0, speed: 0, mult: 1, flags: 0,
     anim: Math.random() * 6,
     x: TRACK.start, y: 0,
     jitter: ((entry.id * 0.618) % 1) - 0.5,
@@ -72,27 +73,28 @@ function applyFrame(f) {
   state.frame = f;
   state.frameAt = now;
   state.meters = METERS;
-  for (const [id, pos, mult, energy, flags, combo, tier] of f.ducks) {
+  for (const [id, pos, mult, flags] of f.ducks) {
     const d = state.ducks.get(id);
     if (!d) continue;
     if (Math.abs(pos - d.pos) > f.track * 0.05) d.jump = true;
     d.target = pos;
     d.mult = mult / 1000;
     d.speed = f.base * d.mult;
-    d.energy = energy;
     d.flags = flags;
-    d.combo = combo;
-    d.tier = tier;
   }
 }
 
+const withLook = (r) => ({ ...r, hue: state.ducks.get(r.id)?.hue ?? 48, skin: state.ducks.get(r.id)?.skin ?? null });
+
 function onFx(e, now) {
   const d = e.id != null ? state.ducks.get(e.id) : null;
-  if (d) d.hotUntil = now + 4000;
+  if (d && !e.quiet) d.hotUntil = now + 4000; // Bots are busy all the time; a big name is for viewers.
   const [x, y] = d ? [d.x, d.y] : [0, 0];
   switch (e.k) {
     case 'note':
-      ui.notify(e, now, state.settings.maxNotifications ?? 4);
+      // During the race a gift gets a close-up whose caption says the same thing.
+      if (e.kind === 'gift' && e.id != null && camera.rules.enabled && (state.frame.phase === 'race' || state.frame.phase === 'sprint')) break;
+      ui.notify(e, now, state.settings.maxNotifications ?? 3);
       break;
     case 'join': {
       const nd = addDuck(e.duck);
@@ -104,48 +106,52 @@ function onFx(e, now) {
     case 'roster':
       setRoster(e.roster);
       break;
-    case 'energy':
+    case 'dash':
       if (!d) break;
-      fx.text(`+${e.amount}⚡`, x + 20, y - 90, { color: e.via === 'gift' ? '#ffa8e2' : '#ffe066', size: 28, life: 1 });
+      fx.text(`+${e.meters}m`, x + 20, y - 80, { color: e.via === 'gift' ? '#ffa8e2' : '#ffe066', size: e.meters >= 30 ? 62 : e.quiet ? 32 : 44, life: 1.1 });
+      fx.splash(x - 20, y, e.meters >= 30 ? 24 : e.quiet ? 4 : 8, 1.2);
       if (e.via !== 'like') sound.play('energy');
-      break;
-    case 'combo':
-      if (!d) break;
-      fx.text(`COMBO x${e.count}`, x, y - 120, { color: '#d0bfff', stroke: '#5f3dc4', size: 34, life: 1.1 });
-      fx.burst('star', x, y - 40, 8, { speed: 160, life: 0.8, size: 9, color: '#d0bfff' });
-      sound.play('combo');
       break;
     case 'skill': {
       if (!d) break;
-      const [label, color] = e.skill === 'ENERGY_TURBO' ? [`TURBO +${[0, 5, 10, 15, 20][e.tier] ?? 5}%`, '#ffe066'] : SKILL_TEXT[e.skill] ?? [e.skill, '#fff'];
-      fx.text(label, x, y - 112, { color, size: e.skill === 'ENERGY_TURBO' ? 30 + e.tier * 3 : 38, life: 1.4 });
-      fx.splash(x - 20, y, 22, 1.4);
+      const [label, color] = SKILL_TEXT[e.skill] ?? [e.skill, '#fff'];
+      fx.text(label, x, y - 130, { color, size: 46, life: 1.4 });
       if (e.skill === 'SUPER_TURBO') fx.burst('fire', x - 30, y - 20, 40, { speed: 240, life: 0.8, size: 9, angle: Math.PI, spread: 1.4 });
-      else if (e.skill === 'RAINBOW_BOOST' || e.skill === 'RAINBOW_PICKUP') fx.burst('spark', x, y - 30, 50, { speed: 320, life: 1, size: 5, colors: ['#ff6b6b', '#ffa94d', '#ffe066', '#69db7c', '#4dabf7', '#9775fa'] });
+      else if (e.skill === 'RAINBOW_BOOST') fx.burst('spark', x, y - 30, 50, { speed: 320, life: 1, size: 5, colors: ['#ff6b6b', '#ffa94d', '#ffe066', '#69db7c', '#4dabf7', '#9775fa'] });
       else if (e.skill === 'WINGS') fx.burst('feather', x, y - 30, 18, { speed: 160, life: 1.6, size: 7, g: 40 });
       else if (e.skill === 'SHIELD') fx.burst('spark', x, y - 20, 30, { speed: 200, life: 0.8, size: 4, color: '#99e9f2' });
-      else fx.burst('spark', x, y - 30, 26, { speed: 260, life: 0.7, size: 4, color: '#ffe066' });
       sound.play(e.skill === 'SHIELD' ? 'shield' : e.skill === 'WINGS' ? 'gift' : 'turbo');
       break;
     }
+    case 'gift':
+      camera.onGift(e);
+      break;
+    case 'skin':
+      if (!d) break;
+      d.skin = e.skin;
+      fx.burst('smoke', x, y - 24, 20, { speed: 130, life: 0.8, size: 14 });
+      fx.burst('star', x, y - 24, 14, { speed: 240, life: 0.9, size: 9, color: '#ffe066' });
+      fx.text(e.label, x, y - 130, { color: '#b2f2bb', size: 46, life: 1.6 });
+      sound.play('gift');
+      break;
     case 'hit':
       if (!d) break;
       if (e.result === 'hit') {
         fx.splash(x + 20, y, 18, 1.2);
-        fx.text(['Ối!', 'Úi da!', 'Á!'][e.obj % 3], x, y - 100, { color: '#ff8787', size: 30, life: 0.9 });
+        fx.text(['Ối!', 'Úi da!', 'Á!'][e.obj % 3], x, y - 100, { color: '#ff8787', size: 38, life: 0.9 });
         sound.play('hit');
       } else if (e.result === 'shield') {
         fx.burst('spark', x + 20, y - 20, 30, { speed: 260, life: 0.6, size: 4, color: '#99e9f2' });
-        fx.text('CHẶN!', x, y - 100, { color: '#99e9f2', size: 30, life: 0.9 });
+        fx.text('CHẶN!', x, y - 100, { color: '#99e9f2', size: 38, life: 0.9 });
         sound.play('shield');
       } else {
-        fx.text('BAY QUA!', x, y - 110, { color: '#fff', size: 28, life: 0.9 });
+        fx.text('BAY QUA!', x, y - 110, { color: '#fff', size: 36, life: 0.9 });
       }
       break;
     case 'pickup':
       if (!d) break;
       fx.burst('star', x + 20, y - 20, 12, { speed: 200, life: 0.8, size: 8, color: '#ffe066' });
-      fx.text({ coin: '+5⚡', rocket: 'TÊN LỬA!', shield: 'LÁ CHẮN!', star: '+10 điểm', rainbow: 'CẦU VỒNG!', boost: 'TĂNG TỐC!' }[e.type] ?? '+', x, y - 100, { color: '#ffe066', size: 28, life: 1 });
+      if (e.type === 'shield') fx.text('LÁ CHẮN!', x, y - 100, { color: '#99e9f2', size: 38, life: 1 });
       sound.play('coin');
       break;
     case 'finish':
@@ -156,7 +162,7 @@ function onFx(e, now) {
       break;
     case 'community': {
       const [title, color] = COMMUNITY_BANNERS[e.id] ?? [e.id, '#fff'];
-      ui.banner(title, `+${Math.round(e.bonus * 100)}% tốc độ cho TẤT CẢ vịt · ${e.seconds}s`, color, now, true);
+      ui.banner(title, e.meters ? `Cả đàn vịt lao lên ${e.meters}m!` : `Cả đàn vịt nhanh hơn ${Math.round(e.bonus * 100)}% trong ${e.seconds} giây`, color, now, true);
       if (e.id === 'wind') {
         state.scenes.wind = e.seconds;
         sound.play('wind');
@@ -165,7 +171,7 @@ function onFx(e, now) {
         sound.play('tsunami');
       } else if (e.id === 'cheer') {
         state.scenes.cheer = e.seconds + 1;
-        for (let i = 0; i < 6; i++) fx.confetti(200 + i * 220, RIVER.y + 40, 40);
+        for (let i = 0; i < 6; i++) fx.confetti(RIVER.w * ((i + 0.5) / 6), RIVER.y + 40, 40);
         sound.play('cheer');
       } else if (e.id === 'giftStorm') {
         state.scenes.storm = e.seconds + 1;
@@ -174,23 +180,23 @@ function onFx(e, now) {
       break;
     }
     case 'milestone':
-      ui.banner(`${(e.n * 1000).toLocaleString('vi-VN')} LIKE!`, 'Sóng thần đang tới gần...', '#74c0fc', now);
+      ui.banner(`${(e.n * 1000).toLocaleString('vi-VN')} TIM!`, 'Sóng thần đang tới gần...', '#74c0fc', now);
       break;
     case 'phase':
-      if (e.phase === 'registration') ui.banner('ĐĂNG KÝ THAM GIA!', 'Comment để thả vịt xuống sông', '#8ce99a', now);
+      if (e.phase === 'registration') ui.banner('SẮP XUẤT PHÁT!', 'Comment gì cũng được là có vịt', '#8ce99a', now);
       if (e.phase === 'race') {
         ui.banner('XUẤT PHÁT!', null, '#ffe066', now, true);
         for (const duck of state.ducks.values()) fx.splash(duck.x, duck.y, 6, 0.8);
         sound.play('start');
       }
       if (e.phase === 'sprint') {
-        ui.banner('NƯỚC RÚT!', 'Dùng hết năng lượng còn lại!', '#ff8787', now, true);
+        ui.banner('NƯỚC RÚT!', 'Thả tim thật nhanh!', '#ff8787', now, true);
         sound.play('start');
       }
       if (e.phase === 'waiting') state.result = null;
       break;
     case 'win': {
-      state.result = { ...e.result, top: e.result.top.map((r) => ({ ...r, hue: state.ducks.get(r.id)?.hue ?? 48 })) };
+      state.result = { ...e.result, top: e.result.top.map(withLook) };
       state.winnerWins = e.wins;
       state.finishAt = now;
       for (let i = 0; i < 8; i++) setTimeout(() => {
@@ -212,6 +218,7 @@ function connect() {
       case 'snapshot':
         state.settings = m.settings;
         sound.enabled = m.settings.sound;
+        camera.configure(m.settings.camera);
         state.ducks.clear();
         setRoster(m.roster);
         applyFrame(m.frame);
@@ -222,7 +229,7 @@ function connect() {
         state.rank = m.rank;
         state.obstacles = m.obstacles;
         if (m.result) {
-          state.result = { ...m.result, top: m.result.top.map((r) => ({ ...r, hue: state.ducks.get(r.id)?.hue ?? 48 })) };
+          state.result = { ...m.result, top: m.result.top.map(withLook) };
           state.finishAt = now - 3000;
         }
         break;
@@ -248,19 +255,67 @@ function connect() {
       case 'settings':
         state.settings = m.settings;
         sound.enabled = m.settings.sound;
+        camera.configure(m.settings.camera);
         break;
     }
   };
 }
 
+// ---------- camera ----------
+function directCamera(dt) {
+  const f = state.frame;
+  const leader = (state.rank.race ?? []).find((r) => !r.done);
+  camera.update(f.paused ? 0 : dt, {
+    racing: f.phase === 'race' || f.phase === 'sprint',
+    sprint: f.phase === 'sprint',
+    leaderId: leader?.id ?? null,
+    target: (id) => state.ducks.get(id) ?? null,
+  });
+  const shot = camera.takeStarted();
+  if (shot) startShot(shot);
+}
+
+function startShot(shot) {
+  const d = state.ducks.get(shot.id);
+  if (!d) return;
+  if (shot.kind === 'leader') {
+    sound.play('wind');
+    return;
+  }
+  const [x, y] = [d.x, d.y - 30];
+  if (shot.tier === 'skin') {
+    fx.burst('smoke', x, y, 30, { speed: 170, life: 0.9, size: 16 });
+    fx.confetti(x, y, 40);
+    sound.play('gift');
+    return;
+  }
+  fx.burst('gift', x, y, shot.tier === 'small' ? 6 : 12, { speed: 340, life: 1.2, size: 9, g: 260, colors: ['#ff6b6b', '#cc5de8', '#4dabf7', '#51cf66'] });
+  fx.burst('star', x, y, 22, { speed: 300, life: 1, size: 11, color: '#ffe066' });
+  if (shot.tier === 'medium') fx.burst('spark', x, y, 50, { speed: 280, life: 0.9, size: 5, color: '#99e9f2' });
+  if (shot.tier === 'large') fx.burst('fire', x - 30, y + 10, 40, { speed: 320, life: 0.7, size: 7, angle: Math.PI, spread: 1.4 });
+  if (shot.tier === 'special') {
+    fx.burst('spark', x, y, 120, { speed: 420, life: 1.2, size: 6, colors: ['#ff6b6b', '#ffa94d', '#ffe066', '#69db7c', '#4dabf7', '#9775fa'] });
+    fx.confetti(x, y, 50);
+  }
+  sound.play(shot.tier === 'special' || shot.tier === 'large' ? 'fanfare' : 'gift');
+}
+
+// Spray off the feet, a wave at the chest and sweat flying off the head of the duck on screen.
+function strain(d, s) {
+  if (Math.random() < 0.9) fx.emit('drop', d.x - 28 * s, d.y + 6 * s, { vx: -240 - Math.random() * 220, vy: -60 - Math.random() * 170, g: 700, life: 0.55, size: 2 + Math.random() * 2.5, color: 'rgba(235,250,255,0.95)' });
+  if (Math.random() < 0.6) fx.emit('drop', d.x + 30 * s, d.y + 4 * s, { vx: -60 - Math.random() * 90, vy: -90 - Math.random() * 130, g: 700, life: 0.4, size: 1.5 + Math.random() * 2, color: 'rgba(235,250,255,0.9)' });
+  if (Math.random() < 0.28) fx.emit('drop', d.x + 12 * s, d.y - 50 * s, { vx: -150 - Math.random() * 120, vy: -70 - Math.random() * 90, g: 420, life: 0.6, size: 2.6, color: '#a5e4ff' });
+  if (Math.random() < 0.12) fx.emit('smoke', d.x + 40 * s, d.y - 32 * s, { vx: -90, vy: -30, life: 0.5, size: 5 });
+}
+
 // ---------- simulation on screen ----------
-// Ducks shrink with the crowd and never outgrow their lane, so the name above fits in the water between lanes.
+// Ducks shrink with the crowd and never outgrow their lane.
 function duckScale(n) {
   const byCount = n <= 30 ? 1 : n <= 80 ? 0.8 : n <= 200 ? 0.65 : 0.55;
   return Math.min(byCount, laneHeight(state.settings.lanes || 8) / 100);
 }
 
-// The waterline sits a little below the lane centre, leaving room for the name above the head.
+// The waterline sits a little below the lane centre, so the head stays inside the lane.
 const swimY = (lane, lanes) => laneY(lane, lanes) + laneHeight(lanes) * 0.18;
 
 function placeDuck(d) {
@@ -276,6 +331,7 @@ function gameTime(now) {
 }
 
 function update(now, dt) {
+  directCamera(dt);
   const f = state.frame;
   const since = (now - state.frameAt) / 1000;
   const racing = (f.phase === 'race' || f.phase === 'sprint') && !f.paused;
@@ -293,7 +349,10 @@ function update(now, dt) {
     d.racing = racing && !finished;
     d.finished = finished;
     const slowed = d.flags & (F.SLOW ?? 64);
-    d.anim += dt * (d.racing ? (slowed ? 4 : 7 * d.mult ** 4) : 2.5);
+    d.effort = camera.focus?.id === d.id && d.racing ? camera.k : 0;
+    d.anim += dt * (d.racing ? (slowed ? 4 : 7 * Math.min(d.mult, 1.6) ** 2) + d.effort * 24 : 2.5);
+    d.hot = d.hotUntil > now;
+    if (d.effort > 0.4) strain(d, scale);
     // Splashes and fire scale with speed; with hundreds of ducks only a share of them emit each frame.
     if (d.racing && Math.random() < (d.mult > 1.08 ? 0.5 : 0.08) * (state.ducks.size > 80 ? 0.3 : 1)) {
       fx.emit('drop', d.x - 30 * scale, d.y + 4, { vx: -60 - Math.random() * 80, vy: -80 - Math.random() * 120, g: 600, life: 0.5, size: 3 * scale, color: 'rgba(230,248,255,0.9)' });
@@ -323,6 +382,18 @@ function draw(now, t, dt) {
   const f = state.frame;
   ctx.fillStyle = '#0b2545';
   ctx.fillRect(0, 0, W, H);
+  river.drawGround();
+
+  // Everything on the river goes through the camera; everything around it stays put.
+  const cam = camera.view();
+  const shake = camera.k * 2.5 + camera.kick * 7;
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(RIVER.x, RIVER.y, RIVER.w, RIVER.h);
+  ctx.clip();
+  ctx.translate(RIVER.x + RIVER.w / 2 + Math.sin(t * 41) * shake, RIVER.y + RIVER.h / 2 + Math.cos(t * 53) * shake);
+  ctx.scale(cam.zoom, cam.zoom);
+  ctx.translate(-cam.x, -cam.y);
   river.draw(t, dt, {
     lanes: state.settings.lanes || 10,
     sprint: f.phase === 'sprint',
@@ -330,43 +401,55 @@ function draw(now, t, dt) {
     cheer: state.scenes.cheer,
     storm: state.scenes.storm,
     meters: METERS,
+    rush: camera.k,
   });
 
   const lanes = state.settings.lanes || 10;
   const scale = duckScale(state.ducks.size);
-  drawObstacles(ctx, state.obstacles, t, gameTime(now), { lanes, x: (pos) => trackX(pos, f.track), y: (lane) => swimY(lane, lanes) - 6, scale });
+  // Objects stand still in the river, which would give the close-up away while the scenery rushes past.
+  if (camera.k < 0.5) drawObstacles(ctx, state.obstacles, t, gameTime(now), { lanes, x: (pos) => trackX(pos, f.track), y: (lane) => swimY(lane, lanes) - 6, scale });
 
-  // Labels: everyone when the river is small; otherwise the top 15 and whoever just did something.
+  // Labels: everyone when the river is small; otherwise the top 10 and whoever just did something.
   const ducks = [...state.ducks.values()].sort((a, b) => a.y - b.y);
   const many = ducks.length > 40;
   let labels = 0;
   const F = state.settings.flags;
   const labelled = [];
+  const hero = camera.focus ? state.ducks.get(camera.focus.id) : null;
   for (const d of ducks) {
     if (!d.finished) d.place = d.rankNow <= 3 && (f.phase === 'race' || f.phase === 'sprint') ? d.rankNow : null;
-    if (!many || (((d.rankNow ?? 99) <= 15 || d.hotUntil > now) && labels < 45)) {
+    if (!many || (((d.rankNow ?? 99) <= 10 || d.hotUntil > now) && labels < 24)) {
       labels++;
       labelled.push(d);
     }
-    drawDuck(ctx, d, t, F);
+    if (d !== hero) drawDuck(ctx, d, t, F);
   }
-  for (const d of labelled) drawDuckLabel(ctx, d, t, F, RIVER.y + 4);
+  // In a close-up the names make way (the caption has the one that matters) and the star of the shot goes on top.
+  ctx.globalAlpha = 1 - camera.k;
+  if (camera.k < 0.95) for (const d of labelled) drawDuckLabel(ctx, d, F);
+  ctx.globalAlpha = 1;
+  if (hero) drawDuck(ctx, hero, t, F);
 
   const tsunami = now / 1000 - state.tsunamiAt;
   river.drawTsunami(tsunami / 2.6);
-  fx.draw();
+  fx.draw(1 / cam.zoom ** 0.7);
+  ctx.restore();
 
-  ui.drawTop3(state, t);
+  ui.drawCloseUp(state, camera, cam, t);
+  ui.drawSprintEdge(state, t);
   const left = Math.max(0, f.left - (f.paused ? 0 : (now - state.frameAt) / 1000));
   const view = { ...state, left, phaseTotal: state.settings.phases?.[f.phase === 'waiting' ? 'registration' : f.phase] ?? 1, finishAge: (now - state.finishAt) / 1000 };
   ui.drawJoinCard(view, t);
   ui.drawResults(view, t);
   ui.drawPaused(state);
-  ui.drawNotes(now, state.settings.maxNotifications ?? 4);
+  // A close-up keeps the river clear; notes wait until the camera is back.
+  if (camera.k < 0.3) ui.drawNotes(now, state.settings.maxNotifications ?? 3);
   ui.drawBanners(now);
   ui.drawHeader(view, t);
   ui.drawBoard(view, t, dt);
-  ui.drawCommunity(view, t);
+  ui.drawHowTo(view);
+  ui.drawGiftList(view, t);
+  ui.drawGoal(view, t);
 
   // Countdown beeps for the last 3 seconds of registration.
   if (f.phase === 'registration' && left <= 3 && left > 0 && Math.ceil(left) !== state.lastTick) {

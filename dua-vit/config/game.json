@@ -1,5 +1,5 @@
 {
-  "tiktokUsername": "nguynx.chi.vn",
+  "tiktokUsername": "hehe27046",
   "port": 3003,
   "testMode": true,
   "phases": { "registration": 15, "race": 60, "sprint": 30, "finish": 15 },
@@ -7,12 +7,35 @@
   "maxDucks": 300,
   "lanes": 8,
   "lateJoin": "pack-tail",
-  "trackFactor": 1.08,
+  "trackFactor": 1.6,
   "sound": true,
   "notifications": true,
-  "maxNotifications": 4,
+  "maxNotifications": 3,
   "maxEventAgeSeconds": 60,
-  "commentKeywords": ["GO", "VỊT ƠI", "CỐ LÊN", "TURBO", "CHẠY ĐI", "THAM GIA", "VỊT", "QUẠC"],
-  "commentMaxLength": 120,
-  "likeGapToCommunity": true
+  "likeGapToCommunity": true,
+  "bots": {
+    "enabled": true,
+    "count": 8,
+    "names": ["Vịt Bầu", "Vịt Xiêm", "Vịt Cỏ", "Vịt Trời", "Vịt Bắc Kinh", "Vịt Mập", "Vịt Ngố", "Vịt Lười", "Vịt Say", "Vịt Thông Thái", "Vịt Hóng Hớt", "Vịt Ế", "Vịt Cao Su", "Vịt Đi Bộ", "Vịt Deadline", "Vịt Mất Ngủ"],
+    "gapSeconds": 2.5,
+    "commentChanceMin": 0.1,
+    "commentChanceMax": 0.5,
+    "moodMin": 0.75,
+    "moodMax": 1.25,
+    "zealMin": 0.5,
+    "zealMax": 1.4,
+    "aloneBoost": 1.7,
+    "marginMin": 3,
+    "marginMax": 14,
+    "aheadSlow": 0.75
+  },
+  "camera": {
+    "enabled": true,
+    "zoom": 2.2,
+    "leaderEverySeconds": 18,
+    "sprintEverySeconds": 10,
+    "leaderSeconds": 5,
+    "giftSeconds": { "small": 2.5, "medium": 3, "large": 4, "special": 5, "skin": 3.5 },
+    "minGiftSeconds": 1.6
+  }
 }

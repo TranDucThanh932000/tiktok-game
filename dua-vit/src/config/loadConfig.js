@@ -54,19 +54,20 @@ export const EDITABLE = [
   ['game.sound', 'boolean'],
   ['game.notifications', 'boolean'],
   ['game.maxNotifications', 'integer', 1, 8],
+  ['game.bots.enabled', 'boolean'],
+  ['game.bots.count', 'integer', 0, 30],
+  ['game.camera.enabled', 'boolean'],
+  ['game.camera.zoom', 'number', 1.2, 4],
+  ['game.camera.leaderEverySeconds', 'number', 5, 600],
+  ['game.camera.sprintEverySeconds', 'number', 5, 600],
+  ['game.camera.leaderSeconds', 'number', 1, 30],
   ['balance.baseSpeed', 'number', 10, 1000],
-  ['balance.maxPersonalBonus', 'number', 0, 1],
+  ['balance.rewards.likesPerMeter', 'integer', 1, 1000],
+  ['balance.rewards.commentMeters', 'number', 0, 100],
+  ['balance.rewards.commentCooldownSeconds', 'number', 0, 120],
+  ['balance.rewards.shareMeters', 'number', 0, 500],
+  ['balance.rewards.maxDashBonus', 'number', 0, 5],
   ['balance.maxCommunityBonus', 'number', 0, 0.5],
-  ['balance.maxTotalBonus', 'number', 0, 1.5],
-  ['balance.energy.likesPerEnergy', 'integer', 1, 1000],
-  ['balance.energy.comment.amount', 'number', 0, 100],
-  ['balance.energy.comment.cooldownSeconds', 'number', 0, 120],
-  ['balance.energy.share.amount', 'number', 0, 100],
-  ['balance.energy.freeCaps.like', 'number', 0, 100],
-  ['balance.energy.freeCaps.comment', 'number', 0, 100],
-  ['balance.energy.freeCaps.share', 'number', 0, 100],
-  ['balance.energy.chargeDelaySeconds', 'number', 0, 10],
-  ['balance.skills.RAINBOW_BOOST.cooldownSeconds', 'number', 0, 600],
   ['balance.community.enabled', 'boolean'],
   ['balance.community.wind.enabled', 'boolean'],
   ['balance.community.tsunami.enabled', 'boolean'],
@@ -97,13 +98,15 @@ export function validate(config) {
   const need = (ok, text) => ok || problems.push(text);
   for (const [phase, seconds] of Object.entries(game.phases ?? {})) need(inRange(seconds, 5, 1800), `game.phases.${phase} phải từ 5 đến 1800 giây`);
   need(Number.isInteger(game.lanes) && game.lanes >= 3 && game.lanes <= 16, 'game.lanes là số nguyên từ 3 đến 16');
-  need(Array.isArray(game.commentKeywords) && game.commentKeywords.length > 0, 'game.commentKeywords là danh sách từ khóa');
+  if (game.bots?.enabled) need(game.bots.names?.length > 0 && game.bots.gapSeconds > 0 && game.bots.zealMin > 0, 'game.bots cần names, gapSeconds và zealMin lớn hơn 0');
   need(inRange(balance.baseSpeed, 10, 1000), 'balance.baseSpeed từ 10 đến 1000');
-  need(Array.isArray(balance.energy?.turboTiers) && balance.energy.turboTiers.length > 0, 'balance.energy.turboTiers không được trống');
+  need(inRange(balance.rewards?.likesPerMeter, 1, 1000), 'balance.rewards.likesPerMeter từ 1 đến 1000');
   for (const [name, tier] of Object.entries(gifts.tiers ?? {})) {
-    need(inRange(tier.energy, 0, 100), `gifts.tiers.${name}.energy từ 0 đến 100`);
+    need(inRange(tier.meters, 0, 500), `gifts.tiers.${name}.meters từ 0 đến 500`);
     need(!tier.skill || balance.skills[tier.skill], `gifts.tiers.${name}.skill "${tier.skill}" không có trong balance.skills`);
   }
+  if (Object.values(gifts.tiers ?? {}).some((tier) => tier.randomSkin)) need(gifts.skins?.length >= 2 && gifts.skins.every((skin) => skin.id && skin.label), 'gifts.skins cần ít nhất 2 skin, mỗi skin có id và label');
+  for (const gift of gifts.list ?? []) need(gifts.tiers[gift.tier] && gift.label && gift.names?.length && gift.icon, `gifts.list: "${gift.label}" cần tier hợp lệ, label, names và icon`);
   for (const [id, tier] of Object.entries(gifts.byId ?? {})) need(gifts.tiers[tier], `gifts.byId.${id} trỏ tới nhóm "${tier}" không tồn tại`);
   for (const rule of gifts.byDiamonds ?? []) need(gifts.tiers[rule.tier] && inRange(rule.min, 0, 1e7), `gifts.byDiamonds: nhóm "${rule.tier}" không tồn tại`);
   for (const [name, type] of Object.entries(balance.obstacles?.types ?? {})) {

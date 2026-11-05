@@ -1,0 +1,17 @@
+{
+  "tiers": {
+    "small": { "label": "Quà nhỏ", "energy": 15, "skill": "TURBO" },
+    "medium": { "label": "Quà vừa", "energy": 30, "skill": "SHIELD" },
+    "large": { "label": "Quà lớn", "energy": 50, "skill": "SUPER_TURBO" },
+    "special": { "label": "Quà đặc biệt", "energy": 50, "skill": "RAINBOW_BOOST" }
+  },
+  "byId": {},
+  "defaultTier": "small",
+  "byDiamonds": [
+    { "min": 1, "tier": "small" },
+    { "min": 10, "tier": "medium" },
+    { "min": 100, "tier": "large" },
+    { "min": 500, "tier": "special" }
+  ],
+  "maxRepeatPerEvent": 99
+}

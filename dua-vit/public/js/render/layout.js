@@ -1,15 +1,19 @@
-// Fixed 1920×1080 stage; the canvas is scaled as a whole to whatever window or OBS source it lives in.
-export const W = 1920;
-export const H = 1080;
+// Fixed 1080×1920 portrait stage; the canvas is scaled as a whole to whatever window or OBS source it lives in.
+// From the top: room for TikTok's own bar, header, how-to and leaderboard, the gift list, the room-wide goal, the
+// river, then a strip of grass for TikTok's comments and gift buttons, so nothing a viewer needs sits underneath them.
+export const W = 1080;
+export const H = 1920;
 
-export const HEADER = { x: 0, y: 0, w: W, h: 96 };
-export const RIVER = { x: 0, y: 96, w: 1490, h: 808 };
+export const HEADER = { x: 0, y: 0, w: W, h: 260 };
+export const HOWTO = { x: 12, y: 268, w: 536, h: 330 };
+export const BOARD = { x: 560, y: 268, w: 508, h: 330 };
+export const GIFTS = { x: 12, y: 606, w: W - 24, h: 136 };
+export const GOAL = { x: 12, y: 750, w: W - 24, h: 58 };
+export const RIVER = { x: 0, y: 816, w: W, h: 810 };
 export const BANK_TOP = 66;
 export const BANK_BOTTOM = 52;
 export const WATER = { x: 0, y: RIVER.y + BANK_TOP, w: RIVER.w, h: RIVER.h - BANK_TOP - BANK_BOTTOM };
-export const TRACK = { start: 130, end: 1385 };
-export const BOARD = { x: 1500, y: 104, w: 410, h: 792 };
-export const BAR = { x: 10, y: 912, w: W - 20, h: 160 };
+export const TRACK = { start: 100, end: 985 };
 
 export const laneHeight = (lanes) => WATER.h / lanes;
 export const laneY = (lane, lanes) => WATER.y + (lane + 0.5) * laneHeight(lanes);

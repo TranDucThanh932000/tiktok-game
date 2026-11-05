@@ -10,10 +10,11 @@ export const MOCK_NAMES = [
 ];
 
 export const MOCK_GIFTS = {
-  small: { id: 'mock-small', name: 'Quà thử nhỏ', diamondCount: 1, type: 1 },
-  medium: { id: 'mock-medium', name: 'Quà thử vừa', diamondCount: 30, type: 1 },
-  large: { id: 'mock-large', name: 'Quà thử lớn', diamondCount: 199, type: 2 },
-  special: { id: 'mock-special', name: 'Quà thử đặc biệt', diamondCount: 1000, type: 2 },
+  small: { id: 'mock-small', name: 'Rose', diamondCount: 1, type: 1 },
+  medium: { id: 'mock-medium', name: 'Finger Heart', diamondCount: 5, type: 1 },
+  large: { id: 'mock-large', name: 'Lucky Pig', diamondCount: 10, type: 1 },
+  special: { id: 'mock-special', name: 'Gift Box', diamondCount: 100, type: 2 },
+  skin: { id: 'mock-skin', name: 'Treasure Clover', diamondCount: 10, type: 1 },
 };
 
 export function mockUser(nameOrIndex) {

@@ -12,19 +12,20 @@ const SETTING_LABELS = {
   'game.sound': 'Âm thanh',
   'game.notifications': 'Notification',
   'game.maxNotifications': 'Số notification cùng lúc',
+  'game.bots.enabled': 'Vịt bot cho sông đỡ vắng',
+  'game.bots.count': 'Số vịt bot mỗi vòng (mỗi người chơi thật thay 1 bot)',
+  'game.camera.enabled': 'Camera zoom vào vịt',
+  'game.camera.zoom': 'Độ zoom camera',
+  'game.camera.leaderEverySeconds': 'Bao lâu zoom vào vịt dẫn đầu 1 lần (giây)',
+  'game.camera.sprintEverySeconds': 'Như trên, lúc nước rút (giây)',
+  'game.camera.leaderSeconds': 'Mỗi lần zoom vịt dẫn đầu kéo dài (giây)',
   'balance.baseSpeed': 'Tốc độ cơ bản',
-  'balance.maxPersonalBonus': 'Giới hạn buff cá nhân (0.25 = 25%)',
+  'balance.rewards.likesPerMeter': 'Số tim = 1 mét',
+  'balance.rewards.commentMeters': 'Số mét mỗi comment',
+  'balance.rewards.commentCooldownSeconds': 'Giãn cách giữa 2 comment được tính (giây)',
+  'balance.rewards.shareMeters': 'Số mét khi share',
+  'balance.rewards.maxDashBonus': 'Tốc độ lao tối đa (1.5 = thêm 150%)',
   'balance.maxCommunityBonus': 'Giới hạn buff cộng đồng',
-  'balance.maxTotalBonus': 'Giới hạn tổng buff',
-  'balance.energy.likesPerEnergy': 'Số like = 1 năng lượng',
-  'balance.energy.comment.amount': 'Năng lượng mỗi comment',
-  'balance.energy.comment.cooldownSeconds': 'Cooldown comment (giây)',
-  'balance.energy.share.amount': 'Năng lượng mỗi share',
-  'balance.energy.freeCaps.like': 'Tối đa năng lượng từ like / vòng',
-  'balance.energy.freeCaps.comment': 'Tối đa năng lượng từ comment / vòng',
-  'balance.energy.freeCaps.share': 'Tối đa năng lượng từ share / vòng',
-  'balance.energy.chargeDelaySeconds': 'Chờ tích năng lượng trước Turbo (giây)',
-  'balance.skills.RAINBOW_BOOST.cooldownSeconds': 'Cooldown Cầu vồng (giây)',
   'balance.community.enabled': 'Bật Community Buff',
   'balance.community.wind.enabled': '· Gió Thuận',
   'balance.community.tsunami.enabled': '· Sóng Thần',
@@ -56,7 +57,7 @@ async function post(url, body) {
 document.querySelectorAll('[data-action]').forEach((button) =>
   button.addEventListener('click', () => {
     const action = button.dataset.action;
-    if (action === 'reset' && !confirm('Reset toàn bộ: xóa vịt, tổng tương tác và bảng vô địch?')) return;
+    if (action === 'reset' && !confirm('Reset toàn bộ: xóa vịt, tổng tương tác, bảng vô địch và skin của mọi người?')) return;
     post('/api/control', { action });
   }),
 );
@@ -133,14 +134,14 @@ function render(m) {
     ['Trùng bị lọc', s.duplicates],
     ['Đến trễ', s.late],
     ['Hàng đợi (gộp / bỏ)', `${s.queue} (${s.merged} / ${s.dropped})`],
-    ['Like · Comment hợp lệ', `${t.likes} · ${t.comments}`],
+    ['Like · Comment được tính', `${t.likes} · ${t.comments}`],
     ['Share · Quà · 💎', `${t.shares} · ${t.gifts} · ${t.diamonds}`],
   ].map(([label, value]) => `<div class="stat"><span class="muted">${label}</span><b>${esc(value)}</b></div>`).join('');
 
   $('players').innerHTML =
-    '<tr><th>#</th><th>Tên</th><th>%</th><th>Tốc độ</th><th>⚡</th><th>Điểm</th><th>❤/💬/↗/🎁</th><th>⚡ miễn phí (like/cmt/share)</th><th>Buff · Cooldown</th></tr>' +
+    '<tr><th>#</th><th>Tên</th><th>%</th><th>Tốc độ</th><th>Mét đã nhận</th><th>❤/💬/↗/🎁</th><th>Hiệu ứng</th></tr>' +
     m.players
-      .map((p) => `<tr><td>${p.rank}</td><td>${esc(p.name)} <span class="tag ${p.src}">${p.src === 'mock' ? 'TEST' : 'LIVE'}</span><br><span class="muted">@${esc(p.user)}</span></td><td>${p.finished ? '🏁' : p.progress}</td><td>${p.speed}</td><td>${p.energy}</td><td>${p.score}</td><td>${p.likes}/${p.comments}/${p.shares}/${p.gifts}</td><td>${p.earned.like}/${p.earned.comment}/${p.earned.share}</td><td>${esc(p.buffs.join(', '))}<br><span class="muted">${esc(p.cooldowns.join(', '))}</span></td></tr>`)
+      .map((p) => `<tr><td>${p.rank}</td><td>${esc(p.name)} <span class="tag ${p.src}">${{ mock: 'TEST', bot: 'BOT' }[p.src] ?? 'LIVE'}</span><br><span class="muted">@${esc(p.user)}</span></td><td>${p.finished ? '🏁' : p.progress}</td><td>${p.speed}</td><td>${p.meters}</td><td>${p.likes}/${p.comments}/${p.shares}/${p.gifts}</td><td>${esc(p.buffs.join(', '))}</td></tr>`)
       .join('');
 
   $('recent').innerHTML =

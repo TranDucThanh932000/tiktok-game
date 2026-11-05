@@ -121,7 +121,7 @@ function coin(ctx, t) {
     ctx.font = '900 18px sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText('⚡', 0, -9);
+    ctx.fillText('+', 0, -9);
   }
 }
 

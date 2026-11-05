@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bảng điều khiển · Thả Vịt</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font: 14px/1.4 "Segoe UI", Arial, sans-serif; background: #0f1a24; color: #e8f4ff; }
+    header { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 12px 16px; background: #13283a; border-bottom: 1px solid #24425c; position: sticky; top: 0; z-index: 2; }
+    header h1 { margin: 0 12px 0 0; font-size: 20px; }
+    .pill { padding: 5px 12px; border-radius: 999px; background: #24425c; font-weight: 600; }
+    .pill.on { background: #1d5a33; }
+    .pill.off { background: #5a1d24; }
+    .pill.test { background: #8a4b08; }
+    main { display: grid; grid-template-columns: minmax(380px, 560px) 1fr; gap: 16px; padding: 16px; }
+    section { background: #13283a; border: 1px solid #24425c; border-radius: 12px; padding: 12px 14px; margin-bottom: 16px; }
+    h2 { margin: 0 0 10px; font-size: 14px; color: #f2c14e; text-transform: uppercase; letter-spacing: 1px; }
+    .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 8px; }
+    button { padding: 8px 12px; border: 1px solid #3f6a8c; border-radius: 8px; background: #1a3347; color: inherit; font: inherit; cursor: pointer; }
+    button:hover { background: #24445e; }
+    button.primary { background: #1c6b3a; border-color: #2f9e44; }
+    button.danger { background: #3a1d1d; border-color: #a0403a; }
+    button.warn { background: #5a3b08; border-color: #c47f17; }
+    button:disabled { opacity: 0.4; cursor: not-allowed; }
+    input, select { padding: 7px 9px; border: 1px solid #2f4b63; border-radius: 8px; background: #0f1f2d; color: inherit; font: inherit; }
+    input[type=number] { width: 90px; }
+    input[type=checkbox] { width: 18px; height: 18px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { padding: 5px 6px; border-bottom: 1px solid #1f3a52; text-align: left; vertical-align: top; }
+    th { color: #8fb3cf; font-weight: 600; position: sticky; top: 0; background: #13283a; }
+    .scroll { max-height: 420px; overflow: auto; }
+    .muted { color: #8fb3cf; }
+    .tag { display: inline-block; padding: 0 6px; border-radius: 6px; font-size: 11px; font-weight: 700; }
+    .tag.mock { background: #8a4b08; }
+    .tag.live { background: #9c1c2c; }
+    #log { min-height: 1.4em; color: #ffe08a; margin: 0; }
+    .grid2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .stat { background: #0f1f2d; border-radius: 8px; padding: 8px 10px; }
+    .stat b { display: block; font-size: 20px; }
+    .settings td:first-child { font-family: Consolas, monospace; font-size: 12px; }
+    .testbox { border: 2px dashed #c47f17; }
+    .testbox.disabled { opacity: 0.45; }
+    a { color: #74c0fc; }
+    @media (max-width: 1000px) { main { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🦆 Thả Vịt · Bảng điều khiển</h1>
+    <span id="conn-live" class="pill">TikTok: …</span>
+    <span id="conn-mock" class="pill">Mock: …</span>
+    <span id="round" class="pill">Vòng …</span>
+    <label class="pill test" style="display:flex;gap:8px;align-items:center;cursor:pointer"><input type="checkbox" id="testmode"> TEST MODE</label>
+    <a href="/" target="_blank">Mở màn hình game ↗</a>
+    <p id="log"></p>
+  </header>
+  <main>
+    <div>
+      <section>
+        <h2>Điều khiển vòng đua</h2>
+        <div class="row">
+          <button class="primary" data-action="start">▶ Start Game</button>
+          <button class="danger" data-action="stop">■ Stop Game</button>
+          <button data-action="pause">⏸ Pause</button>
+          <button data-action="resume">⏵ Resume</button>
+        </div>
+        <div class="row">
+          <button data-action="newRound">↻ Start New Round</button>
+          <button data-action="skip">⏭ Chuyển giai đoạn</button>
+          <button data-action="reload">⟳ Nạp lại file cấu hình</button>
+          <button class="danger" data-action="reset">✖ Reset Game</button>
+        </div>
+        <div class="grid2" id="stats"></div>
+      </section>
+
+      <section class="testbox" id="testbox">
+        <h2>TEST MODE · Sự kiện giả lập</h2>
+        <p class="muted" style="margin-top:0">Chỉ hoạt động khi bật TEST MODE. Sự kiện giả lập có nhãn <span class="tag mock">TEST</span> trên màn hình và không bao giờ được tính như sự kiện LIVE thật.</p>
+        <div class="row">
+          <input id="sim-name" placeholder="Tên người xem" value="minh123">
+          <input id="sim-count" type="number" min="1" max="999" value="10" title="Số lượng">
+        </div>
+        <div class="row">
+          <button data-sim="like">❤ Like ×số lượng</button>
+          <input id="sim-text" value="GO" style="width:120px" title="Nội dung comment">
+          <button data-sim="comment">💬 Comment</button>
+          <button data-sim="share">↗ Share</button>
+        </div>
+        <div class="row">
+          <select id="sim-tier"><option value="small">Quà nhỏ (1💎)</option><option value="medium">Quà vừa (30💎)</option><option value="large">Quà lớn (199💎)</option><option value="special">Quà đặc biệt (1000💎)</option></select>
+          <label><input type="checkbox" id="sim-streak"> combo streak</label>
+          <button data-sim="gift">🎁 Tặng quà ×số lượng</button>
+          <button data-sim="communityLikes">❤ Like cộng đồng (ẩn danh) ×số lượng</button>
+        </div>
+        <h2 style="margin-top:14px">Kịch bản kiểm thử</h2>
+        <div class="row" id="scenarios"></div>
+      </section>
+
+      <section>
+        <h2>Cấu hình (lưu vào data/settings.json)</h2>
+        <div class="scroll" style="max-height:520px"><table class="settings" id="settings"></table></div>
+      </section>
+
+      <section>
+        <h2>Cấu hình Gift (gán quà thật → nhóm kỹ năng)</h2>
+        <p class="muted" style="margin-top:0">Quà chưa gán sẽ được chia nhóm theo số kim cương TikTok gửi (gifts.byDiamonds). Quà nhận được trong phiên sẽ hiện ở đây để gán theo gift ID.</p>
+        <div class="scroll"><table id="gifts"></table></div>
+      </section>
+    </div>
+
+    <div>
+      <section>
+        <h2>Người chơi vòng này</h2>
+        <div class="scroll" style="max-height:480px"><table id="players"></table></div>
+      </section>
+      <section>
+        <h2>Sự kiện gần nhất</h2>
+        <div class="scroll" style="max-height:360px"><table id="recent"></table></div>
+      </section>
+      <section>
+        <h2>Kết quả & vô địch</h2>
+        <div class="grid2">
+          <div class="scroll"><table id="results"></table></div>
+          <div class="scroll"><table id="wins"></table></div>
+        </div>
+      </section>
+    </div>
+  </main>
+  <script type="module" src="js/admin.js"></script>
+</body>
+</html>
