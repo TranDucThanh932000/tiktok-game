@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <radialGradient id="leaf" cx="50%" cy="40%" r="65%">
+      <stop offset="0" stop-color="#8ef07a"/>
+      <stop offset="1" stop-color="#1f9d3a"/>
+    </radialGradient>
+  </defs>
+  <path d="M50 54 C52 70 58 82 70 94" fill="none" stroke="#1b7a2e" stroke-width="6" stroke-linecap="round"/>
+  <g fill="url(#leaf)" stroke="#146b27" stroke-width="2.5" stroke-linejoin="round">
+    <path id="h" d="M50 52 C30 44 18 30 22 18 C26 7 40 6 46 16 C48 19 49 22 50 25 C51 22 52 19 54 16 C60 6 74 7 78 18 C82 30 70 44 50 52 Z" transform="translate(0 -2)"/>
+    <use href="#h" transform="rotate(118 50 52)"/>
+    <use href="#h" transform="rotate(-118 50 52)"/>
+  </g>
+  <circle cx="50" cy="51" r="4" fill="#146b27"/>
+</svg>

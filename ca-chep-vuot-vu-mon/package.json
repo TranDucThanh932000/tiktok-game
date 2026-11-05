@@ -1,0 +1,18 @@
+{
+  "name": "ca-chep-vuot-vu-mon",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Game TikTok LIVE cá chép vượt Vũ Môn: like, bình luận, follow, share và quà tặng đưa cá chép vượt thác, ai qua cổng trước sẽ hóa rồng",
+  "type": "module",
+  "scripts": {
+    "start": "node --env-file-if-exists=.env server.js",
+    "window": "start \"\" msedge --app=http://127.0.0.1:3001/ --window-size=456,820 --window-position=0,0 --user-data-dir=D:\\tiktok-cache\\ca-chep-window --disable-component-update --no-first-run --no-default-browser-check --autoplay-policy=no-user-gesture-required --disable-backgrounding-occluded-windows --disable-renderer-backgrounding --disable-background-timer-throttling --disable-features=CalculateNativeWinOcclusion"
+  },
+  "engines": {
+    "node": ">=22.9"
+  },
+  "dependencies": {
+    "express": "^5.3.0",
+    "tiktok-live-connector": "^2.5.0"
+  }
+}

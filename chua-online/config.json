@@ -1,0 +1,71 @@
+{
+  "tiktokUsername": "linh.phng2903",
+  "port": 3000,
+  "readWishes": true,
+  "readBlessings": false,
+  "voiceTemplates": {
+    "wish": [
+      "{name} xin gửi lời nguyện cầu về {wish}.",
+      "Với lòng thành kính, {name} gửi gắm ước nguyện về {wish}.",
+      "Xin đón nhận lời cầu nguyện của {name} về {wish}.",
+      "{name} gửi đến cửa chùa ước nguyện về {wish}.",
+      "Với tâm thành, {name} một lòng cầu nguyện về {wish}."
+    ],
+    "repent": [
+      "{name} thành kính xin sám hối.",
+      "{name} một lòng ăn năn, xin được sám hối.",
+      "Với tâm chân thành, {name} xin sám hối những lỗi lầm.",
+      "{name} xin nhận lỗi và hướng lòng về điều thiện.",
+      "{name} thành tâm hối lỗi, nguyện sửa mình."
+    ]
+  },
+  "merit": {
+    "like": 1,
+    "wish": 5,
+    "follow": 20,
+    "share": 10,
+    "perCoin": 10
+  },
+  "socialActions": {
+    "follow": "incense",
+    "share": "lantern"
+  },
+  "gifts": [
+    { "name": "Rose", "label": "Hoa hồng", "icon": "/gifts/rose.webp", "action": "flower" },
+    { "name": "Lucky Pig", "label": "Chú heo may mắn", "coins": 10, "icon": "/gifts/lucky-pig.webp", "action": "repent" }
+  ],
+  "giftTiers": [
+    { "minCoins": 1, "action": "incense", "icon": "/gifts/tiktok.webp" },
+    { "minCoins": 5, "action": "flower", "icon": "/gifts/finger-heart.webp" },
+    { "minCoins": 30, "action": "lantern", "icon": "/gifts/doughnut.webp" },
+    { "minCoins": 100, "action": "bell", "icon": "/gifts/gift-box.webp" },
+    { "minCoins": 1000, "action": "ceremony", "icon": "/gifts/galaxy.webp" }
+  ],
+  "rituals": [
+    { "everyMinutes": 5, "action": "mo", "count": 5 },
+    { "everyMinutes": 5, "action": "incense", "count": 1 },
+    { "everyMinutes": 10, "action": "bell", "count": 1 },
+    { "everyMinutes": 10, "action": "speak" }
+  ],
+  "blessings": [
+    "Nam mô A Di Đà Phật. Nguyện cho mỗi người cùng gia đình được an yên, thân tâm khỏe mạnh.",
+    "Mong ngày hôm nay của mọi người thật an lành, lòng thanh thản và mọi việc thuận lợi.",
+    "Cầu mong ông bà, cha mẹ của chúng ta dồi dào sức khỏe, luôn vui sống và hạnh phúc.",
+    "Nguyện những lo âu dần lắng xuống, để mỗi người tìm thấy niềm vui và sự an yên trong tâm.",
+    "Hãy gửi lời nguyện bình an, sức khỏe hay tài lộc qua bình luận, để chùa đọc lời cầu nguyện cùng bạn nhé."
+  ],
+  "repentVerse": [
+    "Xưa kia con đã tạo bao nghiệp ác",
+    "Đều do vô thỉ tham, sân, si",
+    "Từ thân, miệng, ý phát sinh ra",
+    "Tất cả con nay xin sám hối"
+  ],
+  "wishes": [
+    { "text": "Bình an", "keywords": ["cau an", "an lanh", "binh yen"] },
+    { "text": "Sức khỏe", "keywords": ["khoe manh"] },
+    { "text": "Tài lộc", "keywords": ["phat tai", "tien tai", "giau"] },
+    { "text": "Tình duyên", "keywords": ["duyen", "nguoi yeu"] },
+    { "text": "Học hành", "keywords": ["thi cu", "thi do", "hoc gioi"] },
+    { "text": "Gia đạo", "keywords": ["gia dinh", "hanh phuc"] }
+  ]
+}

@@ -1,0 +1,102 @@
+{
+  "tiktokUsername": "tranducthanh932000",
+  "port": 3004,
+  "items": {
+    "water": { "name": "nước lã", "unit": "ly" },
+    "beer": { "name": "sinh tố lúa mạch", "unit": "cốc", "consumeSeconds": 10 },
+    "peanut": { "name": "đậu phộng rang", "unit": "đĩa", "consumeSeconds": 15 },
+    "nem": { "name": "nem", "unit": "đĩa", "consumeSeconds": 30 },
+    "squid": { "name": "mực nướng", "unit": "đĩa", "consumeSeconds": 240 },
+    "hotpot": { "name": "lẩu", "unit": "nồi", "consumeSeconds": 420 }
+  },
+  "menu": [
+    { "gift": "Rose", "label": "Hoa hồng", "icon": "/gifts/rose.webp", "item": "peanut", "perGift": 1, "call": "Tiểu nhị, 1 đậu phộng!" },
+    { "gift": "Finger Heart", "label": "Tim tay", "icon": "/gifts/finger-heart.webp", "item": "beer", "perGift": 1, "call": "Tiểu nhị, 1 cốc!" },
+    { "gift": "Doughnut", "label": "Bánh donut", "icon": "/gifts/doughnut.webp", "item": "nem", "perGift": 1, "call": "Tiểu nhị, 1 nem!" },
+    { "gift": "Gift Box", "label": "Hộp quà", "icon": "/gifts/gift-box.webp", "item": "squid", "perGift": 1, "call": "Tiểu nhị, 1 mực!" },
+    { "gift": "Galaxy", "label": "Galaxy", "icon": "/gifts/galaxy.webp", "item": "hotpot", "perGift": 1, "big": true, "call": "Tiểu nhị, 1 lẩu!" }
+  ],
+  "callSpeed": 1.2,
+  "callVoices": ["hn_male_minhquan_yt-stable", "hue_male_duyphuong_full_24k-stl", "sg_male_trungkien_vdts_24k-stl", "sg_male_chidat_ebook_48k-phg"],
+  "likes": { "per": 100, "item": "beer", "qty": 1, "icon": "/gifts/heart.svg" },
+  "seating": {
+    "autoAdmitOnGift": true,
+    "idleLeaveMinutes": 20,
+    "makeRoomIdleMinutes": 5
+  },
+  "chat": {
+    "maxLength": 40,
+    "bannedWords": ["địt", "đm", "dm", "đmm", "dmm", "đcm", "dcm", "vcl", "vkl", "clm", "cmm", "lồn", "buồi", "cặc", "đụ", "đĩ", "fuck", "shit"]
+  },
+  "promos": {
+    "b1g2": { "seconds": 60, "gifts": ["Rose", "Finger Heart", "Doughnut", "Gift Box"] },
+    "b1g3": { "seconds": 90, "gifts": ["Rose", "Finger Heart", "Doughnut", "Gift Box"] }
+  },
+  "wheel": {
+    "seconds": 60,
+    "gifts": ["Rose", "Finger Heart", "Doughnut", "Gift Box"],
+    "slots": [
+      { "effect": "double", "weight": 30 },
+      { "effect": "side", "weight": 25 },
+      { "effect": "large", "weight": 20 },
+      { "effect": "b1g2", "weight": 17 },
+      { "effect": "b1g3", "weight": 8 }
+    ]
+  },
+  "match": {
+    "seconds": 50,
+    "home": "Hẻm FC",
+    "opponents": ["Chợ Lớn United", "Xóm Chài FC", "Bến Đò Rangers", "Ngã Tư Stars", "Cầu Sắt City"],
+    "chances": { "win": 0.5, "draw": 0.2, "lose": 0.3 }
+  },
+  "drunk": {
+    "vomitAtCup": 2,
+    "vomitDelaySeconds": 4,
+    "cooldownSeconds": 30,
+    "soberMinutes": 3
+  },
+  "crash": {
+    "everySeconds": 120,
+    "seconds": 24
+  },
+  "water": {
+    "glassMinutes": 3
+  },
+  "toast": {
+    "need": 10,
+    "seconds": 30,
+    "cooldownSeconds": 45,
+    "promptEveryMinutes": 4
+  },
+  "wife": {
+    "everyMinutes": 6,
+    "spareChance": 0.35
+  },
+  "blackout": {
+    "everyMinutes": 9,
+    "seconds": 14
+  },
+  "vendor": {
+    "everySeconds": 150,
+    "maxTables": 4,
+    "products": [
+      { "name": "hột vịt lộn", "unit": "quả", "color": "#efe6d2" },
+      { "name": "bánh tráng nướng", "unit": "cái", "color": "#f2b25c" },
+      { "name": "kẹo kéo", "unit": "cây", "color": "#f7f1e1" },
+      { "name": "bắp luộc", "unit": "trái", "color": "#f5d547" },
+      { "name": "khoai lang nướng", "unit": "củ", "color": "#a0522d" }
+    ]
+  },
+  "shift": {
+    "minutes": 20,
+    "autoEvents": true,
+    "schedule": [
+      { "at": 3, "event": "b1g2" },
+      { "at": [5, 8], "event": "wheel" },
+      { "at": 10, "event": "match" },
+      { "at": [14, 15], "event": "ambient" },
+      { "at": 18, "event": "closing" }
+    ],
+    "chatterEveryMinutes": [2, 4]
+  }
+}

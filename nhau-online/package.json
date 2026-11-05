@@ -1,0 +1,19 @@
+{
+  "name": "nhau-online",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Game TikTok LIVE Quán Cô Ba Đầu Hẻm: comment vào để vào quán (có sẵn nước lã), gửi quà nhận món",
+  "type": "module",
+  "scripts": {
+    "start": "node --env-file-if-exists=.env server.js",
+    "test": "node --test tests/*.test.js",
+    "window": "start \"\" msedge --app=http://127.0.0.1:3004/ --window-size=456,820 --window-position=0,0 --user-data-dir=D:\\tiktok-cache\\nhau-online-window --disable-component-update --no-first-run --no-default-browser-check --autoplay-policy=no-user-gesture-required --disable-backgrounding-occluded-windows --disable-renderer-backgrounding --disable-background-timer-throttling --disable-features=CalculateNativeWinOcclusion"
+  },
+  "engines": {
+    "node": ">=22.9"
+  },
+  "dependencies": {
+    "express": "^5.3.0",
+    "tiktok-live-connector": "^2.5.0"
+  }
+}

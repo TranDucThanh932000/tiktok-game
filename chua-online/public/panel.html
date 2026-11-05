@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bảng điều khiển · Chùa Online</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: "Segoe UI", Arial, sans-serif; background: #17121f; color: #f4ecff; }
+    main { display: flex; gap: 16px; height: 100vh; padding: 16px; }
+    .controls { flex: 1 1 0; min-width: 0; max-width: 560px; overflow-x: hidden; overflow-y: auto; }
+    h1 { margin: 0 0 10px; font-size: 24px; }
+    h2 { margin: 18px 0 8px; font-size: 15px; color: #f2c14e; text-transform: uppercase; letter-spacing: 1px; }
+    #status { margin: 0; padding: 8px 12px; border-radius: 8px; background: #3a1d24; }
+    #status.on { background: #1d3a26; }
+    #tts { margin: 8px 0 0; font-size: 14px; color: #bfb3d6; }
+    #session { margin: 8px 0 0; padding: 8px 12px; border-radius: 8px; background: #241c30; font-size: 15px; }
+    #alerts p { margin: 8px 0 0; padding: 8px 12px; border: 1px solid #c0392b; border-radius: 8px; background: #4a1717; font-size: 14px; }
+    #safe-box { display: flex; align-items: center; gap: 10px; margin-top: 8px; padding: 8px 12px; border: 1px solid #4b3a63; border-radius: 8px; font-size: 14px; }
+    #safe-box.on { border-color: #f2c14e; background: #4a3a10; }
+    #safe-box span { flex: 1; }
+    .hint { margin: 0 0 8px; font-size: 14px; color: #bfb3d6; }
+    label { display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px; font-size: 14px; }
+    input { width: 100%; max-width: 260px; padding: 8px 10px; border: 1px solid #4b3a63; border-radius: 8px; background: #241c30; color: inherit; font: inherit; }
+    .row { display: flex; flex-wrap: wrap; gap: 8px; }
+    button { padding: 9px 14px; border: 1px solid #6b5390; border-radius: 8px; background: #2d2340; color: inherit; font: inherit; cursor: pointer; }
+    button:hover { background: #3c2f55; }
+    .gift-icon { width: 28px; height: 28px; margin: -6px 6px -6px -4px; object-fit: contain; vertical-align: middle; }
+    .danger { border-color: #a0403a; background: #3a1d1d; }
+    form { display: flex; gap: 8px; margin-top: 8px; }
+    form input { flex: 1; min-width: 0; max-width: none; }
+    #log { min-height: 1.4em; font-size: 14px; color: #bfb3d6; }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="controls">
+      <h1>🛕 Bảng điều khiển</h1>
+      <p id="status">Đang kết nối máy chủ game...</p>
+      <p id="session"></p>
+      <p id="tts"></p>
+      <div id="alerts"></div>
+      <div id="safe-box"><span id="safe"></span><button type="button" id="safe-toggle"></button></div>
+
+      <h2>Người xem giả lập</h2>
+      <label>Tên <input id="name" value="Khách thử" maxlength="20"></label>
+      <label>Link ảnh đại diện (không bắt buộc) <input id="avatar" type="url" maxlength="1000" placeholder="https://..."></label>
+      <label>Số lượng <input id="count" type="number" min="1" max="999" value="1"></label>
+
+      <h2>Tương tác</h2>
+      <div class="row">
+        <button type="button" data-kind="like">❤️ Like</button>
+        <button type="button" data-kind="follow">➕ Follow</button>
+        <button type="button" data-kind="share">🔁 Share</button>
+        <button type="button" data-kind="join">👋 Vào phòng</button>
+      </div>
+
+      <h2>Bình luận cầu nguyện</h2>
+      <div class="row" id="wishes"></div>
+      <form id="chat">
+        <input id="chat-text" maxlength="200" placeholder="Gõ thử một bình luận...">
+        <button>Gửi</button>
+      </form>
+
+      <h2>Quà tặng</h2>
+      <div class="row" id="gifts"></div>
+
+      <h2>Tự động theo giờ</h2>
+      <p class="hint">Chùa tự làm theo lịch, tính từ lúc bật server; không cộng công đức. Bấm để chạy thử ngay.</p>
+      <div class="row" id="rituals"></div>
+
+      <h2>Khác</h2>
+      <div class="row">
+        <button type="button" id="telegram-test">📨 Gửi thử Telegram</button>
+        <button type="button" id="reset" class="danger">Xóa bảng công đức</button>
+      </div>
+      <p id="log"></p>
+    </section>
+  </main>
+
+  <script type="module">
+    const $ = (id) => document.getElementById(id);
+    const post = (url, body) => fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    const simulate = (body) => post('/api/simulate', { name: $('name').value, avatar: $('avatar').value, count: Number($('count').value) || 1, ...body });
+
+    function button(text, onClick, icon) {
+      const el = document.createElement('button');
+      el.type = 'button';
+      if (icon) el.append(Object.assign(new Image(), { className: 'gift-icon', alt: '', src: icon }));
+      el.append(text);
+      el.onclick = onClick;
+      return el;
+    }
+
+    function showStatus({ connected, text }) {
+      $('status').textContent = text;
+      $('status').classList.toggle('on', connected);
+    }
+
+    const LABEL = { mo: 'Gõ mõ', incense: 'Thắp hương', flower: 'Dâng hoa', lantern: 'Thả hoa đăng', bell: 'Thỉnh chuông', ceremony: 'Đại lễ', repent: 'Sám hối' };
+
+    function renderButtons(guide, tts) {
+      $('wishes').replaceChildren(...guide.wishes.map((text) => button(`🙏 ${text}`, () => simulate({ kind: 'chat', text }))));
+      const gifts = [
+        ...guide.gifts.map((gift) => ({ icon: gift.icon, text: gift.icon ? LABEL[gift.action] : gift.label, title: `${gift.label} · ${gift.coins} xu`, body: { gift: gift.name, coins: gift.coins } })),
+        ...[...guide.tiers].reverse().map((tier) => ({ icon: tier.icon, text: tier.icon ? LABEL[tier.action] : `🎁 ${tier.minCoins} xu`, title: `Quà từ ${tier.minCoins} xu`, body: { gift: `Quà ${tier.minCoins} xu`, coins: tier.minCoins } })),
+      ];
+      $('gifts').replaceChildren(
+        ...gifts.map(({ icon, text, title, body }) => Object.assign(button(text, () => simulate({ kind: 'gift', ...body }), icon), { title })),
+      );
+      const RITUAL_TEXT = {
+        mo: (n) => `🥁 Gõ mõ ${n} cái`,
+        incense: (n) => `🙏 Thắp ${n} nén hương`,
+        bell: () => '🔔 Thỉnh chuông',
+        speak: () => (tts.enabled && tts.readBlessings ? '🗣️ Đọc 1 lời chúc' : '📜 Hiện 1 lời chúc'),
+      };
+      $('rituals').replaceChildren(
+        ...guide.rituals.map((ritual, index) => button(`${RITUAL_TEXT[ritual.action](ritual.count)} · mỗi ${ritual.everyMinutes} phút`, () => simulate({ kind: 'ritual', index }))),
+      );
+    }
+
+    document.querySelectorAll('[data-kind]').forEach((el) => {
+      el.onclick = () => simulate({ kind: el.dataset.kind });
+    });
+
+    $('chat').onsubmit = async (event) => {
+      event.preventDefault();
+      const res = await simulate({ kind: 'chat', text: $('chat-text').value });
+      const { wish } = await res.json();
+      $('log').textContent = wish ? `Khớp lời cầu: ${wish}` : 'Bình luận không khớp từ khóa nào nên không có hiệu ứng.';
+    };
+
+    $('telegram-test').onclick = async () => {
+      $('log').textContent = 'Đang gửi tin thử Telegram...';
+      const { message } = await (await post('/api/telegram-test', {})).json();
+      $('log').textContent = message;
+    };
+
+    $('reset').onclick = () => {
+      if (confirm('Xóa toàn bộ điểm công đức?')) post('/api/reset', {});
+    };
+
+    const showAlert = ({ at, text }) =>
+      $('alerts').prepend(Object.assign(document.createElement('p'), { textContent: `⚠️ ${new Date(at).toLocaleTimeString('vi-VN')} TikTok cảnh báo: ${text}` }));
+
+    let safeMode = false;
+    function showSafeMode(on) {
+      safeMode = on;
+      $('safe-box').classList.toggle('on', on);
+      $('safe').textContent = on
+        ? '🛡️ Chế độ an toàn: BẬT. Đã tạm dừng nghi thức theo giờ và giọng Vbee.'
+        : '🛡️ Chế độ an toàn: tắt. Tự bật khi có cảnh báo TikTok.';
+      $('safe-toggle').textContent = on ? 'Tắt chế độ an toàn' : 'Bật ngay';
+    }
+    $('safe-toggle').onclick = () => post('/api/safe-mode', { on: !safeMode });
+
+    const showSession = ({ roomId, diamonds, gifts, since }) => {
+      $('session').textContent = roomId
+        ? `💎 Phiên live này (từ ${new Date(since).toLocaleTimeString('vi-VN')}): ${diamonds.toLocaleString('vi-VN')} kim cương từ ${gifts.toLocaleString('vi-VN')} quà. Ước tính theo giá quà, số chính thức xem trong LIVE Studio.`
+        : '💎 Chưa có phiên live nào từ lúc bật server.';
+    };
+
+    const events = new EventSource('/events');
+    events.onmessage = (event) => {
+      const msg = JSON.parse(event.data);
+      if (msg.type === 'snapshot') {
+        renderButtons(msg.guide, msg.tts);
+        showStatus(msg.status);
+        $('alerts').replaceChildren();
+        msg.alerts.forEach(showAlert);
+        showSafeMode(msg.safeMode);
+        showSession(msg.session);
+        const { enabled, voice, readWishes, readBlessings } = msg.tts;
+        $('tts').textContent = enabled
+          ? `${readWishes ? `🔊 Đọc bình luận cầu nguyện: bật (giọng ${voice})` : '🔇 Đọc bình luận cầu nguyện: tắt'} · Lời chúc tự động: ${readBlessings ? 'có đọc' : 'chỉ hiện chữ'} (readWishes, readBlessings trong config.json)`
+          : '🔇 Vbee chưa bật: cần VBEE_TOKEN và VBEE_APP_ID trong .env rồi chạy lại server';
+      }
+      if (msg.type === 'status') showStatus(msg);
+      if (msg.type === 'moderation') showAlert(msg);
+      if (msg.type === 'safe-mode') showSafeMode(msg.on);
+      if (msg.type === 'session') showSession(msg);
+      if (msg.type === 'speak-error') $('log').textContent = `Vbee lỗi: ${msg.message}`;
+    };
+    events.onerror = () => showStatus({ connected: false, text: 'Mất kết nối tới máy chủ game, kiểm tra cửa sổ đang chạy npm start.' });
+  </script>
+</body>
+</html>

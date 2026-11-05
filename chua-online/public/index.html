@@ -1,0 +1,409 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Chùa Online</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="stage">
+    <!-- A temple courtyard at dawn, seen from high above; game.js draws the paving, ponds, mats and cushions into #floor. -->
+    <svg id="scene" viewBox="0 0 1080 1920" aria-hidden="true">
+      <defs>
+        <linearGradient id="g-sky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#132a3c"/>
+          <stop offset=".34" stop-color="#2e5568"/>
+          <stop offset=".56" stop-color="#93a3a3"/>
+          <stop offset=".72" stop-color="#e7b896"/>
+          <stop offset="1" stop-color="#f7ddb9"/>
+        </linearGradient>
+        <radialGradient id="g-sunglow">
+          <stop offset="0" stop-color="#fff3d4" stop-opacity=".95"/>
+          <stop offset=".16" stop-color="#ffdcaa" stop-opacity=".6"/>
+          <stop offset=".5" stop-color="#f4b78c" stop-opacity=".2"/>
+          <stop offset="1" stop-color="#f4b78c" stop-opacity="0"/>
+        </radialGradient>
+        <radialGradient id="g-mist">
+          <stop offset="0" stop-color="#f6f2ea" stop-opacity=".75"/>
+          <stop offset="1" stop-color="#f6f2ea" stop-opacity="0"/>
+        </radialGradient>
+        <linearGradient id="g-ray" gradientUnits="userSpaceOnUse" x1="205" y1="492" x2="820" y2="1500">
+          <stop offset="0" stop-color="#fff1d6" stop-opacity=".55"/>
+          <stop offset=".55" stop-color="#ffe6c2" stop-opacity=".14"/>
+          <stop offset="1" stop-color="#ffe6c2" stop-opacity="0"/>
+        </linearGradient>
+        <linearGradient id="g-ground" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#c3bdaf"/>
+          <stop offset=".35" stop-color="#aaa99e"/>
+          <stop offset="1" stop-color="#7d8683"/>
+        </linearGradient>
+        <linearGradient id="g-water" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#a9c2b9"/>
+          <stop offset=".35" stop-color="#6f9c98"/>
+          <stop offset="1" stop-color="#3f6d70"/>
+        </linearGradient>
+        <radialGradient id="g-warm">
+          <stop offset="0" stop-color="#ffd9a8" stop-opacity=".4"/>
+          <stop offset="1" stop-color="#ffd9a8" stop-opacity="0"/>
+        </radialGradient>
+        <linearGradient id="g-vignette" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#16252b" stop-opacity="0"/>
+          <stop offset="1" stop-color="#16252b" stop-opacity=".5"/>
+        </linearGradient>
+        <linearGradient id="g-tile" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#a5603f"/>
+          <stop offset="1" stop-color="#7b422c"/>
+        </linearGradient>
+        <pattern id="p-tiles" width="13" height="40" patternUnits="userSpaceOnUse">
+          <path d="M6.5 0V40" stroke="#5a2c1d" stroke-opacity=".5" stroke-width="3"/>
+          <path d="M2 0V40" stroke="#d58c62" stroke-opacity=".28" stroke-width="1.5"/>
+        </pattern>
+        <linearGradient id="g-wall" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#a8906a"/>
+          <stop offset=".22" stop-color="#e7d3aa"/>
+          <stop offset="1" stop-color="#d9c398"/>
+        </linearGradient>
+        <linearGradient id="g-wood" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="#7d4c33"/>
+          <stop offset=".45" stop-color="#5e3826"/>
+          <stop offset="1" stop-color="#3e2418"/>
+        </linearGradient>
+        <linearGradient id="g-inside" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#4a2618"/>
+          <stop offset=".5" stop-color="#b8673a"/>
+          <stop offset="1" stop-color="#ffcf8c"/>
+        </linearGradient>
+        <radialGradient id="g-halo">
+          <stop offset="0" stop-color="#fff6d2" stop-opacity="1"/>
+          <stop offset=".45" stop-color="#ffd67e" stop-opacity=".65"/>
+          <stop offset="1" stop-color="#ffae4c" stop-opacity="0"/>
+        </radialGradient>
+        <linearGradient id="g-gold" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="#a8721f"/>
+          <stop offset=".45" stop-color="#f6d27a"/>
+          <stop offset="1" stop-color="#9a6618"/>
+        </linearGradient>
+        <linearGradient id="g-bronze" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="#3a3224"/>
+          <stop offset=".28" stop-color="#8d7446"/>
+          <stop offset=".46" stop-color="#bf9d5f"/>
+          <stop offset=".72" stop-color="#6c5835"/>
+          <stop offset="1" stop-color="#30291d"/>
+        </linearGradient>
+        <linearGradient id="g-patina" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="#2c463e"/>
+          <stop offset=".35" stop-color="#6c9282"/>
+          <stop offset=".55" stop-color="#a9ba94"/>
+          <stop offset="1" stop-color="#29403a"/>
+        </linearGradient>
+        <linearGradient id="g-stone" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#d9d3c3"/>
+          <stop offset="1" stop-color="#c2bba8"/>
+        </linearGradient>
+        <radialGradient id="g-mo" cx=".38" cy=".32" r=".8">
+          <stop offset="0" stop-color="#c0653f"/>
+          <stop offset=".6" stop-color="#83351f"/>
+          <stop offset="1" stop-color="#4c1d10"/>
+        </radialGradient>
+        <linearGradient id="g-pot" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="#b9c7d0"/>
+          <stop offset=".4" stop-color="#f4f7f8"/>
+          <stop offset="1" stop-color="#a7b7c2"/>
+        </linearGradient>
+        <path id="pine" d="M0 0L-13 -2L-5 -9L-15 -12L-5 -20L-12 -23L-3 -31L-8 -33L0 -44L8 -33L3 -31L12 -23L5 -20L15 -12L5 -9L13 -2Z"/>
+        <!-- Front slopes of the two roof tiers, corners curling up (đầu đao). -->
+        <path id="roof-up" d="M398 486H682C716 504 748 524 776 540C786 534 792 526 796 516C802 530 794 550 774 560C740 564 700 564 680 564H400C380 564 340 564 306 560C286 550 278 530 284 516C288 526 294 534 304 540C332 524 364 504 398 486Z"/>
+        <path id="roof-low" d="M330 596H750C800 622 840 648 864 662C870 654 874 646 878 634C884 652 876 676 854 690C802 696 762 696 740 696H340C318 696 278 696 226 690C204 676 196 652 202 634C206 646 210 654 216 662C240 648 280 622 330 596Z"/>
+        <path id="roof-bell-low" d="M86 628H184C206 644 224 658 234 666C240 660 244 654 248 644C254 660 246 678 228 690C200 692 160 692 135 692C110 692 70 692 42 690C24 678 16 660 22 644C26 654 30 660 36 666C46 658 64 644 86 628Z"/>
+        <path id="roof-bell-up" d="M106 574H164C180 586 194 594 202 598C207 594 211 588 214 580C219 592 213 604 200 610C178 613 150 613 135 613C120 613 92 613 70 610C57 604 51 592 56 580C59 588 63 594 68 598C76 594 90 586 106 574Z"/>
+        <g id="blossom">
+          <ellipse cx="-4" cy="-3" rx="4" ry="6" transform="rotate(-30)" fill="#f4a9bc"/>
+          <ellipse cx="4" cy="-3" rx="4" ry="6" transform="rotate(30)" fill="#f4a9bc"/>
+          <ellipse cy="-5" rx="3.6" ry="6.5" fill="#fbd3dc"/>
+          <circle cy="-2" r="1.8" fill="#f7d36b"/>
+        </g>
+      </defs>
+
+      <!-- Dawn sky and misty mountains; the sun rises on the left. -->
+      <rect width="1080" height="800" fill="url(#g-sky)"/>
+      <circle cx="205" cy="492" r="430" fill="url(#g-sunglow)"/>
+      <circle cx="205" cy="492" r="40" fill="#fff6e2"/>
+      <path d="M0 470C50 470 100 488 150 500C188 509 228 508 266 492C308 474 344 440 392 414C436 390 470 398 506 414C546 432 580 424 616 402C656 376 694 362 736 370C778 378 806 400 846 410C888 420 922 402 958 384C996 366 1034 368 1080 382V800H0Z" fill="#c9cdc6"/>
+      <ellipse class="mist" cx="300" cy="530" rx="560" ry="44" fill="url(#g-mist)"/>
+      <path d="M0 556C40 546 84 540 128 548C170 556 204 574 246 570C290 566 330 540 372 516C414 494 452 488 492 500C540 514 580 512 624 494C668 476 712 470 758 482C808 496 846 522 892 530C944 538 1000 520 1080 508V820H0Z" fill="#a2b5b0"/>
+      <ellipse class="mist slow" cx="760" cy="598" rx="580" ry="50" fill="url(#g-mist)"/>
+      <path d="M0 640C40 622 84 612 130 618C176 624 214 640 262 636C320 630 360 606 420 600C480 594 520 604 580 602C640 600 690 590 744 596C800 602 846 624 900 628C960 632 1020 612 1080 604V860H0Z" fill="#738e84"/>
+      <g fill="#58766b">
+        <use href="#pine" transform="translate(14 650) scale(1.5)"/>
+        <use href="#pine" transform="translate(52 640) scale(1.9)"/>
+        <use href="#pine" transform="translate(96 636) scale(1.3)"/>
+        <use href="#pine" transform="translate(150 646) scale(1.7)"/>
+        <use href="#pine" transform="translate(198 650) scale(1.2)"/>
+        <use href="#pine" transform="translate(900 650) scale(1.4)"/>
+        <use href="#pine" transform="translate(944 640) scale(1.8)"/>
+        <use href="#pine" transform="translate(992 634) scale(1.3)"/>
+        <use href="#pine" transform="translate(1040 628) scale(1.9)"/>
+      </g>
+      <ellipse class="mist" cx="540" cy="700" rx="660" ry="46" fill="url(#g-mist)" opacity=".85"/>
+
+      <!-- Low wall around the courtyard. -->
+      <rect y="812" width="1080" height="36" fill="#d4c39f"/>
+      <rect y="803" width="1080" height="11" fill="#6c4836"/>
+      <path d="M0 803H1080" stroke="#b07c5e" stroke-width="2"/>
+      <path d="M0 847H1080" stroke="#8a7b62" stroke-width="2"/>
+
+      <rect y="840" width="1080" height="1080" fill="url(#g-ground)"/>
+      <g id="floor"></g>
+      <ellipse cx="540" cy="940" rx="560" ry="170" fill="url(#g-warm)"/>
+
+      <!-- Bell tower (gác chuông) on the left. -->
+      <ellipse cx="140" cy="880" rx="100" ry="10" fill="#22302f" opacity=".28"/>
+      <path d="M54 836H216L228 858H42Z" fill="url(#g-stone)"/>
+      <rect x="42" y="858" width="186" height="18" fill="#958d7b"/>
+      <path d="M42 858H228" stroke="#eee8da" stroke-opacity=".7" stroke-width="2"/>
+      <rect x="80" y="684" width="9" height="154" fill="#4b2c1f"/>
+      <rect x="182" y="684" width="9" height="154" fill="#4b2c1f"/>
+      <rect x="58" y="682" width="152" height="9" fill="#5a3526"/>
+      <g id="bell">
+        <path d="M135 688V710" stroke="#3a2a20" stroke-width="5"/>
+        <path d="M106 792C106 744 114 716 135 711C156 716 164 744 164 792Z" fill="url(#g-patina)"/>
+        <rect x="101" y="787" width="68" height="10" rx="4" fill="url(#g-patina)"/>
+        <path d="M110 738H160M108 764H162" stroke="#2c4239" stroke-width="3"/>
+        <circle cx="135" cy="776" r="6" fill="#4b6a5c" stroke="#bccaa0" stroke-width="1.5"/>
+      </g>
+      <g id="striker">
+        <path d="M175 691V752M195 691V752" stroke="#3a2a20" stroke-width="2"/>
+        <rect x="168" y="750" width="34" height="12" rx="6" fill="#8a5e3c"/>
+      </g>
+      <rect x="56" y="684" width="11" height="174" fill="url(#g-wood)"/>
+      <rect x="203" y="684" width="11" height="174" fill="url(#g-wood)"/>
+      <rect x="96" y="604" width="78" height="28" fill="url(#g-wall)"/>
+      <use href="#roof-bell-low" fill="url(#g-tile)"/>
+      <use href="#roof-bell-low" fill="url(#p-tiles)"/>
+      <path d="M40 689C70 692 110 692 135 692C160 692 200 692 230 689" fill="none" stroke="#4a281c" stroke-width="5"/>
+      <path d="M44 689C70 692 110 692 135 692C160 692 200 692 226 689" fill="none" stroke="#efdcb8" stroke-width="3" stroke-dasharray="3 9"/>
+      <use href="#roof-bell-up" fill="url(#g-tile)"/>
+      <use href="#roof-bell-up" fill="url(#p-tiles)"/>
+      <path d="M68 610C92 613 120 613 135 613C150 613 178 613 202 610" fill="none" stroke="#4a281c" stroke-width="4"/>
+      <rect x="102" y="566" width="66" height="10" rx="4" fill="#6b3a28"/>
+      <path d="M104 571C96 566 92 558 95 550C99 556 103 561 110 565ZM166 571C174 566 178 558 175 550C171 556 167 561 160 565Z" fill="#5f9a88"/>
+      <path d="M135 566V550" stroke="#6b3a28" stroke-width="3"/>
+      <circle cx="135" cy="546" r="6" fill="#e9c47c"/>
+      <path d="M22 644c-7-4-7-12-1-16M248 644c7-4 7-12 1-16M56 580c-6-4-6-10-1-13M214 580c6-4 6-10 1-13" fill="none" stroke="#7fb8a4" stroke-width="3" stroke-linecap="round"/>
+
+      <!-- Bodhi tree on the right. -->
+      <ellipse cx="955" cy="874" rx="125" ry="13" fill="#22302f" opacity=".28"/>
+      <path d="M912 874C922 842 928 800 926 760C924 724 906 700 884 678L896 668C916 688 934 706 942 728C948 700 952 664 948 630L962 628C968 664 966 700 960 730C972 706 992 690 1016 676L1024 688C998 704 980 724 972 754C968 794 976 840 994 874Z" fill="#6c5847"/>
+      <path d="M912 874C900 870 890 872 880 878M994 874C1006 868 1018 870 1030 878M940 874C938 864 934 858 928 854" fill="none" stroke="#6c5847" stroke-width="6" stroke-linecap="round"/>
+      <path d="M930 860C934 820 936 780 932 752" fill="none" stroke="#8d7763" stroke-width="3" stroke-linecap="round"/>
+      <g id="crown">
+        <g fill="#36604a">
+          <circle cx="852" cy="642" r="70"/><circle cx="930" cy="560" r="95"/><circle cx="1030" cy="578" r="90"/>
+          <circle cx="990" cy="690" r="85"/><circle cx="878" cy="724" r="58"/><circle cx="1072" cy="684" r="70"/>
+          <circle cx="950" cy="760" r="40"/>
+        </g>
+        <g fill="#4f7d55">
+          <circle cx="842" cy="612" r="54"/><circle cx="914" cy="530" r="74"/><circle cx="1008" cy="540" r="70"/>
+          <circle cx="958" cy="652" r="70"/><circle cx="866" cy="694" r="44"/><circle cx="1050" cy="640" r="52"/>
+        </g>
+        <g fill="#7ea463">
+          <circle cx="826" cy="592" r="30"/><circle cx="894" cy="502" r="44"/><circle cx="986" cy="508" r="40"/>
+          <circle cx="934" cy="620" r="38"/><circle cx="850" cy="664" r="24"/><circle cx="1030" cy="606" r="26"/>
+        </g>
+        <g fill="#b4cf86" opacity=".7">
+          <circle cx="814" cy="582" r="12"/><circle cx="878" cy="486" r="18"/><circle cx="972" cy="494" r="15"/><circle cx="920" cy="606" r="13"/>
+        </g>
+      </g>
+
+      <!-- Main hall (chính điện): two roof tiers, five bays, the Buddha inside the open central door. -->
+      <use href="#pine" fill="#3f5f55" transform="translate(240 706) scale(3.4)"/>
+      <use href="#pine" fill="#3f5f55" transform="translate(842 706) scale(3.4)"/>
+      <rect x="344" y="548" width="392" height="56" fill="url(#g-wall)"/>
+      <g fill="#6b4130">
+        <rect x="382" y="568" width="58" height="26" rx="2"/>
+        <rect x="511" y="568" width="58" height="26" rx="2"/>
+        <rect x="640" y="568" width="58" height="26" rx="2"/>
+      </g>
+      <path d="M392 568V594M402 568V594M412 568V594M422 568V594M432 568V594M521 568V594M531 568V594M541 568V594M551 568V594M561 568V594M650 568V594M660 568V594M670 568V594M680 568V594M690 568V594" stroke="#e8d2a2" stroke-opacity=".55" stroke-width="2"/>
+      <use href="#roof-up" fill="url(#g-tile)"/>
+      <use href="#roof-up" fill="url(#p-tiles)"/>
+      <path d="M304 560C340 564 380 564 400 564H680C700 564 740 564 776 560" fill="none" stroke="#4a281c" stroke-width="6"/>
+      <path d="M310 561C340 564 380 564 400 564H680C700 564 740 564 770 561" fill="none" stroke="#efdcb8" stroke-width="3.5" stroke-dasharray="3.5 9.5"/>
+      <rect x="392" y="474" width="296" height="14" rx="5" fill="#6a3826"/>
+      <path d="M396 478H684" stroke="#e0c08f" stroke-opacity=".55" stroke-width="2"/>
+      <path d="M396 480C382 474 372 460 376 446C384 454 390 462 402 468ZM684 480C698 474 708 460 704 446C696 454 690 462 678 468Z" fill="#5f9a88"/>
+      <path d="M452 474C458 462 470 466 476 458C482 450 494 452 500 460C506 466 516 462 522 456M628 474C622 462 610 466 604 458C598 450 586 452 580 460C574 466 564 462 558 456" fill="none" stroke="#5f9a88" stroke-width="5" stroke-linecap="round"/>
+      <rect x="531" y="458" width="18" height="17" fill="#6a3826"/>
+      <circle cx="540" cy="450" r="10" fill="#f1c76a"/>
+      <path d="M540 432C545 441 548 446 540 450C532 446 535 441 540 432Z" fill="#ffe08f"/>
+      <path d="M284 516c-7-5-6-13 0-17M796 516c7-5 6-13 0-17M202 634c-7-5-6-13 0-17M878 634c7-5 6-13 0-17" fill="none" stroke="#7fb8a4" stroke-width="4" stroke-linecap="round"/>
+
+      <rect x="258" y="688" width="564" height="126" fill="url(#g-wall)"/>
+      <rect x="384" y="710" width="92" height="98" fill="url(#g-inside)" opacity=".8"/>
+      <rect x="604" y="710" width="92" height="98" fill="url(#g-inside)" opacity=".8"/>
+      <rect x="492" y="704" width="96" height="104" fill="url(#g-inside)"/>
+      <circle id="halo" cx="540" cy="752" r="42" fill="url(#g-halo)"/>
+      <g id="buddha">
+        <ellipse cx="540" cy="803" rx="31" ry="5" fill="#b9802f"/>
+        <path d="M510 802C514 790 527 786 540 786C553 786 566 790 570 802Z" fill="url(#g-gold)"/>
+        <path d="M512 794C510 788 514 784 520 786C524 780 532 780 536 786M568 794C570 788 566 784 560 786C556 780 548 780 544 786" fill="none" stroke="#a46d22" stroke-width="1.5"/>
+        <path d="M521 791C519 772 527 762 540 760C553 762 561 772 559 791Z" fill="url(#g-gold)"/>
+        <path d="M516 793C526 784 554 784 564 793C554 798 526 798 516 793Z" fill="#dfab50"/>
+        <ellipse cx="540" cy="782" rx="6" ry="4" fill="#f7d98e"/>
+        <circle cx="540" cy="750" r="9" fill="#f3cb73"/>
+        <circle cx="540" cy="740" r="4.5" fill="#c58f37"/>
+      </g>
+      <g fill="#f3ead6">
+        <rect x="500" y="786" width="4" height="14"/>
+        <rect x="576" y="786" width="4" height="14"/>
+      </g>
+      <g fill="#ffd36b">
+        <ellipse class="flame" cx="502" cy="782" rx="2.4" ry="4.5"/>
+        <ellipse class="flame" cx="578" cy="782" rx="2.4" ry="4.5" style="animation-delay: -.3s"/>
+      </g>
+      <g fill="#5c3626">
+        <rect x="282" y="720" width="82" height="70" rx="3"/>
+        <rect x="716" y="720" width="82" height="70" rx="3"/>
+        <rect x="484" y="704" width="10" height="104"/>
+        <rect x="586" y="704" width="10" height="104"/>
+        <rect x="376" y="710" width="10" height="98"/>
+        <rect x="694" y="710" width="10" height="98"/>
+      </g>
+      <path d="M292 730H354M292 745H354M292 760H354M292 775H354M726 730H788M726 745H788M726 760H788M726 775H788M303 724V786M323 724V786M343 724V786M737 724V786M757 724V786M777 724V786" stroke="#d9bf8e" stroke-opacity=".45" stroke-width="2"/>
+      <g fill="url(#g-wood)">
+        <rect x="262" y="690" width="14" height="122"/>
+        <rect x="370" y="690" width="14" height="122"/>
+        <rect x="478" y="690" width="14" height="122"/>
+        <rect x="588" y="690" width="14" height="122"/>
+        <rect x="696" y="690" width="14" height="122"/>
+        <rect x="804" y="690" width="14" height="122"/>
+      </g>
+      <rect x="276" y="806" width="528" height="7" fill="#4a2a1c"/>
+      <use href="#roof-low" fill="url(#g-tile)"/>
+      <use href="#roof-low" fill="url(#p-tiles)"/>
+      <path d="M226 690C278 696 318 696 340 696H740C762 696 802 696 854 690" fill="none" stroke="#4a281c" stroke-width="7"/>
+      <path d="M232 691C278 696 318 696 340 696H740C762 696 802 696 848 691" fill="none" stroke="#efdcb8" stroke-width="4" stroke-dasharray="4 10"/>
+      <g class="sway" style="transform-origin: 432px 698px">
+        <path d="M432 698V712" stroke="#4a281c" stroke-width="2"/>
+        <ellipse cx="432" cy="724" rx="9" ry="12" fill="#f1b25c"/>
+        <ellipse cx="432" cy="724" rx="4" ry="12" fill="#ffd98f" opacity=".7"/>
+      </g>
+      <g class="sway" style="transform-origin: 648px 698px; animation-delay: -2s">
+        <path d="M648 698V712" stroke="#4a281c" stroke-width="2"/>
+        <ellipse cx="648" cy="724" rx="9" ry="12" fill="#f1b25c"/>
+        <ellipse cx="648" cy="724" rx="4" ry="12" fill="#ffd98f" opacity=".7"/>
+      </g>
+
+      <!-- Stone terrace and steps down into the courtyard. -->
+      <path d="M258 812H822L840 846H240Z" fill="url(#g-stone)"/>
+      <path d="M300 812L292 846M380 812L376 846M460 812L458 846M620 812L622 846M700 812L704 846M780 812L788 846" stroke="#a49d8b" stroke-opacity=".5" stroke-width="1.5"/>
+      <rect x="240" y="846" width="600" height="26" fill="#9a927f"/>
+      <path d="M240 846H840" stroke="#eee8da" stroke-opacity=".8" stroke-width="2"/>
+      <rect x="478" y="846" width="124" height="7" fill="#ddd7c7"/>
+      <rect x="478" y="853" width="124" height="6" fill="#958d7b"/>
+      <rect x="474" y="859" width="132" height="7" fill="#ddd7c7"/>
+      <rect x="474" y="866" width="132" height="6" fill="#958d7b"/>
+      <rect x="470" y="872" width="140" height="7" fill="#ddd7c7"/>
+      <rect x="470" y="879" width="140" height="6" fill="#958d7b"/>
+      <rect x="466" y="885" width="148" height="7" fill="#ddd7c7"/>
+      <rect x="466" y="892" width="148" height="6" fill="#8a826f"/>
+      <path d="M462 840H476L466 896H450ZM604 840H618L630 896H614Z" fill="#d2cbb9"/>
+      <circle cx="457" cy="896" r="8" fill="#d2cbb9"/>
+      <circle cx="623" cy="896" r="8" fill="#d2cbb9"/>
+
+      <!-- Blue-and-white flower pots either side of the steps; they bloom for Dâng hoa. -->
+      <g class="vase">
+        <path d="M420 808C410 798 404 790 408 780M432 806V776M444 808C454 798 460 790 456 780" fill="none" stroke="#4f7d55" stroke-width="3" stroke-linecap="round"/>
+        <ellipse cx="410" cy="796" rx="9" ry="5" fill="#5d8c5a" transform="rotate(-30 410 796)"/>
+        <ellipse cx="454" cy="796" rx="9" ry="5" fill="#5d8c5a" transform="rotate(30 454 796)"/>
+        <use href="#blossom" transform="translate(408 782)"/>
+        <use href="#blossom" transform="translate(432 776) scale(1.2)"/>
+        <use href="#blossom" transform="translate(456 782)"/>
+        <path d="M414 818C414 836 422 846 432 846C442 846 450 836 450 818Z" fill="url(#g-pot)"/>
+        <rect x="410" y="813" width="44" height="7" rx="3.5" fill="#eef3f5"/>
+        <path d="M420 829C426 833 438 833 444 829M424 838C430 840 434 840 440 838" fill="none" stroke="#3b5f8a" stroke-width="2"/>
+      </g>
+      <g class="vase">
+        <path d="M636 808C626 798 620 790 624 780M648 806V776M660 808C670 798 676 790 672 780" fill="none" stroke="#4f7d55" stroke-width="3" stroke-linecap="round"/>
+        <ellipse cx="626" cy="796" rx="9" ry="5" fill="#5d8c5a" transform="rotate(-30 626 796)"/>
+        <ellipse cx="670" cy="796" rx="9" ry="5" fill="#5d8c5a" transform="rotate(30 670 796)"/>
+        <use href="#blossom" transform="translate(624 782)"/>
+        <use href="#blossom" transform="translate(648 776) scale(1.2)"/>
+        <use href="#blossom" transform="translate(672 782)"/>
+        <path d="M630 818C630 836 638 846 648 846C658 846 666 836 666 818Z" fill="url(#g-pot)"/>
+        <rect x="626" y="813" width="44" height="7" rx="3.5" fill="#eef3f5"/>
+        <path d="M636 829C642 833 654 833 660 829M640 838C646 840 650 840 656 838" fill="none" stroke="#3b5f8a" stroke-width="2"/>
+      </g>
+
+      <!-- Wooden fish (mõ) on a low stand at the right end of the terrace. -->
+      <ellipse cx="786" cy="845" rx="52" ry="8" fill="#22302f" opacity=".3"/>
+      <rect x="748" y="830" width="76" height="12" rx="3" fill="#5a3526"/>
+      <path d="M752 830H820" stroke="#8a5a3c" stroke-width="2"/>
+      <g id="mo">
+        <ellipse cx="786" cy="808" rx="42" ry="27" fill="url(#g-mo)"/>
+        <path d="M752 816Q786 834 820 816" fill="none" stroke="#2a0e08" stroke-width="5" stroke-linecap="round"/>
+        <path d="M762 794Q786 784 810 794" fill="none" stroke="#5a1f10" stroke-width="2" opacity=".6"/>
+        <ellipse cx="772" cy="796" rx="14" ry="6" fill="#fff" opacity=".18"/>
+      </g>
+      <g id="mallet">
+        <path d="M848 768L802 794" stroke="#7a5230" stroke-width="5" stroke-linecap="round"/>
+        <circle cx="798" cy="797" r="8" fill="#a0613a" stroke="#5a2e14" stroke-width="1.5"/>
+      </g>
+
+      <!-- Bronze incense cauldron (lư hương) in front of the steps; incense sticks stand in its sand. -->
+      <ellipse cx="540" cy="960" rx="88" ry="15" fill="#22302f" opacity=".3"/>
+      <path d="M470 934H610L620 950H460Z" fill="#d2cbb9"/>
+      <rect x="460" y="950" width="160" height="12" fill="#958d7b"/>
+      <path d="M502 912L496 940M578 912L584 940" stroke="#3f3424" stroke-width="9" stroke-linecap="round"/>
+      <path d="M476 876C476 914 504 930 540 930C576 930 604 914 604 876Z" fill="url(#g-bronze)"/>
+      <path d="M482 894C510 903 570 903 598 894" fill="none" stroke="#e0c084" stroke-opacity=".45" stroke-width="2"/>
+      <g fill="#6f9a86" opacity=".55">
+        <ellipse cx="500" cy="906" rx="7" ry="4"/>
+        <ellipse cx="584" cy="900" rx="5" ry="3"/>
+        <ellipse cx="560" cy="918" rx="6" ry="3"/>
+      </g>
+      <path d="M486 870V852Q486 844 494 844H502V870M594 870V852Q594 844 586 844H578V870" fill="none" stroke="#7d6740" stroke-width="7"/>
+      <ellipse cx="540" cy="876" rx="66" ry="13" fill="#4a3d2a"/>
+      <ellipse cx="540" cy="877" rx="58" ry="9" fill="#8c7a58"/>
+
+      <rect y="1440" width="1080" height="480" fill="url(#g-vignette)"/>
+      <g id="rays" fill="url(#g-ray)">
+        <path d="M205 492L1080 640V760Z"/>
+        <path d="M205 492L1080 900V1060Z"/>
+        <path d="M205 492L1080 1260L960 1400Z"/>
+        <path d="M205 492L780 1560L640 1600Z"/>
+        <path d="M205 492L440 1640L340 1640Z"/>
+      </g>
+    </svg>
+
+    <canvas id="fx" width="1080" height="1920"></canvas>
+
+    <header id="hud">
+      <p id="total">
+        <svg class="lotus" viewBox="0 0 40 28" aria-hidden="true">
+          <path d="M20 26C12 25 4 20 2 10C12 11 18 18 20 26ZM20 26C28 25 36 20 38 10C28 11 22 18 20 26Z" fill="#f48fab"/>
+          <path d="M20 26C12 22 9 14 20 2C31 14 28 22 20 26Z" fill="#ffc2cf"/>
+        </svg>
+        Công đức <b id="total-value">0</b>
+      </p>
+    </header>
+    <div id="welcome"></div>
+    <div id="guide">
+      <section class="guide-panel panel" aria-label="Tương tác">
+        <ul id="social-guide"></ul>
+      </section>
+      <section class="guide-panel panel" aria-label="Quà tặng">
+        <ul id="gift-guide"></ul>
+      </section>
+    </div>
+    <div id="toast"></div>
+    <section id="board" class="panel">
+      <h2>Bảng công đức</h2>
+      <ol id="top"></ol>
+    </section>
+    <button id="sound-hint" type="button" hidden>🔇 Bấm vào màn hình để bật âm thanh</button>
+  </div>
+  <script type="module" src="game.js"></script>
+</body>
+</html>

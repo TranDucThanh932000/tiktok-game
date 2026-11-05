@@ -1,0 +1,130 @@
+# THẢ VỊT – ĐẠI CHIẾN DÒNG SÔNG
+
+Game đua vịt tương tác cho TikTok LIVE. Người xem Like, Comment, Share, tặng quà trong phòng live; mỗi người có một chú vịt riêng trên dòng sông. Game chạy trên máy streamer và được đưa vào livestream bằng OBS / TikTok LIVE Studio. Người xem không phải vào website nào.
+
+## 1. Cấu trúc source code
+
+```text
+dua-vit/
+├── server.js                    Ghép mọi thứ: config, nguồn sự kiện, vòng lặp game 20 Hz, SSE, API admin
+├── start.bat                    Nhấp đúp để chạy (server + cửa sổ game + bảng điều khiển)
+├── config/
+│   ├── game.json                Kênh TikTok, cổng, thời gian các giai đoạn, số lane, từ khóa comment...
+│   ├── balance.json             Năng lượng, kỹ năng, giới hạn buff, community buff, vật cản, điểm
+│   └── gifts.json               Nhóm quà → năng lượng + kỹ năng, gán quà theo gift ID / kim cương
+├── data/                        (tự tạo) settings.json = thay đổi từ Admin, results.json = kết quả & vô địch
+├── src/
+│   ├── config/loadConfig.js     Đọc, gộp, kiểm tra cấu hình; danh sách cấu hình Admin được sửa
+│   ├── events/
+│   │   ├── EventAdapter.js      Interface chung cho mọi nguồn sự kiện
+│   │   ├── TikTokAdapter.js     Nguồn TikTok LIVE thật (tiktok-live-connector), tự kết nối lại
+│   │   ├── MockAdapter.js       Nguồn giả lập cho TEST MODE (đi qua cùng normalizer với LIVE)
+│   │   ├── mockScenarios.js     12+ kịch bản kiểm thử
+│   │   ├── EventNormalizer.js   Payload TikTok → schema nội bộ; xử lý gift combo, like total
+│   │   ├── EventDeduplicator.js Lọc event trùng theo eventId (TTL 10 phút)
+│   │   └── EventQueue.js        Hàng đợi có giới hạn, gộp like, không bao giờ bỏ quà
+│   └── game/
+│       ├── GameEngine.js        Luật chơi, xử lý event, vòng đua, output cho renderer
+│       ├── RoundManager.js      Các giai đoạn: chờ → đăng ký → đua → nước rút → kết thúc
+│       ├── DuckManager.js       Người chơi / vịt (1 người = 1 vịt / vòng, theo user ID)
+│       ├── EnergyManager.js     Năng lượng, giới hạn miễn phí, combo comment, Turbo tự động
+│       ├── BuffManager.js       Buff, cộng dồn có giảm dần, giới hạn, công thức tốc độ
+│       ├── SkillManager.js      Kỹ năng + map quà → nhóm quà
+│       ├── CommunityManager.js  Gió Thuận, Sóng Thần, Đại Hội Cổ Vũ, Cơn Bão Gift
+│       ├── ObstacleManager.js   Vật cản & power-up công bằng
+│       ├── RankingManager.js    Xếp hạng tất định, người thắng
+│       └── ResultStore.js       Lưu kết quả & bảng vô địch
+├── public/
+│   ├── index.html               Màn hình game (đưa vào OBS) – Canvas 1920×1080
+│   ├── admin.html               Bảng điều khiển streamer
+│   └── js/
+│       ├── main.js              Nhận dữ liệu, nội suy vị trí, vòng lặp vẽ 60 FPS
+│       ├── admin.js
+│       ├── sound.js             Âm thanh tạo bằng WebAudio (không cần file)
+│       └── render/              RiverRenderer, DuckRenderer, ObstacleRenderer, EffectsRenderer, UIManager, layout
+└── tests/                       Unit test (node:test)
+```
+
+Luồng sự kiện:
+
+```
+TikTok LIVE → TikTokAdapter → EventNormalizer → EventDeduplicator → EventQueue → GameEngine (20 Hz, delta time) → SSE → Renderer (Canvas)
+Admin TEST MODE → MockAdapter ↗ (cùng normalizer, gắn source = "mock")
+```
+
+Server là nơi duy nhất giữ trạng thái game, nên mở nhiều cửa sổ game / tải lại trang OBS không làm lệch hay mất cuộc đua.
+
+## 2. Tính năng đã hoàn thành
+
+- Vòng đua tự động: Đăng ký 15s → Đua chính 60s → Nước rút 30s → Kết thúc 15s → vòng mới (cấu hình được). Nếu chưa có ai, game chờ người chơi đầu tiên rồi mới đếm ngược.
+- Mỗi người xem tương tác hợp lệ được 1 vịt (theo TikTok user ID, không theo tên hiển thị). Tương tác tiếp theo buff đúng vịt đó.
+- Like: 10 like = 1⚡, tối đa 20⚡/vòng. Like không rõ người → năng lượng cộng đồng (Sóng Thần). Like được tính theo mức tăng, và phần chênh của tổng like phòng đi vào cộng đồng, không cộng trùng.
+- Comment có từ khóa (GO, VỊT ƠI, CỐ LÊN, TURBO, CHẠY ĐI… không phân biệt dấu): +3⚡, cooldown 5s, tối đa 15⚡/vòng, combo x1.2 / x1.5, mỗi 5 comment liên tiếp → Turbo Combo.
+- Share: +10⚡ một lần/vòng + Cánh Thiên Thần (bay qua vật cản). 5 người share khác nhau trong 30s → Gió Thuận.
+- Gift: năng lượng + kỹ năng theo nhóm (TURBO, LÁ CHẮN, SIÊU TURBO, CẦU VỒNG có cooldown). Gift combo/streak được tính đúng số quà thật. Quà tặng trước giờ xuất phát sẽ kích hoạt khi bắt đầu đua.
+- Năng lượng tự bắn Turbo theo mốc 25/50/75/100 (+5/10/15/20%), không bắn chồng; cuối nước rút xả năng lượng còn dư.
+- Cân bằng: tốc độ cơ bản như nhau; buff khác nhau cộng dồn có giảm dần, buff cá nhân ≤ 25%, cộng đồng ≤ 8%, tổng ≤ 30%; vật cản chỉ làm chậm tạm thời (không dưới 60%), có thời gian miễn nhiễm. Người không tặng quà vẫn có thể thắng.
+- 4 Community Buff có ngưỡng, cửa sổ thời gian, cooldown, thời gian hiệu lực và thông báo; hiệu ứng riêng (lá bay, sóng thần quét sông, khán đài + pháo giấy, bầu trời đổi màu + mưa quà).
+- Vật cản (đá, khúc gỗ, nước xoáy, ghềnh thác, rong) và power-up (đồng xu, tên lửa, lá chắn, ngôi sao, cầu vồng, vùng tăng tốc), xuất hiện có cảnh báo trước.
+- Vịt hoạt hình vẽ bằng Canvas: bơi, vỗ cánh, chân quạt nước, sóng nước, vệt tốc độ, lửa, cầu vồng, cánh thiên thần, lá chắn, choáng khi va chạm, vương miện khi về đích.
+- Giao diện 1920×1080 (tự co giãn, 1280×720 vẫn nét): header, đường đua, bảng xếp hạng TOP 10 có animation đổi hạng, bảng phụ xoay vòng (TOP tốc độ / đóng góp / vô địch / cộng đồng), thanh cộng đồng, notification giới hạn số lượng + gộp khi đông, banner, TOP 3 khi nước rút, bục vinh quang + pháo hoa.
+- Âm thanh tạo bằng WebAudio, bật/tắt từ Admin.
+- Admin Panel: Start/Stop/Pause/Resume/Reset/New Round/Chuyển giai đoạn, chỉnh cấu hình khi đang chạy, gán quà thật vào nhóm quà, xem người chơi, event gần nhất, kết quả, bảng vô địch, thống kê (event/giây, trùng, trễ, hàng đợi).
+- TEST MODE với form gửi Like/Comment/Share/Gift/Like cộng đồng và các kịch bản kiểm thử; sự kiện giả lập luôn gắn nhãn TEST, bị từ chối khi tắt TEST MODE, và khi tắt thì vịt giả lập bị xóa khỏi vòng.
+- Kết quả và số lần vô địch được lưu vào `data/results.json` (vô địch TEST tách riêng).
+- 52 unit test.
+
+## 3. Cài đặt
+
+Cần Node.js ≥ 22.9 (máy này dùng sẵn `d:\laragon\bin\nodejs\node-v26.3.1-win-x64`).
+
+```bash
+cd dua-vit
+npm install
+```
+
+## 4. Chạy game
+
+- Cách nhanh: nhấp đúp `start.bat` (tự `npm install` lần đầu, mở server, cửa sổ game và bảng điều khiển).
+- Hoặc: `npm start` rồi mở
+  - Màn hình game: http://127.0.0.1:3003/  (nhấp đúp hoặc phím F để toàn màn hình)
+  - Bảng điều khiển: http://127.0.0.1:3003/admin.html
+
+Đưa vào OBS: thêm **Browser Source**, URL `http://127.0.0.1:3003/`, Width 1920, Height 1080, tick "Control audio via OBS" nếu muốn chỉnh âm lượng game. Với TikTok LIVE Studio: dùng cửa sổ game (`npm run window`) và thêm nguồn "Window capture".
+
+## 5. TEST MODE
+
+TEST MODE mặc định bật (`config/game.json → testMode`). Trong Admin:
+
+- Ô "Tên người xem" + nút Like / Comment / Share / Tặng quà (chọn nhóm quà, số lượng, tick "combo streak" để gửi dạng streak như TikTok).
+- Nút kịch bản: 100 người tham gia, 1 người like liên tục, 1 người comment liên tục, nhiều người share, nhiều người tặng quà, gift combo, 2 người cùng Turbo, community + personal buff, event trùng, mất kết nối, vào giữa vòng, kết thúc & vòng mới, đại hội cổ vũ, bot tự chơi.
+- Bỏ tick TEST MODE trước khi lên live thật: vịt giả lập bị xóa và mọi sự kiện giả lập bị từ chối.
+
+Unit test: `npm test`.
+
+## 6. Kết nối TikTok LIVE thật
+
+1. Đặt tên kênh (không có @) vào `config/game.json → "tiktokUsername"`, hoặc chạy `npm start -- ten_kenh`.
+2. Bật live trên TikTok, chạy game. Header Admin hiển thị trạng thái "Đã kết nối live @... (room ...)". Nếu kênh chưa live, game tự chờ và thử lại; mất kết nối thì tự nối lại sau 10–30 giây, game vẫn chạy bình thường trong lúc đó.
+3. Tắt TEST MODE.
+4. Khi có quà thật, quà xuất hiện ở mục "Cấu hình Gift" trong Admin: chọn nhóm (small/medium/large/special) để gán theo gift ID. Quà chưa gán được chia nhóm theo số kim cương TikTok gửi (`gifts.json → byDiamonds`).
+
+Nguồn sự kiện dùng thư viện [`tiktok-live-connector`](https://www.npmjs.com/package/tiktok-live-connector) 2.x (cùng thư viện các game khác trong repo này đang dùng). Đây là thư viện **không chính thức**: nó đọc luồng sự kiện công khai của phòng live, không cần đăng nhập hay API key của TikTok. Toàn bộ code dùng thư viện nằm trong `src/events/TikTokAdapter.js`; muốn đổi sang nguồn khác (ví dụ TikFinity, một bridge WebSocket riêng), chỉ cần viết adapter mới phát ra event theo schema trong `EventNormalizer.js`.
+
+## 7. Các phần cần cấu hình
+
+- `config/game.json → tiktokUsername` (bắt buộc cho LIVE thật), `testMode: false` khi lên live.
+- Gán quà thật: `gifts.json → byId` (qua Admin) và ngưỡng `byDiamonds`, `defaultTier`.
+- Từ khóa comment: `game.json → commentKeywords`.
+- Cân bằng: `balance.json` (mọi con số trong kịch bản đều ở đây). Nhiều mục chỉnh được ngay trong Admin, lưu vào `data/settings.json`; sửa file JSON thì bấm "Nạp lại file cấu hình" (riêng số lane áp dụng từ vòng sau).
+- Cổng web: `game.json → port` (mặc định 3003, tránh trùng 3000/3001 của Chùa Online và Cá chép).
+
+## 8. Giới hạn của nguồn sự kiện TikTok LIVE
+
+- `tiktok-live-connector` là thư viện không chính thức, có thể ngừng hoạt động khi TikTok thay đổi giao thức; khi đó cần cập nhật phiên bản thư viện.
+- TikTok **không gửi mọi lượt like**: sự kiện like được gửi theo đợt kèm số like của một người. Like của người không được nêu tên chỉ thấy qua tổng like của phòng, nên game đưa phần đó vào năng lượng cộng đồng (không gán cho ai). Con số này là gần đúng nếu các tin đến lệch thứ tự.
+- Sự kiện share không phải lúc nào cũng được gửi, và chỉ được tính khi có danh tính người share.
+- Comment, quà và share của người xem đều có user ID; tên hiển thị (nickname) có thể đổi nên game dùng ID làm định danh.
+- Quà combo được gửi nhiều lần với số đếm cộng dồn; game chỉ cộng phần tăng thêm. Sau khi kết nối lại, các tin cũ không được phát lại (`processInitialData: false`) và tin trùng bị lọc theo `msgId`.
+- Trong lúc mất kết nối, sự kiện trên TikTok bị mất (thư viện không lấy lại được); game vẫn chạy tiếp với trạng thái hiện có.
+- Sự kiện đến trễ quá `maxEventAgeSeconds` (60s) hoặc gửi trước khi vòng hiện tại mở chỉ được cộng vào tổng, không ảnh hưởng cuộc đua; riêng quà luôn được tính.

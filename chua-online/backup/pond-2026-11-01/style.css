@@ -1,0 +1,391 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #000;
+}
+
+body {
+  font-family: "Segoe UI", Roboto, Arial, sans-serif;
+  color: #fff;
+}
+
+/* The game is laid out on a fixed 1080x1920 (9:16) stage that game.js scales to the window. */
+#stage {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1080px;
+  height: 1920px;
+  overflow: hidden;
+  transform-origin: 0 0;
+}
+
+#scene,
+#fx {
+  position: absolute;
+  inset: 0;
+  width: 1080px;
+  height: 1920px;
+}
+
+#fx {
+  pointer-events: none;
+}
+
+#hud {
+  position: absolute;
+  top: 190px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  text-shadow: 0 3px 10px rgba(0, 0, 0, 0.7);
+}
+
+#hud h1 {
+  font: 700 86px/1 "Times New Roman", Georgia, serif;
+  letter-spacing: 8px;
+  color: #ffe08a;
+  text-shadow: 0 0 18px rgba(255, 190, 80, 0.55), 0 4px 0 #7a3b0c, 0 8px 18px rgba(0, 0, 0, 0.8);
+}
+
+#total {
+  margin-top: 10px;
+  font-size: 42px;
+  font-weight: 700;
+  color: #fff4d0;
+}
+
+#total b {
+  color: #ffd54a;
+}
+
+#note {
+  margin-top: 4px;
+  font-size: 22px;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.panel {
+  position: absolute;
+  background: rgba(28, 10, 26, 0.66);
+  border: 2px solid rgba(240, 190, 90, 0.6);
+  border-radius: 22px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+}
+
+#guide {
+  top: 384px;
+  left: 24px;
+  right: 24px;
+  padding: 12px 14px;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 10px;
+  font-size: 23px;
+}
+
+#guide li {
+  padding: 3px 14px;
+  border-radius: 999px;
+  background: rgba(255, 210, 120, 0.12);
+  white-space: nowrap;
+}
+
+#guide b {
+  color: #ffd54a;
+}
+
+.gift-icon {
+  width: 2em;
+  height: 2em;
+  margin: -0.5em 0.3em -0.45em -0.2em;
+  object-fit: contain;
+  vertical-align: middle;
+}
+
+#toast {
+  position: absolute;
+  top: 562px;
+  left: 50%;
+  max-width: 1040px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 6px 30px 6px 8px;
+  border: 2px solid #f2c14e;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(110, 18, 10, 0.92), rgba(170, 62, 12, 0.95), rgba(110, 18, 10, 0.92));
+  font-size: 34px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  opacity: 0;
+  transform: translateX(-50%);
+}
+
+#toast .text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.avatar {
+  flex: none;
+  width: 58px;
+  height: 58px;
+  border: 3px solid #f2c14e;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.avatar.initial {
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, #e0507a, #f2a03d);
+  color: #fff;
+  font-size: 30px;
+  font-weight: 800;
+}
+
+#toast.big {
+  font-size: 44px;
+  color: #fff8dc;
+  background: linear-gradient(90deg, #8a5a00, #e0a400, #8a5a00);
+  box-shadow: 0 0 40px rgba(255, 200, 60, 0.8);
+}
+
+#toast.big .avatar {
+  width: 70px;
+  height: 70px;
+}
+
+#toast.note {
+  max-width: 940px;
+  padding: 12px 34px;
+  border-radius: 30px;
+  font-size: 32px;
+  line-height: 1.35;
+  text-align: center;
+  white-space: normal;
+}
+
+/* Sits in the gap between the merit total and the guide panel. */
+#welcome {
+  position: absolute;
+  top: 342px;
+  left: 50%;
+  max-width: 1000px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 3px 20px 3px 3px;
+  border: 2px solid rgba(240, 190, 90, 0.75);
+  border-radius: 999px;
+  background: rgba(28, 10, 26, 0.85);
+  font-size: 24px;
+  font-weight: 700;
+  color: #fff4d0;
+  white-space: nowrap;
+  overflow: hidden;
+  opacity: 0;
+  transform: translateX(-50%);
+}
+
+#welcome .avatar {
+  width: 32px;
+  height: 32px;
+  border-width: 2px;
+  font-size: 18px;
+}
+
+#welcome .text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#board {
+  top: 634px;
+  right: 10px;
+  width: 258px;
+  padding: 10px 14px 12px;
+}
+
+#board h2 {
+  margin-bottom: 4px;
+  font-size: 25px;
+  text-align: center;
+  color: #ffd54a;
+}
+
+#top {
+  list-style: none;
+}
+
+#top li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  font-size: 23px;
+}
+
+#top .rank {
+  width: 32px;
+  text-align: center;
+}
+
+#top .name {
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+#top .pts {
+  font-weight: 700;
+  color: #ffd54a;
+}
+
+#top li.empty {
+  height: auto;
+  padding: 6px 0;
+  font-size: 20px;
+  text-align: center;
+  opacity: 0.75;
+}
+
+/* While the focus cam (game.js) runs, only the praying viewer is on screen. */
+#hud,
+#guide,
+#board {
+  transition: opacity 0.6s;
+}
+
+#stage.focusing #hud,
+#stage.focusing #guide,
+#stage.focusing #board {
+  opacity: 0;
+}
+
+#stage.focusing #toast,
+#stage.focusing #welcome {
+  visibility: hidden;
+}
+
+#sound-hint {
+  position: absolute;
+  bottom: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 14px 28px;
+  border: 2px solid #fff;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.75);
+  color: #fff;
+  font: 600 30px "Segoe UI", Arial, sans-serif;
+  cursor: pointer;
+}
+
+#sound-hint[hidden] {
+  display: none;
+}
+
+/* Scene parts animated from game.js (Web Animations) or by CSS. */
+.plaque {
+  font: 700 30px "Times New Roman", serif;
+  letter-spacing: 4px;
+  fill: #f2c14e;
+}
+
+#bell {
+  transform-box: view-box;
+  transform-origin: 140px 690px;
+}
+
+#mo {
+  transform-box: view-box;
+  transform-origin: 920px 1118px;
+}
+
+#mallet {
+  transform-box: view-box;
+  transform-origin: 1040px 920px;
+  transform: rotate(14deg);
+}
+
+#halo {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: breathe 4s ease-in-out infinite alternate;
+}
+
+.vase {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+
+.flame {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: flicker 0.18s ease-in-out infinite alternate;
+}
+
+.sway {
+  transform-box: view-box;
+  animation: sway 4s ease-in-out infinite;
+}
+
+.star {
+  animation: twinkle 3s ease-in-out infinite alternate;
+}
+
+/* Pond pads drift; a lotus and its leaf share one group so they move together. */
+.float {
+  transform-box: fill-box;
+  transform-origin: 50% 60%;
+  animation: float-leaf 8s ease-in-out infinite;
+}
+
+.float.lotus {
+  animation-name: float-lotus;
+}
+
+@keyframes float-leaf {
+  0%, 100% { transform: translate(-6px, 0) rotate(-1.5deg); }
+  50% { transform: translate(6px, 5px) rotate(1.5deg); }
+}
+
+@keyframes float-lotus {
+  0%, 100% { transform: translate(-9px, 2px) rotate(-3.5deg); }
+  50% { transform: translate(9px, -8px) rotate(3.5deg); }
+}
+
+@keyframes breathe {
+  from { opacity: 0.6; }
+  to { opacity: 1; }
+}
+
+@keyframes flicker {
+  from { transform: scale(1, 1); opacity: 0.85; }
+  to { transform: scale(0.88, 1.12); opacity: 1; }
+}
+
+@keyframes sway {
+  0%, 100% { transform: rotate(-4deg); }
+  50% { transform: rotate(4deg); }
+}
+
+@keyframes twinkle {
+  from { opacity: 0.2; }
+  to { opacity: 1; }
+}

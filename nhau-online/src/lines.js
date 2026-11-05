@@ -1,0 +1,116 @@
+// Lời thoại của Cô Ba, Tí và Chú Tư. {name}, {table}... được thay khi nói.
+export const LINES = {
+  open: ['Quán mở rồi bà con ơi! Muốn vô ngồi thì comment “vào” nha. Ngồi chơi nước cô mời, thực đơn cô treo ngay đây!'],
+  closing: ['Hôm nay vui là nhờ bà con đó. Ai còn ngồi cứ tự nhiên, cô châm thêm nước!'],
+  welcome: [
+    'Khách mới hả con? Vô ngồi đi, ngồi chơi cho quán đông vui!',
+    '{name} tới rồi hả, ngồi bàn {table} nha con!',
+    'Vô đây {name}, bàn {table} còn chỗ nè!',
+    'Ngồi bàn {table} đi con, quán đông vui lắm!',
+  ],
+  welcomeBack: ['{name} quay lại rồi hả, ngồi bàn {table} nha!'],
+  full: ['Quán đầy rồi, {name} chờ chút có ghế liền nha!'],
+  moveOk: ['{name} qua bàn {table} ngồi nha, món cô cho mang theo luôn!', 'Đổi bàn hả {name}? Qua bàn {table} đi con!', '{name} dời qua bàn {table}, đông vui hơn nè!'],
+  moveSame: ['{name} đang ngồi bàn {table} rồi mà con!'],
+  moveFull: ['Bàn {table} đã đầy rồi {name} ơi, chọn bàn khác nha!', 'Bàn {table} đã đầy rồi con, đổi bàn khác đi!'],
+  moveFullJoin: ['Bàn {table} đã đầy rồi, {name} ngồi tạm bàn {seat} nha!'],
+  moveBad: ['Quán cô có bàn 1 tới bàn {max} thôi nha {name}!'],
+  bye: ['{name} về hả? Đi đường cẩn thận nha con!', 'Về mạnh giỏi nha {name}, bữa sau ghé quán nữa nha!', 'Về hả {name}? Chạy xe từ từ thôi nha!'],
+  byeDrunk: ['{name} uống rồi đó, đừng có chạy xe nha con!', 'Ê {name}, uống rồi là đi bộ về nha con!'],
+  // Nói sau khi chú công an giữ xe khách say (mốc giờ khớp cảnh trên màn hình).
+  caughtTu: ['Đó, tui nói rồi! Đã uống thì đi bộ!', 'Chú công an làm chuẩn luôn!', 'Thấy chưa, uống rồi đừng có lái!'],
+  caughtBa: ['Thôi đi bộ về nha {name}, mai lên phường lấy xe!', 'Cô dặn rồi mà không nghe, {name} ơi!'],
+  hint: ['{name} ơi, comment “vào” để vô quán ngồi nha!', 'Muốn vô ngồi thì comment “vào” nha {name}!'],
+  waterCoBa: ['Ngồi chơi cứ tự nhiên nha con, nước cô mời!', 'Nước cô mời, ngồi chơi tự nhiên nha!'],
+  waterTi: ['Nước của {name} đây, ngồi chơi nha!', 'Ly mới cho {name} nè!', 'Nước đây, nước đây!'],
+  // Tí đáp khách gọi món, khớp với giọng public/voice/co_ngay.mp3.
+  order: ['Có ngay!'],
+  orderBig: ['Có ngay!'],
+  orderPromoTi: ['Có ngay!'],
+  orderPromoCoBa: ['Đúng giờ cô bao rồi nha! Một {unit} gọi, {bonus} {unit} tặng!'],
+  orderSide: ['{item} cho {name}, kèm đĩa đậu phộng cô mời nha!'],
+  orderLarge: ['Phần lớn cô mời nè {name}! {item} đầy đĩa luôn!'],
+  thanks: ['Cảm ơn {name} nha! Món này quán chưa có trên thực đơn, để cô coi lại.'],
+  b1g2Open: ['Bếp hôm nay làm sung quá! Một phút tới, mua một tặng hai, cô nói là cô làm!'],
+  b1g3Open: ['Đội nhà thắng rồi! Mua một tặng ba cho cả quán, chơi lớn luôn!'],
+  promoEnd: ['Hết giờ ưu đãi rồi nha bà con, thực đơn về như cũ!'],
+  queued: ['Từ từ, xong cái này rồi cô làm tiếp nha!'],
+  wheelOpen: ['Đồ cũ nhưng lộc mới nha bà con! Để cô quay coi hôm nay quán mình có gì!'],
+  wheelResult: {
+    double: ['Gấp đôi món! {gift} giờ ra hai phần nha!'],
+    side: ['Có đồ nhắm kèm! {gift} được thêm đĩa đậu phộng!'],
+    large: ['Phần lớn cô mời! {gift} ra đĩa bự luôn!'],
+    b1g2: ['Mua một tặng hai cho {gift}! Trúng lớn rồi!'],
+    b1g3: ['Trời ơi mua một tặng ba cho {gift}! Quạt hôm nay hên quá!'],
+  },
+  matchOpenTu: ['Tui coi bóng đá mấy chục năm rồi. Trận này cứ tin tui!'],
+  matchOpenBa: ['Lần trước ông cũng nói vậy đó!'],
+  predict: ['{home} thắng {a}-{b}, chắc luôn!', 'Trận này {home} thắng đậm, {a}-{b} là ít!'],
+  goalHomeBusy: ['Bóng vô rồi! Còn món bàn {table} chừng nào mới vô bàn hả Tí?'],
+  goalHome: ['Vô! Vô rồi bà con ơi!', 'Bóng vô rồi! Hẻm mình số một!'],
+  goalHomeTu: ['Thấy chưa! Tui nói rồi mà!', 'Đó, đá vậy mới là đá chớ!'],
+  goalAwayTu: ['Thủ môn đâu rồi trời!', 'Hậu vệ đi uống nước hết rồi hả?'],
+  win: ['Đội nhà thắng! Ông Tư đoán trật tỉ số nhưng trúng đội thắng nha!'],
+  drawTu: ['Hòa là thắng đó, tui nói rồi mà!'],
+  drawBa: ['Ông nói đội nhà thắng mà ông Tư!'],
+  loseTu: ['Trọng tài hôm nay có vấn đề...', 'Sân trơn quá, không phải lỗi đội mình!'],
+  loseBa: ['Thôi uống nước đi ông Tư, trận sau gỡ!'],
+  rainTi: ['Mưa rồi cô Ba ơi!'],
+  rainBa: ['Kéo bạt trước, kéo ghế sau! Bàn nào cũng phải khô ráo nha con!'],
+  rainEnd: ['Tạnh mưa rồi, mát ghê!'],
+  cat: ['Mướp! Đừng có phá khách nha mày!', 'Mướp nó thương {name} đó!', 'Mướp ghé bàn {table} rồi kìa!'],
+  nearMiss: ['Ủa... bàn nào ta? À đây rồi!', 'Khoan khoan, em coi lại phiếu... đúng rồi bàn {table}!'],
+  karaoke: ['Hát hay quá, thêm bài nữa đi!', 'Karaoke đầu hẻm tới rồi bà con!'],
+  crashBa: ['Trời đất, đụng xe rồi kìa!', 'Ui da, có sao không mấy đứa?', 'Chạy từ từ thôi mấy đứa ơi!', 'Trời ơi, ngay đầu ngõ luôn!'],
+  crashTu: ['Hóng biến bà con ơi!', 'Có biến, có biến!', 'Tui thấy hết nha, tui làm chứng!', 'Lỗi ông bên trái, chắc luôn!', 'Vụ này tui phân tích được nè!'],
+  crashTi: ['Ủa ủa, có ai sao không vậy?', 'Em ra coi thử nha cô Ba!', 'Hú hồn, may mà không ai sao!'],
+  policeBa: ['Công an tới rồi, giải quyết êm thôi!', 'Có chú công an rồi, yên tâm nha bà con!', 'Chú công an tới nhanh ghê!'],
+  policeTu: ['Đó, tui nói rồi, lỗi cả hai!', 'Chú công an xử chuẩn luôn!'],
+  crashEndBa: ['Không ai sao là mừng rồi, ngồi chơi tiếp nha bà con!', 'Hết biến rồi, quay lại ăn uống tiếp nha!', 'Thôi êm rồi, ai về chỗ nấy nha!'],
+  // Dì Năm bán hàng rong: {item}, {unit} là món đang bán, {qty} là số khách mua.
+  vendorCall: ['{item} đây! {item} nóng hổi đây!', 'Ai {item} hông? {item} đây!'],
+  vendorBa: ['Dì Năm ghé quán hả? Bà con ủng hộ dì Năm nha!', 'Dì Năm tới rồi, ai ăn {item} thì mua ủng hộ dì nha!'],
+  vendorAsk: ['Mua giùm dì một {unit} {item} nha con?', '{item} nè {name}, ủng hộ dì một {unit} nha?', 'Con ơi, {item} ngon lắm, lấy một {unit} hông?'],
+  buyerYes: ['Dạ cho con {qty} {unit}!', 'Lấy con {qty} {unit} nha dì!', 'Ủng hộ dì {qty} {unit} nè!'],
+  buyerYesDrunk: ['Bán con {qty} {unit} đi dì... hic!', 'Dì ơi con lấy {qty} {unit}... hic!'],
+  buyerYesBig: ['Dì để con {qty} {unit}, con mời cả bàn!', 'Lấy {qty} {unit} đi dì, con bao!'],
+  buyerNo: ['Dạ thôi dì ơi, con cảm ơn!', 'Để bữa khác nha dì!', 'Con hết tiền rồi dì ơi!', 'Dạ con không ăn đâu dì!'],
+  buyerNoFull: ['Dạ con no rồi dì ơi!', 'Bàn con đầy đồ rồi dì ơi!'],
+  vendorThanks: ['Cảm ơn con nha, ăn ngon nha!', 'Trời ơi dễ thương quá, cảm ơn con!', 'Dì cảm ơn nha, buôn may bán đắt!'],
+  vendorOk: ['Không sao, ngồi chơi vui nha con!', 'Ừ, bữa khác ủng hộ dì nha!'],
+  // Một, hai, ba, dô!
+  toastOpen: ['Cả quán ơi! Comment “dô” đủ {need} lần trong {seconds} giây là cụng ly nha!', 'Nâng ly lên bà con! Đủ {need} tiếng “dô” là cả quán cụng!'],
+  toastDone: ['Uống vui thôi nha bà con, không ép nha!', 'Vui quá trời! Cụng xong nhớ ăn đồ nhắm nha!'],
+  toastFail: ['Mới có {count} tiếng dô à? Lát dô lại nha bà con!', 'Ít người dô quá, chút nữa làm lại nha!'],
+  // Vợ tới kiếm
+  wifeBa: ['Chết rồi, vợ {name} tới kìa!', 'Ủa, vợ {name} kìa! Mấy đứa ngồi im!'],
+  wifeScold: ['{name}! Mấy giờ rồi hả?!', 'Về! Ngồi đây hoài vậy {name}?!', '{name}! Ở nhà con khóc kìa, về liền!', 'Nói đi mua bó rau mà ngồi đây hả {name}?!'],
+  wifePlead: ['Cho ly cuối thôi mà...', 'Mười phút nữa thôi mà, nha!', 'Dạ về liền, về liền!'],
+  wifePleadSober: ['Uống nước lã thôi mà, thiệt đó!', 'Ngồi chơi chút xíu à mà!'],
+  wifeSpare: ['Ly cuối thôi đó! Mười phút nữa không về là biết tay!', 'Thôi ngồi đi, nhưng về sớm nghe chưa!'],
+  wifeDrag: ['Ly cuối gì mà ly cuối! Về!', 'Không có mười phút gì hết! Về!'],
+  wifeTu: ['Vợ tui cũng y chang vậy đó...', 'Tội nghiệp, ngồi chưa ấm chỗ!', 'Thôi, mai gặp lại nha {name}!'],
+  // Cúp điện
+  blackoutTi: ['Ủa cúp điện rồi cô Ba ơi!', 'Tối thui luôn cô Ba ơi!'],
+  blackoutBa: ['Tí lấy đèn pin, cô thắp đèn cầy! Bà con ngồi im nha!', 'Bình tĩnh bà con, chút có điện liền!'],
+  blackoutTu: ['Đang coi tivi mà cúp điện!', 'Điện lực ơi là điện lực!'],
+  blackoutEnd: ['Có điện rồi bà con ơi!', 'Sáng rồi! Ăn uống tiếp nha bà con!'],
+  chatter: [
+    'Đội này mà vô chung kết là tui bao cả quán... nước lã!',
+    'Hồi xưa tui đá tiền đạo đó, chạy nhanh lắm!',
+    'Trận này tui đoán chắc như bắp!',
+    'Cô Ba ơi, cái tivi này coi mờ quá!',
+    'Quán đông vui vậy mới là quán chớ!',
+  ],
+  chatterBa: ['Ông Tư đoán trận nào trật trận đó!', 'Ông ngồi coi tivi hoài, gọi món đi chớ!'],
+};
+
+const NUMBERS = ['không', 'một', 'hai', 'ba', 'bốn', 'năm', 'sáu', 'bảy', 'tám', 'chín', 'mười'];
+export const numberWord = (n) => NUMBERS[n] ?? String(n);
+const capitalize = (text) => text.charAt(0).toUpperCase() + text.slice(1);
+
+export function line(key, values = {}, random = Math.random) {
+  const list = key.split('.').reduce((node, part) => node?.[part], LINES) ?? [key];
+  const text = list[Math.floor(random() * list.length)] ?? '';
+  return capitalize(text.replace(/\{(\w+)\}/g, (_, name) => String(values[name] ?? '')));
+}

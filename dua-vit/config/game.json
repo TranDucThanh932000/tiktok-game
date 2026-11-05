@@ -1,0 +1,18 @@
+{
+  "tiktokUsername": "nguynx.chi.vn",
+  "port": 3003,
+  "testMode": true,
+  "phases": { "registration": 15, "race": 60, "sprint": 30, "finish": 15 },
+  "autoNextRound": true,
+  "maxDucks": 300,
+  "lanes": 8,
+  "lateJoin": "pack-tail",
+  "trackFactor": 1.08,
+  "sound": true,
+  "notifications": true,
+  "maxNotifications": 4,
+  "maxEventAgeSeconds": 60,
+  "commentKeywords": ["GO", "VỊT ƠI", "CỐ LÊN", "TURBO", "CHẠY ĐI", "THAM GIA", "VỊT", "QUẠC"],
+  "commentMaxLength": 120,
+  "likeGapToCommunity": true
+}

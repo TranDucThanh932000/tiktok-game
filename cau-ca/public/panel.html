@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bảng điều khiển · Hồ câu cá</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: "Segoe UI", Arial, sans-serif; background: #0f1a24; color: #e8f4ff; }
+    main { display: flex; gap: 16px; height: 100vh; padding: 16px; }
+    .controls { flex: 1 1 0; min-width: 0; max-width: 560px; overflow-x: hidden; overflow-y: auto; }
+    h1 { margin: 0 0 10px; font-size: 24px; }
+    h2 { margin: 18px 0 8px; font-size: 15px; color: #f2c14e; text-transform: uppercase; letter-spacing: 1px; }
+    #status { margin: 0; padding: 8px 12px; border-radius: 8px; background: #3a1d24; }
+    #status.on { background: #1d3a26; }
+    #pond-info { margin: 8px 0 0; padding: 8px 12px; border-radius: 8px; background: #12324a; font-size: 15px; }
+    #tts { margin: 8px 0 0; font-size: 14px; color: #a9c2d6; }
+    #session { margin: 8px 0 0; padding: 8px 12px; border-radius: 8px; background: #172636; font-size: 15px; }
+    #alerts p { margin: 8px 0 0; padding: 8px 12px; border: 1px solid #c0392b; border-radius: 8px; background: #4a1717; font-size: 14px; }
+    #safe-box { display: flex; align-items: center; gap: 10px; margin-top: 8px; padding: 8px 12px; border: 1px solid #2f4b63; border-radius: 8px; font-size: 14px; }
+    #safe-box.on { border-color: #f2c14e; background: #4a3a10; }
+    #safe-box span { flex: 1; }
+    .hint { margin: 0 0 8px; font-size: 14px; color: #a9c2d6; }
+    label { display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px; font-size: 14px; }
+    input { width: 100%; max-width: 260px; padding: 8px 10px; border: 1px solid #2f4b63; border-radius: 8px; background: #172636; color: inherit; font: inherit; }
+    .row { display: flex; flex-wrap: wrap; gap: 8px; }
+    button { padding: 9px 14px; border: 1px solid #3f6a8c; border-radius: 8px; background: #1a3347; color: inherit; font: inherit; cursor: pointer; }
+    button:hover { background: #24445e; }
+    .gift-icon { width: 28px; height: 28px; margin: -6px 6px -6px -4px; object-fit: contain; vertical-align: middle; }
+    .danger { border-color: #a0403a; background: #3a1d1d; }
+    button.on { border-color: #f2c14e; background: #4a3a10; }
+    #sky-hour { margin-top: 8px; }
+    form { display: flex; gap: 8px; margin-top: 8px; }
+    form input { flex: 1; min-width: 0; max-width: none; }
+    #log { min-height: 1.4em; font-size: 14px; color: #a9c2d6; }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="controls">
+      <h1>🎣 Bảng điều khiển · Hồ câu cá</h1>
+      <p id="status">Đang kết nối máy chủ game...</p>
+      <p id="pond-info"></p>
+      <p id="session"></p>
+      <p id="tts"></p>
+      <div id="alerts"></div>
+      <div id="safe-box"><span id="safe"></span><button type="button" id="safe-toggle"></button></div>
+
+      <h2>Người xem giả lập</h2>
+      <label>Tên <input id="name" value="Khách thử" maxlength="20"></label>
+      <label>Link ảnh đại diện (không bắt buộc) <input id="avatar" type="url" maxlength="1000" placeholder="https://..."></label>
+      <label>Số lượng vật phẩm <input id="count" type="number" min="1" max="999" value="1"></label>
+
+      <h2>Tương tác</h2>
+      <div class="row">
+        <button type="button" id="join">🎣 Comment “câu”</button>
+        <button type="button" id="like10">❤️ Thả 10 tim</button>
+        <button type="button" id="like100">❤️ Thả 100 tim (1 lần giật)</button>
+        <button type="button" id="follow">➕ Follow (giật 1 lần)</button>
+        <button type="button" id="share">↗️ Share (giật 1 lần)</button>
+      </div>
+      <form id="chat">
+        <input id="chat-text" maxlength="200" value="câu" aria-label="Bình luận thử">
+        <button>💬 Gửi bình luận</button>
+      </form>
+
+      <h2>Vật phẩm</h2>
+      <div class="row" id="gifts"></div>
+
+      <h2>Thử đông người</h2>
+      <p class="hint">Người xem giả để xem trước; vật phẩm và tim thử không tính vào phiên live nhưng có vào bảng xếp hạng (bấm Xóa bảng xếp hạng trước khi live).</p>
+      <div class="row">
+        <button type="button" id="spawn">🪂 Thả 6 người thử xuống hồ</button>
+        <button type="button" id="storm">🎲 Vật phẩm + tim ngẫu nhiên 30 giây</button>
+      </div>
+
+      <h2>Vòng quay</h2>
+      <p id="wheel-info" class="hint">Đang tải...</p>
+      <div class="row">
+        <button type="button" id="wheel-spin">🎡 Quay ngay</button>
+        <button type="button" id="wheel-gold">👑 Quay vòng vàng</button>
+        <button type="button" id="wheel-auto"></button>
+      </div>
+      <p class="hint" style="margin-top:8px">Thử từng ô:</p>
+      <div class="row" id="wheel-slots"></div>
+
+      <h2>Cá hiếm</h2>
+      <p id="rare-info" class="hint">Đang tải...</p>
+      <div class="row">
+        <button type="button" id="rare-next">🌟 Lượt giật tới ra cá hiếm</button>
+        <button type="button" id="rare-zero">↺ Đếm lại từ 0</button>
+      </div>
+
+      <h2>Thời tiết &amp; giờ</h2>
+      <p id="sky-info" class="hint">Đang tải...</p>
+      <div class="row" id="sky-weather">
+        <button type="button" data-weather="auto">🎲 Tự đổi ngẫu nhiên</button>
+        <button type="button" data-weather="clear">✨ Yên ắng</button>
+        <button type="button" data-weather="cloudy">🌫️ Sương mù</button>
+        <button type="button" data-weather="windy">🌬️ Gió lùa</button>
+        <button type="button" data-weather="rain">💧 Nước rỉ</button>
+        <button type="button" data-weather="storm">⛈️ Giông bão</button>
+      </div>
+      <div class="row" id="sky-hour">
+        <button type="button" data-hour="6">🌅 Bình minh</button>
+        <button type="button" data-hour="11">🌞 Trưa</button>
+        <button type="button" data-hour="17.6">🌇 Hoàng hôn</button>
+        <button type="button" data-hour="22">🌙 Đêm</button>
+        <button type="button" id="sky-freeze"></button>
+      </div>
+
+      <h2>Quản lý</h2>
+      <div class="row">
+        <button type="button" id="clear">🧹 Mời mọi người rời hồ</button>
+        <button type="button" id="reset" class="danger">Xóa bảng xếp hạng</button>
+        <button type="button" id="telegram-test">📨 Gửi thử Telegram</button>
+      </div>
+      <p id="log"></p>
+    </section>
+  </main>
+
+  <script type="module">
+    const $ = (id) => document.getElementById(id);
+    const post = (url, body) => fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    const simulate = (body) => post('/api/simulate', { name: $('name').value, avatar: $('avatar').value, ...body });
+    let guide = null;
+
+    function button(text, onClick, icon) {
+      const el = document.createElement('button');
+      el.type = 'button';
+      if (icon) el.append(Object.assign(new Image(), { className: 'gift-icon', alt: '', src: icon }));
+      el.append(text);
+      el.onclick = onClick;
+      return el;
+    }
+
+    function showStatus({ connected, text }) {
+      $('status').textContent = text;
+      $('status').classList.toggle('on', connected);
+    }
+
+    const sendGift = (gift, name, count) => post('/api/simulate', { kind: 'gift', name, gift: gift.name, coins: gift.coins, count });
+
+    function renderGifts(g) {
+      $('gifts').replaceChildren(
+        ...g.gifts.map((gift) => {
+          const t = g.tiers[gift.tier];
+          return Object.assign(
+            button(`${gift.label} · ${t.label} ${t.minKg}–${t.maxKg} kg`, () => simulate({ kind: 'gift', gift: gift.name, coins: gift.coins, count: Number($('count').value) || 1 }), gift.icon),
+            { title: `Thử vật phẩm "${gift.name}"` },
+          );
+        }),
+        ...(g.shop ?? [])
+          .filter((item) => item.name)
+          .map((item) =>
+            Object.assign(
+              button(`${item.label} · ${item.coins} xu`, () => simulate({ kind: 'gift', gift: item.name, coins: item.coins, count: 1 }), item.icon),
+              { title: `Thử vật phẩm "${item.name}"` },
+            ),
+          ),
+      );
+    }
+
+    $('join').onclick = () => simulate({ kind: 'chat', text: guide?.joinWord ?? 'câu' });
+    $('like10').onclick = () => simulate({ kind: 'like', count: 10 });
+    $('like100').onclick = () => simulate({ kind: 'like', count: 100 });
+    $('follow').onclick = () => simulate({ kind: 'follow' });
+    $('share').onclick = () => simulate({ kind: 'share' });
+    $('chat').onsubmit = (event) => {
+      event.preventDefault();
+      simulate({ kind: 'chat', text: $('chat-text').value });
+    };
+
+    const NAMES = ['Lan Anh', 'Minh Tú', 'Hoàng Nam', 'Thu Hà', 'Quốc Bảo', 'Ngọc Mai', 'Đức Huy', 'Bích Ngọc', 'Tuấn Kiệt', 'Hải Yến', 'Gia Hân', 'Thành Đạt', 'Khánh Linh', 'Phúc An', 'Bảo Ngọc', 'Văn Toàn'];
+    const testers = [];
+    const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+    $('spawn').onclick = async () => {
+      for (let i = 0; i < 6; i++) {
+        const n = testers.length;
+        const name = n < NAMES.length ? NAMES[n] : `${NAMES[n % NAMES.length]} ${Math.floor(n / NAMES.length) + 1}`;
+        testers.push(name);
+        await post('/api/simulate', { kind: 'chat', name, text: guide?.joinWord ?? 'câu' });
+        await wait(350);
+      }
+    };
+
+    let storm = 0;
+    $('storm').onclick = () => {
+      if (!testers.length) $('spawn').onclick();
+      clearInterval(storm);
+      const until = Date.now() + 30_000;
+      storm = setInterval(() => {
+        if (Date.now() > until) {
+          clearInterval(storm);
+          $('log').textContent = 'Đã thử xong.';
+          return;
+        }
+        const name = testers[Math.floor(Math.random() * testers.length)];
+        if (!name) return;
+        const r = Math.random();
+        if (r < 0.75) post('/api/simulate', { kind: 'like', name, count: 5 + Math.floor(Math.random() * 25) });
+        else if (guide) {
+          const weights = [0.5, 0.25, 0.18, 0.07];
+          let x = Math.random();
+          let i = 0;
+          while (i < weights.length - 1 && x > weights[i]) x -= weights[i++];
+          sendGift(guide.gifts[Math.min(i, guide.gifts.length - 1)], name, 1);
+        }
+      }, 700);
+      $('log').textContent = 'Đang thử 30 giây: người thử thả tim và dùng vật phẩm ngẫu nhiên...';
+    };
+
+    // ---- thời tiết & giờ
+    let sky = null;
+    let skyAt = 0;
+    for (const b of document.querySelectorAll('[data-weather]')) b.onclick = () => post('/api/sky', { weather: b.dataset.weather });
+    for (const b of document.querySelectorAll('[data-hour]')) b.onclick = () => post('/api/sky', { hour: Number(b.dataset.hour) });
+    $('sky-freeze').onclick = () => post('/api/sky', { freeze: !sky?.frozen });
+    function showSky() {
+      if (!sky) return;
+      const elapsed = Date.now() - skyAt;
+      const h = (((sky.hour + (sky.msPerHour ? elapsed / sky.msPerHour : 0)) % 24) + 24) % 24;
+      const clock = `${String(Math.floor(h)).padStart(2, '0')}:${String(Math.floor((h % 1) * 60)).padStart(2, '0')}`;
+      const left = sky.held ? 'sự kiện đang giữ, hết sự kiện sẽ trả lại trời cũ' : sky.forced ? 'giữ nguyên tới khi bấm 🎲' : `đổi sau ~${Math.max(0, Math.round((sky.left - elapsed) / 1000))} giây`;
+      const day = sky.realClock ? 'theo giờ thật' : `1 ngày đêm = ${Math.round((sky.msPerHour * 24) / 60000) || '?'} phút`;
+      $('sky-info').textContent = `${sky.label} (${left}) · 🕒 ${clock}${sky.frozen ? ' (đang dừng giờ)' : ` · ${day}`}`;
+      $('sky-freeze').textContent = sky.frozen ? '▶️ Cho giờ chạy tiếp' : '⏸️ Dừng giờ';
+      for (const b of document.querySelectorAll('[data-weather]')) b.classList.toggle('on', sky.forced ? b.dataset.weather === sky.weather : b.dataset.weather === 'auto');
+    }
+    function setSky(next) {
+      sky = next;
+      skyAt = Date.now();
+      showSky();
+    }
+    setInterval(showSky, 1000);
+
+    // ---- vòng quay
+    let wheel = null;
+    let wheelAt = 0;
+    const spinWheel = (body) =>
+      post('/api/wheel', { spin: true, ...body }).then((res) => {
+        if (res.status === 409) $('log').textContent = 'Vòng quay đang quay dở, đợi vài giây rồi bấm lại.';
+      });
+    $('wheel-spin').onclick = () => spinWheel({});
+    $('wheel-gold').onclick = () => spinWheel({ golden: true });
+    $('wheel-auto').onclick = () => post('/api/wheel', { auto: !wheel?.auto });
+    function showWheel() {
+      if (!wheel) {
+        $('wheel-info').textContent = 'Chưa bật vòng quay (mục wheel trong config.json).';
+        return;
+      }
+      const elapsed = Date.now() - wheelAt;
+      const next = wheel.nextIn === null ? 'đang tắt tự quay' : wheel.waiting ? 'chờ có người xuống hồ' : `lần tới sau ~${Math.max(0, Math.ceil((wheel.nextIn - elapsed) / 1000))} giây`;
+      const now = wheel.phase === 'event' && wheel.event ? `${wheel.event.icon} Đang chạy: ${wheel.event.label} (còn ${Math.max(0, Math.ceil((wheel.event.left - elapsed) / 1000))} giây) · ` : wheel.phase === 'spin' ? '🎡 Đang quay · ' : '';
+      const gold = wheel.gold?.goal > 0 ? ` · 💛 ${wheel.gold.likes.toLocaleString('vi-VN')}/${wheel.gold.goal.toLocaleString('vi-VN')} tim${wheel.gold.ready ? ' (lần tới là vòng vàng)' : ''}` : '';
+      $('wheel-info').textContent = `${now}${next}${gold}`;
+      $('wheel-auto').textContent = wheel.auto ? '⏸️ Tắt tự quay' : '▶️ Bật tự quay';
+    }
+    function setWheel(next) {
+      wheel = next;
+      wheelAt = Date.now();
+      showWheel();
+    }
+    setInterval(showWheel, 1000);
+
+    // ---- cá hiếm
+    let rare = null;
+    function showRare(r) {
+      rare = r;
+      $('rare-info').textContent = r?.every
+        ? `🌟 Đã giật ${r.n}/${r.every} con, con thứ ${r.every} là cá hiếm (bộ đếm lưu ở data/rare.json, bật lại server vẫn đếm tiếp).`
+        : 'Chưa bật cá hiếm (mục rare trong config.json).';
+    }
+    $('rare-next').onclick = () => rare?.every && post('/api/rare', { hooked: rare.every - 1 });
+    $('rare-zero').onclick = () => post('/api/rare', { hooked: 0 });
+
+    $('clear').onclick = () => post('/api/clear', {});
+    $('reset').onclick = () => {
+      if (confirm('Xóa toàn bộ bảng xếp hạng?')) post('/api/reset', {});
+    };
+    $('telegram-test').onclick = async () => {
+      $('log').textContent = 'Đang gửi tin thử Telegram...';
+      const { message } = await (await post('/api/telegram-test', {})).json();
+      $('log').textContent = message;
+    };
+
+    const showAlert = ({ at, text }) =>
+      $('alerts').prepend(Object.assign(document.createElement('p'), { textContent: `⚠️ ${new Date(at).toLocaleTimeString('vi-VN')} TikTok cảnh báo: ${text}` }));
+
+    let safeMode = false;
+    function showSafeMode(on) {
+      safeMode = on;
+      $('safe-box').classList.toggle('on', on);
+      $('safe').textContent = on ? '🛡️ Chế độ an toàn: BẬT. Đã tạm dừng giọng Vbee.' : '🛡️ Chế độ an toàn: tắt. Tự bật khi có cảnh báo TikTok.';
+      $('safe-toggle').textContent = on ? 'Tắt chế độ an toàn' : 'Bật ngay';
+    }
+    $('safe-toggle').onclick = () => post('/api/safe-mode', { on: !safeMode });
+
+    const showSession = ({ roomId, diamonds, gifts, since }) => {
+      $('session').textContent = roomId
+        ? `💎 Phiên live này (từ ${new Date(since).toLocaleTimeString('vi-VN')}): ${diamonds.toLocaleString('vi-VN')} kim cương từ ${gifts.toLocaleString('vi-VN')} lượt.`
+        : '💎 Chưa có phiên live nào từ lúc bật server.';
+    };
+
+    const players = new Set();
+    let queue = 0;
+    const showPond = () => ($('pond-info').textContent = `🎣 ${players.size}/${guide?.seats ?? '?'} người đang ngồi câu · ⏳ ${queue} lượt giật đang chờ`);
+
+    const events = new EventSource('/events');
+    events.onmessage = (event) => {
+      const msg = JSON.parse(event.data);
+      if (msg.type === 'snapshot') {
+        guide = msg.guide;
+        renderGifts(guide);
+        showStatus(msg.status);
+        $('alerts').replaceChildren();
+        msg.alerts.forEach(showAlert);
+        showSafeMode(msg.safeMode);
+        showSession(msg.session);
+        if (msg.sky) setSky(msg.sky);
+        showRare(msg.rare);
+        setWheel(msg.wheel);
+        $('wheel-slots').replaceChildren(...(guide.wheel?.slots ?? []).map((s) => button(`${s.icon} ${s.label}`, () => spinWheel({ slot: s.id }))));
+        players.clear();
+        msg.players.forEach((p) => players.add(p.key));
+        queue = msg.queue;
+        const { enabled, voice, readings } = msg.tts;
+        $('tts').textContent = enabled
+          ? `${readings.length ? `🔊 Vbee đọc: ${readings.join(', ')} (giọng ${voice})` : '🔇 Vbee không đọc gì'} · chỉnh mục voice trong config.json`
+          : '🔇 Vbee chưa bật: cần VBEE_TOKEN và VBEE_APP_ID trong .env rồi chạy lại server';
+      }
+      if (msg.type === 'join') players.add(msg.player.key);
+      if (msg.type === 'leave') players.delete(msg.key);
+      if (msg.type === 'queue') queue = msg.n;
+      if (msg.type === 'status') showStatus(msg);
+      if (msg.type === 'moderation') showAlert(msg);
+      if (msg.type === 'safe-mode') showSafeMode(msg.on);
+      if (msg.type === 'session') showSession(msg);
+      if (msg.type === 'sky') setSky(msg);
+      if (msg.type === 'rare') showRare(msg);
+      if (msg.type === 'wheel') setWheel(msg);
+      if (msg.type === 'wheel-gold' && wheel) setWheel({ ...wheel, gold: msg, nextIn: wheel.nextIn === null ? null : wheel.nextIn - (Date.now() - wheelAt), event: wheel.event && { ...wheel.event, left: wheel.event.left - (Date.now() - wheelAt) } });
+      if (msg.type === 'full') $('log').textContent = `Hồ đã kín chỗ, ${msg.name} chưa vào được.`;
+      if (msg.type === 'speak-error') $('log').textContent = `Vbee lỗi: ${msg.message}`;
+      showPond();
+    };
+    events.onerror = () => showStatus({ connected: false, text: 'Mất kết nối tới máy chủ game, kiểm tra cửa sổ đang chạy npm start.' });
+  </script>
+</body>
+</html>

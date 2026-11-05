@@ -1,0 +1,325 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #000;
+}
+
+body {
+  font-family: "Segoe UI", Roboto, Arial, sans-serif;
+  color: #fff;
+}
+
+/* The game is laid out on a fixed 1080x1920 (9:16) stage that game.js scales to the window. */
+#stage {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1080px;
+  height: 1920px;
+  overflow: hidden;
+  transform-origin: 0 0;
+}
+
+#scene,
+#fx {
+  position: absolute;
+  inset: 0;
+  width: 1080px;
+  height: 1920px;
+}
+
+#fx {
+  pointer-events: none;
+}
+
+#hud {
+  position: absolute;
+  top: 186px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  text-shadow: 0 3px 10px rgba(0, 0, 0, 0.7);
+}
+
+#hud h1 {
+  font: 700 70px/1 "Times New Roman", Georgia, serif;
+  letter-spacing: 4px;
+  color: #ffe08a;
+  text-shadow: 0 0 18px rgba(255, 190, 80, 0.55), 0 4px 0 #7a3b0c, 0 8px 18px rgba(0, 0, 0, 0.8);
+}
+
+#note {
+  margin-top: 10px;
+  font-size: 26px;
+  color: rgba(255, 255, 255, 0.86);
+}
+
+.panel {
+  position: absolute;
+  background: rgba(6, 22, 40, 0.7);
+  border: 2px solid rgba(240, 200, 110, 0.6);
+  border-radius: 22px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+}
+
+#guide {
+  top: 352px;
+  left: 24px;
+  right: 24px;
+  padding: 12px 14px;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 10px;
+  font-size: 23px;
+}
+
+#guide li {
+  padding: 3px 12px;
+  border-radius: 999px;
+  background: rgba(120, 210, 255, 0.13);
+  white-space: nowrap;
+}
+
+#guide b {
+  color: #ffd54a;
+}
+
+.gift-icon {
+  width: 1.7em;
+  height: 1.7em;
+  margin: -0.4em 0 -0.35em;
+  object-fit: contain;
+  vertical-align: middle;
+}
+
+#toast {
+  position: absolute;
+  top: 478px;
+  left: 50%;
+  width: max-content;
+  max-width: 1040px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 6px 30px 6px 8px;
+  border: 2px solid #f2c14e;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(8, 52, 74, 0.94), rgba(14, 104, 128, 0.96), rgba(8, 52, 74, 0.94));
+  font-size: 34px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  opacity: 0;
+  transform: translateX(-50%);
+}
+
+#toast .text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.avatar {
+  flex: none;
+  width: 58px;
+  height: 58px;
+  border: 3px solid #f2c14e;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.avatar.initial {
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, #2a8fb8, #f2a03d);
+  color: #fff;
+  font-size: 30px;
+  font-weight: 800;
+}
+
+#toast.big {
+  font-size: 36px;
+  color: #fff8dc;
+  background: linear-gradient(90deg, #8a5a00, #e0a400, #8a5a00);
+  box-shadow: 0 0 40px rgba(255, 200, 60, 0.8);
+}
+
+#toast.big .avatar {
+  width: 70px;
+  height: 70px;
+}
+
+#toast.note {
+  max-width: 940px;
+  padding: 12px 34px;
+  border-radius: 30px;
+  font-size: 32px;
+  line-height: 1.35;
+  text-align: center;
+  white-space: normal;
+}
+
+#welcome {
+  position: absolute;
+  top: 306px;
+  left: 50%;
+  max-width: 1000px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 3px 20px 3px 3px;
+  border: 2px solid rgba(240, 200, 110, 0.75);
+  border-radius: 999px;
+  background: rgba(6, 22, 40, 0.88);
+  font-size: 24px;
+  font-weight: 700;
+  color: #fff4d0;
+  white-space: nowrap;
+  overflow: hidden;
+  opacity: 0;
+  transform: translateX(-50%);
+}
+
+#welcome .avatar {
+  width: 32px;
+  height: 32px;
+  border-width: 2px;
+  font-size: 18px;
+}
+
+#welcome .text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Side panels over the cliffs, either side of the gate. */
+#round,
+#board {
+  top: 640px;
+  width: 240px;
+  padding: 10px 14px 12px;
+}
+
+#round {
+  left: 12px;
+  text-align: center;
+}
+
+#board {
+  right: 12px;
+}
+
+#round h2,
+#board h2 {
+  margin-bottom: 4px;
+  font-size: 25px;
+  text-align: center;
+  color: #ffd54a;
+}
+
+#timer {
+  font: 700 64px/1.1 "Segoe UI", Arial, sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+
+#timer.urgent {
+  color: #ff7a5c;
+  animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  50% {
+    transform: scale(1.12);
+  }
+}
+
+#round-note {
+  font-size: 21px;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+#top {
+  list-style: none;
+}
+
+#top li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  font-size: 23px;
+}
+
+#top .rank {
+  width: 32px;
+  text-align: center;
+}
+
+#top .name {
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+#top .pts {
+  font-weight: 700;
+  color: #ffd54a;
+}
+
+#top li.empty {
+  height: auto;
+  padding: 6px 0;
+  font-size: 20px;
+  text-align: center;
+  opacity: 0.75;
+}
+
+/* While a carp turns into a dragon (game.js), the winner card takes the top of the screen. */
+#note,
+#guide,
+#round,
+#board,
+#welcome {
+  transition: opacity 0.6s;
+}
+
+#stage.celebrating #note,
+#stage.celebrating #guide,
+#stage.celebrating #round,
+#stage.celebrating #board,
+#stage.celebrating #welcome {
+  opacity: 0 !important;
+}
+
+#stage.celebrating #toast {
+  visibility: hidden;
+}
+
+#sound-hint {
+  position: absolute;
+  bottom: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 14px 28px;
+  border: 2px solid #fff;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.75);
+  color: #fff;
+  font: 600 30px "Segoe UI", Arial, sans-serif;
+  cursor: pointer;
+}
+
+#sound-hint[hidden] {
+  display: none;
+}

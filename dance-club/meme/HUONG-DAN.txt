@@ -1,0 +1,8 @@
+Chép file GIF (hoặc .webp/.png) vào các thư mục sau rồi tải lại cửa sổ game (Ctrl + F5):
+
+nguoi-xem/      GIF cho người xem trên sàn. Mỗi người xem được gán cố định 1 GIF trong thư mục này.
+                Thư mục trống = dùng nhân vật 3D như cũ.
+bieu-dien/1..5  GIF cho người biểu diễn theo tier quà (1 Casual ... 5 Legend). Trống thì dùng GIF của người đó.
+san-khau/       dj.gif, mc.gif, vu-cong-1.gif, vu-cong-2.gif cho DJ, MC và 2 vũ công. Thiếu file nào thì người đó vẫn là 3D.
+
+Nên dùng GIF nền trong suốt, đứng thẳng (cao hơn rộng), dưới 2 MB. Chỉ dùng GIF bạn có quyền sử dụng.

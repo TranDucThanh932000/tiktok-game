@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cá chép vượt Vũ Môn</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="stage">
+    <svg id="scene" viewBox="0 0 1080 1920" aria-hidden="true">
+      <defs>
+        <linearGradient id="g-sky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#070d24"/>
+          <stop offset="0.38" stop-color="#1b2a5e"/>
+          <stop offset="0.64" stop-color="#5a3f7e"/>
+          <stop offset="0.84" stop-color="#c9707a"/>
+          <stop offset="1" stop-color="#f4b77a"/>
+        </linearGradient>
+        <radialGradient id="g-heaven">
+          <stop offset="0" stop-color="#fff6dc" stop-opacity="0.95"/>
+          <stop offset="0.45" stop-color="#ffd27a" stop-opacity="0.45"/>
+          <stop offset="1" stop-color="#ffb347" stop-opacity="0"/>
+        </radialGradient>
+        <radialGradient id="g-portal" cx="0.5" cy="1" r="0.95">
+          <stop offset="0" stop-color="#fffbe8" stop-opacity="0.95"/>
+          <stop offset="0.5" stop-color="#ffd98a" stop-opacity="0.5"/>
+          <stop offset="1" stop-color="#ffb347" stop-opacity="0"/>
+        </radialGradient>
+        <radialGradient id="g-glow">
+          <stop offset="0" stop-color="#ffd98a" stop-opacity="0.95"/>
+          <stop offset="1" stop-color="#ffb347" stop-opacity="0"/>
+        </radialGradient>
+        <linearGradient id="g-cliff" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#3a4d50"/>
+          <stop offset="0.35" stop-color="#1f2f33"/>
+          <stop offset="1" stop-color="#0c1518"/>
+        </linearGradient>
+        <linearGradient id="g-falls" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#f2fbff"/>
+          <stop offset="0.07" stop-color="#a8e2f2"/>
+          <stop offset="0.45" stop-color="#5fb5d4"/>
+          <stop offset="0.8" stop-color="#4aa3c6"/>
+          <stop offset="1" stop-color="#d2f2fa"/>
+        </linearGradient>
+        <linearGradient id="g-pond" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#3a9ab0"/>
+          <stop offset="0.12" stop-color="#1a6a82"/>
+          <stop offset="0.55" stop-color="#0c4258"/>
+          <stop offset="1" stop-color="#062634"/>
+        </linearGradient>
+        <radialGradient id="g-mist">
+          <stop offset="0" stop-color="#f4fdff" stop-opacity="0.75"/>
+          <stop offset="1" stop-color="#f4fdff" stop-opacity="0"/>
+        </radialGradient>
+        <linearGradient id="g-lacquer" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="#360806"/>
+          <stop offset="0.35" stop-color="#a8261a"/>
+          <stop offset="0.5" stop-color="#d4442e"/>
+          <stop offset="0.75" stop-color="#851b12"/>
+          <stop offset="1" stop-color="#2a0605"/>
+        </linearGradient>
+        <linearGradient id="g-gold" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#fff0b8"/>
+          <stop offset="1" stop-color="#c88d22"/>
+        </linearGradient>
+        <linearGradient id="g-roof" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#355552"/>
+          <stop offset="1" stop-color="#14262a"/>
+        </linearGradient>
+        <linearGradient id="g-leaf" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#5aa84c"/>
+          <stop offset="1" stop-color="#25613a"/>
+        </linearGradient>
+        <linearGradient id="g-petal" x1="0" y1="1" x2="0" y2="0">
+          <stop offset="0" stop-color="#e0507a"/>
+          <stop offset="1" stop-color="#ffe0ec"/>
+        </linearGradient>
+        <radialGradient id="g-vignette" cx="0.5" cy="0.45" r="0.75">
+          <stop offset="0.6" stop-color="#000" stop-opacity="0"/>
+          <stop offset="1" stop-color="#000" stop-opacity="0.55"/>
+        </radialGradient>
+        <!-- Auspicious cloud (mây cát tường) with a gold curl. -->
+        <g id="cloud">
+          <ellipse cx="0" cy="0" rx="74" ry="28"/>
+          <ellipse cx="-56" cy="8" rx="46" ry="20"/>
+          <ellipse cx="58" cy="7" rx="52" ry="22"/>
+          <ellipse cx="8" cy="-22" rx="44" ry="27"/>
+          <path d="M-38 6a14 14 0 1 1 14 14M30 -4a12 12 0 1 0 12 12" fill="none" stroke="#e8b85c" stroke-width="3" stroke-opacity=".7" stroke-linecap="round"/>
+        </g>
+        <!-- Left cliff; the right one is its mirror image. Its inner edge overlaps the water by up to 16 px. -->
+        <path id="cliff" d="M0 700L50 688L110 702L170 690L230 714L280 744L322 776L352 806L372 836L384 870L370 905L362 930L352 962L350 990L336 1022L324 1050L318 1080L312 1110L296 1140L288 1170L284 1200L276 1230L262 1262L252 1290L248 1320L240 1350L226 1380L216 1410L206 1440L190 1462L130 1478L60 1470L0 1486Z"/>
+        <g id="pine">
+          <path d="M0 0C6 -32 -16 -52 8 -76C26 -94 16 -112 38 -128" fill="none" stroke="#2b1c12" stroke-width="10" stroke-linecap="round"/>
+          <path d="M8 -62C30 -72 50 -66 76 -74M6 -82C-20 -90 -36 -84 -54 -92" fill="none" stroke="#2b1c12" stroke-width="6" stroke-linecap="round"/>
+          <ellipse cx="76" cy="-80" rx="46" ry="15" fill="#1e4a35"/>
+          <ellipse cx="72" cy="-86" rx="34" ry="8" fill="#2e6b48"/>
+          <ellipse cx="-54" cy="-98" rx="40" ry="14" fill="#1e4a35"/>
+          <ellipse cx="-50" cy="-104" rx="28" ry="7" fill="#2e6b48"/>
+          <ellipse cx="40" cy="-134" rx="52" ry="17" fill="#1e4a35"/>
+          <ellipse cx="38" cy="-141" rx="38" ry="8" fill="#2e6b48"/>
+        </g>
+        <g id="leaf">
+          <path d="M0 0L48 -18A52 52 0 1 0 48 18Z" fill="url(#g-leaf)"/>
+          <path d="M0 0L-46 -20M0 0L-50 8M0 0L-24 44M0 0L-22 -46M0 0L18 46M0 0L18 -46" stroke="#8fd07a" stroke-opacity=".45" stroke-width="2.5"/>
+        </g>
+        <path id="petal" d="M0 0C-17 -18 -15 -52 0 -72C15 -52 17 -18 0 0Z" fill="url(#g-petal)" stroke="#b8395f" stroke-width="1.5"/>
+        <g id="lotus">
+          <use href="#petal" transform="rotate(-64) scale(.78)"/>
+          <use href="#petal" transform="rotate(64) scale(.78)"/>
+          <use href="#petal" transform="rotate(-33) scale(.9)"/>
+          <use href="#petal" transform="rotate(33) scale(.9)"/>
+          <use href="#petal"/>
+        </g>
+      </defs>
+
+      <rect width="1080" height="940" fill="url(#g-sky)"/>
+      <g fill="#fff">
+        <circle cx="74" cy="40" r="2" opacity=".8"/>
+        <circle cx="210" cy="96" r="1.6" opacity=".6"/>
+        <circle cx="330" cy="30" r="2.2" opacity=".7"/>
+        <circle cx="468" cy="120" r="1.5" opacity=".5"/>
+        <circle cx="610" cy="58" r="2" opacity=".8"/>
+        <circle cx="742" cy="134" r="1.6" opacity=".6"/>
+        <circle cx="880" cy="44" r="2.4" opacity=".7"/>
+        <circle cx="1010" cy="110" r="1.8" opacity=".6"/>
+        <circle cx="150" cy="176" r="1.4" opacity=".4"/>
+        <circle cx="960" cy="214" r="1.4" opacity=".4"/>
+        <circle cx="40" cy="262" r="1.6" opacity=".35"/>
+        <circle cx="1046" cy="300" r="1.6" opacity=".35"/>
+      </g>
+      <circle cx="540" cy="700" r="340" fill="url(#g-heaven)" opacity=".75"/>
+
+      <g fill="#f6dcd2">
+        <use href="#cloud" transform="translate(120 330) scale(.6)" opacity=".3"/>
+        <use href="#cloud" transform="translate(980 300) scale(.6)" opacity=".3"/>
+        <use href="#cloud" transform="translate(290 480) scale(.75)" opacity=".45"/>
+        <use href="#cloud" transform="translate(800 446) scale(.8)" opacity=".45"/>
+      </g>
+
+      <path d="M0 770L80 712L150 738L240 650L330 706L420 660L540 712L650 648L760 708L850 656L950 724L1080 684V940H0Z" fill="#3b3570" opacity=".85"/>
+      <path d="M0 830L100 768L200 806L300 748L420 806H660L780 748L880 806L980 766L1080 806V940H0Z" fill="#26284f"/>
+      <g fill="#f6dcd2">
+        <use href="#cloud" transform="translate(170 640) scale(1.2)" opacity=".55"/>
+        <use href="#cloud" transform="translate(920 600) scale(1.1)" opacity=".55"/>
+      </g>
+
+      <rect y="1430" width="1080" height="490" fill="url(#g-pond)"/>
+      <path d="M380 836H700L880 1440H200Z" fill="url(#g-falls)"/>
+
+      <use href="#cliff" fill="url(#g-cliff)"/>
+      <use href="#cliff" fill="url(#g-cliff)" transform="translate(1080 0) scale(-1 1)"/>
+      <g fill="none" stroke-linecap="round">
+        <path d="M0 700L50 688L110 702L170 690L230 714L280 744L322 776L352 806L372 836" stroke="#7d9b98" stroke-opacity=".5" stroke-width="3"/>
+        <path d="M1080 700L1030 688L970 702L910 690L850 714L800 744L758 776L728 806L708 836" stroke="#7d9b98" stroke-opacity=".5" stroke-width="3"/>
+        <path d="M20 790Q120 778 210 810M40 920Q150 900 262 940M30 1060Q130 1040 236 1080M50 1200Q140 1186 214 1216M20 1340Q100 1322 176 1356M1060 820Q960 806 870 836M1040 960Q930 942 830 980M1050 1110Q950 1094 860 1126M1030 1260Q940 1248 880 1276M1060 1400Q990 1386 920 1410" stroke="#05090b" stroke-opacity=".45" stroke-width="4"/>
+      </g>
+      <g fill="#3d6b3f" opacity=".55">
+        <ellipse cx="96" cy="708" rx="60" ry="13"/>
+        <ellipse cx="236" cy="726" rx="40" ry="10"/>
+        <ellipse cx="306" cy="784" rx="26" ry="7"/>
+        <ellipse cx="70" cy="964" rx="40" ry="10"/>
+        <ellipse cx="190" cy="1118" rx="48" ry="11"/>
+        <ellipse cx="96" cy="1306" rx="44" ry="11"/>
+        <ellipse cx="990" cy="704" rx="56" ry="12"/>
+        <ellipse cx="790" cy="770" rx="30" ry="8"/>
+        <ellipse cx="1000" cy="1030" rx="44" ry="11"/>
+        <ellipse cx="900" cy="1190" rx="40" ry="10"/>
+        <ellipse cx="1010" cy="1370" rx="46" ry="11"/>
+      </g>
+      <!-- Pines grow out of the cliff faces, below the side panels. -->
+      <use href="#pine" transform="translate(70 1012)"/>
+      <use href="#pine" transform="translate(1012 1092) scale(-.8 .8)"/>
+
+      <!-- Vũ Môn: light pours through the gate at the top of the falls. -->
+      <g id="gate">
+        <ellipse cx="540" cy="780" rx="170" ry="120" fill="url(#g-heaven)" opacity=".6"/>
+        <rect x="418" y="698" width="244" height="140" fill="url(#g-portal)"/>
+        <path d="M344 840Q352 808 398 806Q440 808 448 840Z" fill="#26363a"/>
+        <path d="M632 840Q640 808 682 806Q728 808 736 840Z" fill="#26363a"/>
+        <rect x="384" y="604" width="34" height="210" fill="url(#g-lacquer)"/>
+        <rect x="662" y="604" width="34" height="210" fill="url(#g-lacquer)"/>
+        <rect x="377" y="802" width="48" height="16" rx="3" fill="url(#g-gold)"/>
+        <rect x="655" y="802" width="48" height="16" rx="3" fill="url(#g-gold)"/>
+        <path d="M384 726H418M662 726H696M384 772H418M662 772H696" stroke="#e0b45a" stroke-width="4"/>
+        <rect x="356" y="682" width="368" height="16" fill="#8e2016" stroke="#e0b45a" stroke-width="2.5"/>
+        <rect x="448" y="618" width="184" height="58" rx="6" fill="#5e130c" stroke="#e0b45a" stroke-width="4"/>
+        <rect x="456" y="626" width="168" height="42" rx="3" fill="none" stroke="#e0b45a" stroke-opacity=".45" stroke-width="1.5"/>
+        <text x="542" y="658" text-anchor="middle" font-family="'Times New Roman', Georgia, serif" font-weight="700" font-size="30" letter-spacing="4" fill="#ffe08a">VŨ MÔN</text>
+        <rect x="336" y="598" width="408" height="14" fill="#7a1a12" stroke="#e0b45a" stroke-width="2"/>
+        <path d="M318 600Q414 590 446 558H634Q666 590 762 600Z" fill="url(#g-roof)" stroke="#e0b45a" stroke-width="3" stroke-linejoin="round"/>
+        <path d="M470 562V596M500 560V598M530 560V598M560 560V598M590 560V598M620 562V596M442 566L422 594M638 566L658 594" stroke="#0d1a1b" stroke-opacity=".55" stroke-width="2"/>
+        <path d="M322 600Q298 596 290 572Q304 588 334 592Z" fill="#e0b45a"/>
+        <path d="M758 600Q782 596 790 572Q776 588 746 592Z" fill="#e0b45a"/>
+        <path d="M446 558H634" stroke="#e0b45a" stroke-width="7" stroke-linecap="round"/>
+        <path d="M446 558q-18 -2 -20 -20M634 558q18 -2 20 -20" fill="none" stroke="#e0b45a" stroke-width="5" stroke-linecap="round"/>
+        <!-- Two dragons facing the pearl (lưỡng long chầu nguyệt). -->
+        <path d="M468 552q12 -22 40 -14q-14 2 -16 12M612 552q-12 -22 -40 -14q14 2 16 12" fill="none" stroke="#e0b45a" stroke-width="5" stroke-linecap="round"/>
+        <circle cx="540" cy="536" r="28" fill="url(#g-glow)"/>
+        <circle cx="540" cy="538" r="11" fill="url(#g-gold)" stroke="#a8701c" stroke-width="1.5"/>
+        <path d="M540 512q9 11 0 16q-9 -5 0 -16Z" fill="#ffcf4d"/>
+      </g>
+      <path d="M380 836Q540 826 700 836V846Q540 838 380 846Z" fill="#f4fdff" opacity=".9"/>
+      <g fill="#f6dcd2">
+        <use href="#cloud" transform="translate(300 846) scale(.7)" opacity=".5"/>
+        <use href="#cloud" transform="translate(780 846) scale(.7)" opacity=".5"/>
+      </g>
+
+      <!-- Foot of the falls: rocks, foam and spray (game.js animates the water). -->
+      <path d="M118 1474Q136 1422 196 1424Q246 1430 254 1468Q202 1490 118 1474Z" fill="#1c292d"/>
+      <path d="M962 1474Q944 1422 884 1424Q834 1430 826 1468Q878 1490 962 1474Z" fill="#1c292d"/>
+      <ellipse cx="540" cy="1452" rx="470" ry="70" fill="url(#g-mist)"/>
+      <ellipse cx="540" cy="1446" rx="360" ry="22" fill="#eafaff" opacity=".6"/>
+      <path d="M150 1540H360M610 1566H910M210 1640H530M640 1712H960M120 1790H420M560 1850H900" stroke="#9fe6f5" stroke-opacity=".12" stroke-width="3" stroke-linecap="round"/>
+
+      <use href="#leaf" transform="translate(88 1566) scale(1.2 .5) rotate(200)"/>
+      <use href="#leaf" transform="translate(996 1612) scale(1.3 .54) rotate(-20)"/>
+      <use href="#leaf" transform="translate(170 1770) scale(1 .44) rotate(150)"/>
+      <use href="#leaf" transform="translate(928 1810) scale(1.1 .48) rotate(30)"/>
+      <use href="#leaf" transform="translate(40 1690) scale(.8 .36) rotate(90)"/>
+      <use href="#leaf" transform="translate(1046 1730) scale(.8 .36) rotate(-100)"/>
+      <use href="#lotus" transform="translate(110 1552) scale(.5)"/>
+      <use href="#lotus" transform="translate(972 1598) scale(.56)"/>
+
+      <rect width="1080" height="1920" fill="url(#g-vignette)"/>
+    </svg>
+
+    <canvas id="fx" width="1080" height="1920"></canvas>
+
+    <header id="hud">
+      <h1>CÁ CHÉP VƯỢT VŨ MÔN</h1>
+      <p id="note">Comment “chơi” để tham gia · thả tim cho cá vượt thác</p>
+    </header>
+    <div id="welcome"></div>
+    <ul id="guide" class="panel"></ul>
+    <div id="toast"></div>
+    <section id="round" class="panel">
+      <h2 id="round-title">⏳ Vòng 1</h2>
+      <p id="timer">--:--</p>
+      <p id="round-note">Chờ người chơi</p>
+    </section>
+    <section id="board" class="panel">
+      <h2>🐉 Long bảng</h2>
+      <ol id="top"></ol>
+    </section>
+    <button id="sound-hint" type="button" hidden>🔇 Bấm vào màn hình để bật âm thanh</button>
+  </div>
+  <script type="module" src="game.js"></script>
+</body>
+</html>

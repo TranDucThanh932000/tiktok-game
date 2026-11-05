@@ -1,0 +1,442 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #000;
+}
+
+body {
+  font-family: "Segoe UI", Roboto, Arial, sans-serif;
+  color: #f6efe1;
+}
+
+/* The game is laid out on a fixed 1080x1920 (9:16) stage that game.js scales to the window. */
+#stage {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1080px;
+  height: 1920px;
+  overflow: hidden;
+  transform-origin: 0 0;
+}
+
+/* The courtyard camera in game.js zooms these two layers together; the panels stay put. */
+#scene,
+#fx {
+  position: absolute;
+  inset: 0;
+  width: 1080px;
+  height: 1920px;
+  transform-origin: 0 0;
+}
+
+#fx {
+  pointer-events: none;
+}
+
+/* No title: the merit total sits just below TikTok's own top bar. */
+#hud {
+  position: absolute;
+  top: 80px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+}
+
+#total {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 30px 4px 18px;
+  border: 1.5px solid rgba(255, 222, 176, 0.6);
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(14, 40, 46, 0.72), rgba(32, 70, 72, 0.82), rgba(14, 40, 46, 0.72));
+  box-shadow: 0 6px 22px rgba(8, 20, 24, 0.35);
+  font-size: 36px;
+  font-weight: 600;
+  color: #f6efe1;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+}
+
+#total b {
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: #ffc98a;
+}
+
+#total .lotus {
+  width: 44px;
+  height: 31px;
+}
+
+.panel {
+  position: absolute;
+  background: rgba(14, 36, 42, 0.6);
+  border: 1.5px solid rgba(214, 238, 228, 0.36);
+  border-radius: 18px;
+  box-shadow: 0 8px 26px rgba(8, 20, 24, 0.32);
+}
+
+#guide {
+  position: absolute;
+  top: 148px;
+  left: 24px;
+  right: 24px;
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: 16px;
+  font-size: 32px;
+  font-weight: 600;
+  line-height: 1.25;
+  color: #eef4ef;
+}
+
+#guide .guide-panel {
+  position: static;
+  min-width: 0;
+  padding: 14px 16px;
+  background: rgba(14, 36, 42, 0.88);
+}
+
+#guide h2 {
+  margin-bottom: 10px;
+  font-size: 32px;
+  color: #ffcf96;
+}
+
+#guide ul {
+  list-style: none;
+  display: grid;
+  gap: 6px 12px;
+}
+
+#gift-guide {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+#guide li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  min-height: 60px;
+  padding: 6px 0;
+  border-top: 1px solid rgba(214, 238, 228, 0.2);
+}
+
+#guide li span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+#social-guide li:last-child {
+  display: block;
+}
+
+#social-guide li:last-child b {
+  display: block;
+  margin-bottom: 6px;
+}
+
+#guide b {
+  flex-shrink: 0;
+  color: #ffcf96;
+}
+
+.gift-icon {
+  display: block;
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+}
+
+#welcome {
+  position: absolute;
+  top: 716px;
+  left: 50%;
+  max-width: 1000px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 3px 20px 3px 3px;
+  border: 1.5px solid rgba(214, 238, 228, 0.55);
+  border-radius: 999px;
+  background: rgba(14, 36, 42, 0.85);
+  font-size: 23px;
+  font-weight: 700;
+  color: #f6efe1;
+  white-space: nowrap;
+  overflow: hidden;
+  opacity: 0;
+  transform: translateX(-50%);
+}
+
+#welcome .avatar {
+  width: 32px;
+  height: 32px;
+  border-width: 2px;
+  font-size: 18px;
+}
+
+#welcome .text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#board {
+  top: 904px;
+  right: 10px;
+  width: 246px;
+  padding: 8px 12px 10px;
+}
+
+#board h2 {
+  margin-bottom: 2px;
+  font-size: 23px;
+  letter-spacing: 0.5px;
+  text-align: center;
+  color: #ffcf96;
+}
+
+#top {
+  list-style: none;
+}
+
+#top li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  font-size: 22px;
+}
+
+#top .rank {
+  width: 30px;
+  text-align: center;
+}
+
+#top .name {
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+#top .pts {
+  font-weight: 700;
+  color: #ffcf96;
+}
+
+#top li.empty {
+  height: auto;
+  padding: 6px 0;
+  font-size: 19px;
+  text-align: center;
+  opacity: 0.8;
+}
+
+/* Over the hall roof, clear of the guide above and the leaderboard below. */
+#toast {
+  position: absolute;
+  top: 780px;
+  left: 50%;
+  max-width: 1040px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 6px 30px 6px 8px;
+  border: 2px solid rgba(255, 220, 170, 0.85);
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(18, 56, 60, 0.94), rgba(42, 94, 90, 0.96), rgba(18, 56, 60, 0.94));
+  font-size: 32px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  opacity: 0;
+  transform: translateX(-50%);
+}
+
+#toast .text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.avatar {
+  flex: none;
+  width: 56px;
+  height: 56px;
+  border: 3px solid #ffd8a8;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.avatar.initial {
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, #3f8f88, #e0a066);
+  color: #fff;
+  font-size: 29px;
+  font-weight: 800;
+}
+
+#toast.big {
+  font-size: 42px;
+  color: #fffaf0;
+  background: linear-gradient(90deg, #a8552f, #f0a35a, #a8552f);
+  box-shadow: 0 0 40px rgba(255, 190, 120, 0.8);
+}
+
+#toast.big .avatar {
+  width: 68px;
+  height: 68px;
+}
+
+#toast.note {
+  width: max-content;
+  max-width: 940px;
+  padding: 12px 34px;
+  border-radius: 28px;
+  font-size: 30px;
+  line-height: 1.35;
+  text-align: center;
+  white-space: normal;
+}
+
+/* While the focus cam (game.js) runs, only the praying viewer is on screen. */
+#hud,
+#guide,
+#board {
+  transition: opacity 0.6s;
+}
+
+#stage.focusing #hud,
+#stage.focusing #guide,
+#stage.focusing #board {
+  opacity: 0;
+}
+
+#stage.focusing #toast,
+#stage.focusing #welcome {
+  visibility: hidden;
+}
+
+#sound-hint {
+  position: absolute;
+  bottom: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 14px 28px;
+  border: 2px solid #fff;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.75);
+  color: #fff;
+  font: 600 30px "Segoe UI", Arial, sans-serif;
+  cursor: pointer;
+}
+
+#sound-hint[hidden] {
+  display: none;
+}
+
+/* Scene parts animated from game.js (Web Animations) or by CSS. */
+#bell {
+  transform-box: view-box;
+  transform-origin: 135px 690px;
+}
+
+#striker {
+  transform-box: view-box;
+  transform-origin: 185px 691px;
+}
+
+#mo {
+  transform-box: view-box;
+  transform-origin: 786px 836px;
+}
+
+#mallet {
+  transform-box: view-box;
+  transform-origin: 848px 768px;
+  transform: rotate(14deg);
+}
+
+#halo {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: breathe 4s ease-in-out infinite alternate;
+}
+
+.vase {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+
+.flame {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: flicker 0.18s ease-in-out infinite alternate;
+}
+
+.sway {
+  transform-box: view-box;
+  animation: sway 4s ease-in-out infinite;
+}
+
+.mist {
+  animation: drift 26s ease-in-out infinite alternate;
+}
+
+.mist.slow {
+  animation-duration: 38s;
+  animation-direction: alternate-reverse;
+}
+
+#crown {
+  transform-box: view-box;
+  transform-origin: 950px 870px;
+  animation: rustle 7s ease-in-out infinite;
+}
+
+#rays {
+  animation: shimmer 9s ease-in-out infinite alternate;
+}
+
+@keyframes breathe {
+  from { opacity: 0.6; }
+  to { opacity: 1; }
+}
+
+@keyframes flicker {
+  from { transform: scale(1, 1); opacity: 0.85; }
+  to { transform: scale(0.88, 1.12); opacity: 1; }
+}
+
+@keyframes sway {
+  0%, 100% { transform: rotate(-4deg); }
+  50% { transform: rotate(4deg); }
+}
+
+@keyframes drift {
+  from { transform: translateX(-40px); }
+  to { transform: translateX(40px); }
+}
+
+@keyframes rustle {
+  0%, 100% { transform: rotate(-0.6deg); }
+  50% { transform: rotate(0.6deg); }
+}
+
+@keyframes shimmer {
+  from { opacity: 0.35; }
+  to { opacity: 0.7; }
+}

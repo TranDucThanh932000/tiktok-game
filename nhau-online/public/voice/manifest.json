@@ -1,0 +1,32 @@
+{
+  "peanut": [
+    "peanut__hn_male_minhquan_yt-stable.mp3",
+    "peanut__hue_male_duyphuong_full_24k-stl.mp3",
+    "peanut__sg_male_trungkien_vdts_24k-stl.mp3",
+    "peanut__sg_male_chidat_ebook_48k-phg.mp3"
+  ],
+  "beer": [
+    "beer__hn_male_minhquan_yt-stable.mp3",
+    "beer__hue_male_duyphuong_full_24k-stl.mp3",
+    "beer__sg_male_trungkien_vdts_24k-stl.mp3",
+    "beer__sg_male_chidat_ebook_48k-phg.mp3"
+  ],
+  "nem": [
+    "nem__hn_male_minhquan_yt-stable.mp3",
+    "nem__hue_male_duyphuong_full_24k-stl.mp3",
+    "nem__sg_male_trungkien_vdts_24k-stl.mp3",
+    "nem__sg_male_chidat_ebook_48k-phg.mp3"
+  ],
+  "squid": [
+    "squid__hn_male_minhquan_yt-stable.mp3",
+    "squid__hue_male_duyphuong_full_24k-stl.mp3",
+    "squid__sg_male_trungkien_vdts_24k-stl.mp3",
+    "squid__sg_male_chidat_ebook_48k-phg.mp3"
+  ],
+  "hotpot": [
+    "hotpot__hn_male_minhquan_yt-stable.mp3",
+    "hotpot__hue_male_duyphuong_full_24k-stl.mp3",
+    "hotpot__sg_male_trungkien_vdts_24k-stl.mp3",
+    "hotpot__sg_male_chidat_ebook_48k-phg.mp3"
+  ]
+}

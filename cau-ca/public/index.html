@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hồ Câu Cá</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎣</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap&subset=vietnamese" rel="stylesheet">
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "/vendor/three/build/three.module.js",
+        "three/addons/": "/vendor/three/examples/jsm/"
+      }
+    }
+  </script>
+  <style>
+    html, body { margin: 0; height: 100%; overflow: hidden; background: #05080b; }
+    #stage { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; transform-origin: 0 0; overflow: hidden; font-family: "Baloo 2", "Segoe UI", sans-serif; color: #fff; }
+    #game { position: absolute; inset: 0; width: 1080px; height: 1920px; display: block; }
+    #tags, #floaters { position: absolute; inset: 0; pointer-events: none; }
+
+    /* ---------- tiêu đề ---------- */
+    #title { position: absolute; left: 0; right: 0; top: 108px; text-align: center; pointer-events: none; transition: opacity 0.5s, transform 0.5s; }
+    #logo {
+      display: inline-block; font-size: 70px; font-weight: 800; line-height: 1; letter-spacing: 2px; color: #fff;
+      -webkit-text-stroke: 4px #0b4f8a; paint-order: stroke fill;
+      text-shadow: 0 6px 0 #0b4f8a, 0 10px 18px rgba(0,0,0,0.35);
+    }
+    #logo b { color: #ffd43b; }
+    #join-hint { margin-top: 6px; display: inline-block; padding: 2px 22px 4px; border-radius: 999px; font-size: 32px; font-weight: 700;
+      background: rgba(6, 46, 82, 0.72); border: 3px solid rgba(255,255,255,0.65); }
+    #join-hint b { color: #ffe066; font-size: 38px; padding: 0 4px; }
+
+    /* ---------- bảng xếp hạng ---------- */
+    .panel { position: absolute; top: 322px; border-radius: 26px; padding: 12px 16px 14px;
+      background: linear-gradient(180deg, rgba(8, 56, 98, 0.86), rgba(5, 34, 64, 0.86));
+      border: 3px solid rgba(255, 255, 255, 0.55); box-shadow: 0 10px 26px rgba(0,0,0,0.3); transition: opacity 0.5s, transform 0.5s; }
+    #board { left: 18px; width: 500px; }
+    #guide { right: 18px; width: 470px; }
+    .panel h2 { margin: 0 0 6px; font-size: 32px; line-height: 1.2; text-align: center; color: #ffe066; text-shadow: 0 3px 0 rgba(0,0,0,0.3); }
+    /* mỗi lần hiện một người; thẻ xếp chồng trong khung, main.js đẩy thẻ từ trái sang phải */
+    #board ol { position: relative; list-style: none; margin: 0; padding: 0; height: 176px; overflow: hidden; border-radius: 18px; }
+    #board li { position: absolute; inset: 0; box-sizing: border-box; display: grid; grid-template-columns: 156px 1fr; align-items: center; gap: 14px; padding: 8px 14px 8px 10px; border-radius: 18px;
+      font-weight: 700; background: rgba(255,255,255,0.07); transform: translateX(100%); transition: transform 0.5s ease-in-out; }
+    #board li.flash { animation: flash 1.2s; }
+    @keyframes flash { 0%, 60% { background: rgba(255, 212, 59, 0.55); } }
+    #board .pic { position: relative; display: block; width: 156px; height: 156px; }
+    #board .ava { display: block; box-sizing: border-box; width: 156px; height: 156px; border-radius: 50%; object-fit: cover; background: #2a6fa8; border: 5px solid #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.35); }
+    #board .ini { display: grid; place-items: center; font-size: 72px; color: #fff; }
+    #board .rank { position: absolute; left: -4px; top: -4px; min-width: 52px; height: 52px; display: grid; place-items: center; border-radius: 50%; font-size: 44px; line-height: 1; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
+    #board .rank.num { font-size: 30px; font-weight: 800; color: #fff; background: #1c7ed6; border: 3px solid #fff; box-sizing: border-box; }
+    #board .info { display: block; min-width: 0; }
+    #board .name { display: block; font-size: 36px; line-height: 1.15; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+    #board .kg { display: block; color: #ffe066; font-size: 50px; font-weight: 800; line-height: 1.1; white-space: nowrap; }
+    #board .wins { display: block; font-size: 26px; color: #bfe6ff; font-weight: 600; line-height: 1.2; }
+    #board li.empty { display: block; transform: none; transition: none; padding: 40px 10px; text-align: center; font-size: 24px; color: #cfe8ff; font-weight: 600; background: none; }
+    #top-dots { display: flex; justify-content: center; gap: 10px; height: 14px; margin-top: 8px; }
+    #top-dots i { width: 14px; height: 14px; border-radius: 50%; background: rgba(255,255,255,0.3); transition: background 0.3s; }
+    #top-dots i.on { background: #ffe066; }
+
+    /* ---------- hướng dẫn quà ---------- */
+    #guide .row { display: grid; grid-template-columns: 60px 1fr; align-items: center; gap: 10px; height: 60px; padding: 0 6px; border-radius: 14px; }
+    #guide .row:nth-child(even) { background: rgba(255,255,255,0.07); }
+    #guide .icon { width: 56px; height: 56px; object-fit: contain; font-size: 40px; text-align: center; line-height: 56px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4)); }
+    #guide .what { font-size: 27px; font-weight: 700; line-height: 1.1; }
+    #guide div.icon { position: relative; }
+    #guide .badge { position: absolute; right: -6px; bottom: -4px; padding: 0 6px; border-radius: 999px; font-size: 17px; font-weight: 800; line-height: 1.3;
+      background: #ff3b6b; color: #fff; border: 2px solid #fff; filter: none; }
+    #guide .what em, #free em { font-style: normal; color: #ffe066; }
+    #free { margin-bottom: 8px; padding: 6px 8px 8px; border-radius: 16px; background: rgba(64, 192, 87, 0.28); border: 2px solid rgba(140, 233, 154, 0.7); text-align: center; }
+    #free .free-head { font-size: 27px; font-weight: 800; line-height: 1.15; }
+    #free .free-ways { display: flex; justify-content: center; gap: 6px; margin-top: 4px; white-space: nowrap; }
+    #free .free-ways span { padding: 0 8px; border-radius: 999px; font-size: 24px; font-weight: 700; background: rgba(0, 0, 0, 0.25); }
+    #guide .rate { margin-top: 8px; text-align: center; font-size: 24px; font-weight: 700; color: #fff; background: rgba(255, 107, 107, 0.35); border-radius: 12px; padding: 2px 6px; }
+    #queue { position: absolute; right: 18px; top: 0; transform: translateY(-110%); font-size: 22px; font-weight: 700; padding: 0 14px; border-radius: 999px; background: rgba(255, 146, 43, 0.9); opacity: 0; transition: opacity 0.3s; }
+    #queue.on { opacity: 1; }
+
+    /* ---------- trang bị cần thủ ---------- */
+    #gear { left: 18px; top: 606px; width: 500px; }
+    /* danh sách tự cuộn lặp vô hạn: có 2 bản giống nhau, cuộn đúng nửa chiều cao là khớp lại từ đầu */
+    #gear-view { height: 136px; overflow: hidden; border-radius: 14px;
+      -webkit-mask-image: linear-gradient(transparent, #000 9%, #000 91%, transparent); mask-image: linear-gradient(transparent, #000 9%, #000 91%, transparent); }
+    #gear-track { animation: gear-scroll var(--scroll, 24s) linear infinite; will-change: transform; }
+    @keyframes gear-scroll { to { transform: translateY(-50%); } }
+    #gear-track .row { display: flex; align-items: center; gap: 10px; box-sizing: border-box; height: 68px; padding: 0 6px; }
+    #gear-track .icon { flex: none; width: 58px; height: 58px; object-fit: contain; font-size: 44px; line-height: 58px; text-align: center; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4)); }
+    #gear-track .text { min-width: 0; }
+    #gear-track b { display: block; font-size: 28px; font-weight: 800; line-height: 1.12; color: #ffe066; white-space: nowrap; }
+    #gear-track small { display: block; font-size: 22px; font-weight: 600; line-height: 1.15; color: #d0ebff; white-space: nowrap; }
+
+    #stage.focus #board, #stage.focus #guide, #stage.focus #gear { opacity: 0.0; transform: translateY(-30px); }
+    #stage.focus #title { opacity: 0; transform: translateY(-30px); }
+
+    /* ---------- thẻ tên trên đầu ---------- */
+    .tag { position: absolute; left: 0; top: 0; display: flex; flex-direction: column; align-items: center; gap: 2px; transition: opacity 0.3s; will-change: transform; }
+    .tag .pill { position: relative; display: flex; align-items: center; gap: 6px; padding: 2px 12px 2px 3px; border-radius: 999px; white-space: nowrap; max-width: 340px;
+      background: rgba(6, 40, 72, 0.72); border: 2px solid rgba(255,255,255,0.7); font-size: 22px; font-weight: 700; line-height: 1.3; }
+    .tag .pill span { overflow: hidden; text-overflow: ellipsis; }
+    .tag img { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; background: #2a6fa8; }
+    .tag img.blank { visibility: hidden; width: 4px; }
+    .tag img.gone { display: none; }
+    .tag .ava { display: grid; place-items: center; flex: none; border-radius: 50%; }
+    .tag .ini { display: none; width: 30px; height: 30px; border-radius: 50%; place-items: center; background: #2a6fa8; color: #fff; font-size: 18px; }
+    .tag .bar { width: 90px; height: 8px; border-radius: 4px; background: rgba(0,0,0,0.45); overflow: hidden; display: none; }
+    .tag .bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #ff6b9a, #ff3b6b); transition: width 0.25s; }
+    .tag.likes .bar { display: block; }
+    .tag.big .pill { font-size: 34px; padding: 4px 18px 4px 4px; border-width: 3px; max-width: 520px; background: rgba(255, 146, 43, 0.92); }
+    .tag.big img, .tag.big .ini { width: 48px; height: 48px; }
+    .tag.big .ini { font-size: 28px; }
+    .tag.hidden { opacity: 0; }
+    /* có trang bị: dấu 🎣 trên thẻ tên; lúc quay cận thì hiện tên món đang dùng */
+    .tag.geared .pill::after { content: '🎣'; margin-left: -2px; }
+    .tag .perks { flex: none; font-style: normal; letter-spacing: 1px; }
+    .tag .perks:empty { display: none; }
+    /* Vua Câu: viền vàng, vương miện trước tên */
+    .tag.king .pill { border-color: #ffd43b; box-shadow: 0 0 12px 3px rgba(255, 212, 59, 0.75); }
+    .tag.king .pill::before { content: '👑'; margin-right: -2px; }
+    .tag .gear-line { display: none; padding: 0 14px 2px; border-radius: 999px; font-size: 24px; font-weight: 700; line-height: 1.3; white-space: nowrap; color: #ffe066; background: rgba(6, 40, 72, 0.82); }
+    .tag.big.geared .gear-line { display: block; }
+
+    /* ---------- chữ bay ---------- */
+    .floater { position: absolute; left: 0; top: 0; font-size: 52px; font-weight: 800; white-space: nowrap; color: #ffe066;
+      -webkit-text-stroke: 3px #7a3b00; paint-order: stroke fill; text-shadow: 0 4px 10px rgba(0,0,0,0.4); }
+    .floater.rare { font-size: 64px; color: #fff3bf; -webkit-text-stroke-color: #a61e4d; }
+    .floater.fail { color: #ffffff; -webkit-text-stroke-color: #b0263e; }
+    .floater.heart { font-size: 34px; -webkit-text-stroke: 0; }
+    .floater.otter { font-size: 38px; color: #ffe8c2; -webkit-text-stroke: 2px #6b4426; }
+
+    /* ---------- bảng thông báo giật cá ---------- */
+    #banner { position: absolute; left: 50%; top: 1290px; transform: translate(-50%, 30px) scale(0.85); opacity: 0; min-width: 620px; max-width: 980px;
+      padding: 12px 34px 16px; border-radius: 30px; text-align: center; pointer-events: none;
+      background: linear-gradient(180deg, rgba(255, 196, 0, 0.95), rgba(255, 140, 0, 0.95)); border: 4px solid #fff;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.35); transition: transform 0.35s cubic-bezier(.2,1.6,.4,1), opacity 0.3s; color: #4a1d00; }
+    #banner.on { opacity: 1; transform: translate(-50%, 0) scale(1); }
+    #banner.fail { background: linear-gradient(180deg, rgba(120, 140, 160, 0.95), rgba(70, 86, 104, 0.95)); color: #fff; }
+    #banner.rare { background: linear-gradient(180deg, rgba(255, 224, 102, 0.97), rgba(240, 101, 149, 0.97)); color: #3d0a2a; }
+    #banner.shark { background: linear-gradient(180deg, rgba(255, 70, 110, 0.97), rgba(160, 30, 200, 0.97)); color: #fff; }
+    #banner .who { font-size: 34px; font-weight: 700; line-height: 1.2; }
+    #banner .what { font-size: 54px; font-weight: 800; line-height: 1.1; }
+    #banner .sub { font-size: 28px; font-weight: 700; opacity: 0.9; }
+    #pulling { position: absolute; left: 50%; top: 1290px; transform: translateX(-50%); padding: 6px 30px 8px; border-radius: 999px; font-size: 38px; font-weight: 800;
+      background: rgba(6, 40, 72, 0.8); border: 3px solid #fff; white-space: nowrap; opacity: 0; transition: opacity 0.25s; pointer-events: none; }
+    #pulling.rare { background: rgba(214, 51, 108, 0.92); border-color: #ffe066; color: #fff3bf; }
+    #pulling.on { opacity: 1; animation: shake 0.18s infinite; }
+    @keyframes shake { 0% { transform: translateX(-50%) rotate(-1.5deg); } 50% { transform: translateX(-50%) rotate(1.5deg); } 100% { transform: translateX(-50%) rotate(-1.5deg); } }
+
+    /* ---------- thông báo nhỏ ---------- */
+    #toasts { position: absolute; left: 0; right: 0; top: 1180px; display: flex; flex-direction: column; align-items: center; gap: 8px; pointer-events: none; }
+    #stage.focus #toasts { opacity: 0; }
+    .toast { padding: 4px 22px 6px; border-radius: 999px; font-size: 28px; font-weight: 700; white-space: nowrap; max-width: 900px; overflow: hidden; text-overflow: ellipsis;
+      background: rgba(6, 40, 72, 0.8); border: 2px solid rgba(255,255,255,0.6); animation: toast 3.2s forwards; }
+    .toast.gift { background: rgba(214, 51, 108, 0.88); }
+    .toast.sky { background: rgba(40, 70, 130, 0.88); border-color: rgba(190, 220, 255, 0.8); }
+    #sky-chip { position: absolute; right: 18px; top: 264px; padding: 0 16px 2px; border-radius: 999px; font-size: 28px; font-weight: 700;
+      background: rgba(6, 40, 72, 0.72); border: 2px solid rgba(255,255,255,0.6); pointer-events: none; transition: opacity 0.5s; }
+    #stage.focus #sky-chip { opacity: 0; }
+    /* ---------- tiến trình cá hiếm ---------- */
+    #rare { position: absolute; left: 18px; top: 258px; width: 330px; padding: 3px 14px 9px; border-radius: 20px; pointer-events: none;
+      background: rgba(6, 40, 72, 0.78); border: 2px solid rgba(255, 224, 102, 0.85); box-shadow: 0 4px 12px rgba(0,0,0,0.25); }
+    #rare[hidden] { display: none; }
+    #rare-text { font-size: 24px; font-weight: 800; line-height: 1.25; white-space: nowrap; color: #ffe066; }
+    #rare .track { height: 12px; border-radius: 6px; background: rgba(0,0,0,0.45); overflow: hidden; }
+    #rare-fill { height: 100%; width: 0; border-radius: 6px; background: linear-gradient(90deg, #ffd43b, #ff922b, #f06595); transition: width 0.5s; }
+    #rare.next, #rare.hit { border-color: #fff; animation: rare-glow 0.6s ease-in-out infinite alternate; }
+    #rare.hit #rare-text { color: #fff; }
+    @keyframes rare-glow { to { box-shadow: 0 0 0 3px rgba(255, 212, 59, 0.8), 0 0 22px 6px rgba(255, 146, 43, 0.75); } }
+    /* ---------- hiệu ứng cá hiếm, cá mập ---------- */
+    #epic { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+    #epic-vignette { position: absolute; inset: 0; opacity: 0; transition: opacity 0.35s; }
+    #epic.on #epic-vignette { opacity: 1; animation: epic-pulse 0.55s ease-in-out infinite alternate; }
+    #epic.shark #epic-vignette { background: radial-gradient(ellipse at center, transparent 42%, rgba(120, 0, 24, 0.82) 100%); }
+    #epic.rare #epic-vignette { background: radial-gradient(ellipse at center, transparent 42%, rgba(150, 90, 0, 0.72) 100%); }
+    #epic.lost #epic-vignette { background: radial-gradient(ellipse at center, rgba(20, 28, 38, 0.32) 30%, rgba(8, 12, 18, 0.88) 100%); animation: none; }
+    #epic.won #epic-vignette { animation: none; opacity: 0.55; }
+    @keyframes epic-pulse { from { opacity: 0.62; } to { opacity: 1; } }
+    .epic-bar { position: absolute; left: 0; right: 0; height: 96px; background: #000; transition: transform 0.35s ease-out; }
+    #epic-bar-top { top: 0; transform: translateY(-100%); }
+    #epic-bar-bottom { bottom: 0; transform: translateY(100%); }
+    #epic.on .epic-bar { transform: none; }
+    /* tia sáng xoay quanh con cá: #epic-rays được dời tới vị trí cá, phần tử con quay */
+    #epic-rays { position: absolute; left: 0; top: 0; width: 0; height: 0; opacity: 0; transition: opacity 0.4s; mix-blend-mode: screen; }
+    #epic-rays i { position: absolute; left: -1100px; top: -1100px; width: 2200px; height: 2200px; border-radius: 50%; animation: epic-spin 11s linear infinite;
+      -webkit-mask-image: radial-gradient(circle, transparent 12%, rgba(0,0,0,0.95) 22%, rgba(0,0,0,0.5) 42%, transparent 70%); mask-image: radial-gradient(circle, transparent 12%, rgba(0,0,0,0.95) 22%, rgba(0,0,0,0.5) 42%, transparent 70%); }
+    #epic.rare #epic-rays i { background: repeating-conic-gradient(rgba(255, 212, 59, 0.85) 0 9deg, transparent 9deg 22.5deg); }
+    #epic.shark #epic-rays i { background: repeating-conic-gradient(rgba(255, 90, 120, 0.75) 0 9deg, transparent 9deg 22.5deg); }
+    #epic.won #epic-rays { opacity: 0.5; }
+    @keyframes epic-spin { to { transform: rotate(360deg); } }
+    #epic-flash { position: absolute; inset: 0; background: #fff; opacity: 0; }
+    #epic-flash.go { animation: epic-flash 0.55s ease-out; }
+    @keyframes epic-flash { from { opacity: 0.95; } to { opacity: 0; } }
+    /* chữ lớn nằm trên khung diễn biến và dòng thông báo, không che mặt người câu */
+    #epic-title { position: absolute; left: 20px; right: 20px; top: 1000px; text-align: center; font-size: 88px; font-weight: 800; line-height: 1.05; opacity: 0; white-space: nowrap; }
+    #epic.on #epic-title { opacity: 1; }
+    /* hoạt cảnh đập xuống giữ nguyên trạng thái cuối, nên hết hiệu ứng phải ẩn hẳn chữ */
+    #epic:not(.on) #epic-title { display: none; }
+    #epic-title.slam { animation: epic-slam 0.45s cubic-bezier(.2,1.5,.4,1) both; }
+    #epic.shark #epic-title { color: #fff; -webkit-text-stroke: 6px #a4002a; paint-order: stroke fill; text-shadow: 0 8px 22px rgba(0,0,0,0.6); }
+    #epic.rare #epic-title { color: #fff3bf; -webkit-text-stroke: 6px #a85c00; paint-order: stroke fill; text-shadow: 0 0 26px rgba(255, 212, 59, 0.95), 0 8px 22px rgba(0,0,0,0.5); }
+    #epic.lost #epic-title { color: #dee2e6; -webkit-text-stroke: 6px #343a40; text-shadow: 0 8px 22px rgba(0,0,0,0.6); }
+    @keyframes epic-slam { from { opacity: 0; transform: scale(2.6) rotate(-3deg); } to { opacity: 1; transform: none; } }
+
+    /* ---------- vòng quay sự kiện ---------- */
+    #wheel-chip { position: absolute; left: 390px; top: 258px; width: 496px; box-sizing: border-box; padding: 3px 14px 9px; border-radius: 20px; pointer-events: none;
+      background: rgba(6, 40, 72, 0.78); border: 2px solid rgba(160, 215, 255, 0.85); box-shadow: 0 4px 12px rgba(0,0,0,0.25); }
+    #wheel-chip[hidden] { display: none; }
+    #wheel-chip-text { font-size: 24px; font-weight: 800; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #d0ebff; }
+    #wheel-chip .track { height: 12px; border-radius: 6px; background: rgba(0,0,0,0.45); overflow: hidden; }
+    #wheel-chip-fill { height: 100%; width: 0; border-radius: 6px; background: linear-gradient(90deg, #ffe066, #ffc107); transition: width 0.3s linear; }
+    #wheel-chip.event { border-color: #ffe066; }
+    #wheel-chip.event #wheel-chip-text { color: #fff; }
+    #wheel-chip.event #wheel-chip-fill { background: linear-gradient(90deg, #ff6b6b, #ffa94d, #ffe066); }
+    #wheel-chip.gold { border-color: #ffd43b; }
+    #wheel-chip.gold #wheel-chip-text { color: #ffe066; }
+    #wheel-chip.warn { animation: rare-glow 0.5s ease-in-out infinite alternate; }
+
+    #wheel { position: absolute; left: 180px; top: 322px; width: 720px; text-align: center; pointer-events: none; opacity: 0; transform: scale(0.55);
+      transition: opacity 0.3s, transform 0.4s cubic-bezier(.2,1.5,.4,1); visibility: hidden; }
+    #wheel.on { opacity: 1; transform: none; visibility: visible; }
+    #wheel-title { font-size: 52px; font-weight: 800; line-height: 1.05; color: #fff; -webkit-text-stroke: 4px #0b4f8a; paint-order: stroke fill; text-shadow: 0 5px 12px rgba(0,0,0,0.4); }
+    #wheel-who { margin: 2px auto 8px; display: table; padding: 0 20px 2px; border-radius: 999px; font-size: 30px; font-weight: 700; background: rgba(6, 40, 72, 0.82); border: 2px solid rgba(255,255,255,0.6); }
+    #wheel-rim { position: relative; width: 640px; height: 640px; margin: 0 auto; border-radius: 50%; background: #0b3a66; box-shadow: 0 0 0 10px #fff, 0 0 0 16px #1c7ed6, 0 16px 40px rgba(0,0,0,0.5); }
+    #wheel.golden #wheel-title { -webkit-text-stroke-color: #8a5a00; color: #fff3bf; }
+    #wheel.golden #wheel-rim { box-shadow: 0 0 0 10px #fff3bf, 0 0 0 16px #f0a500, 0 0 50px 14px rgba(255, 196, 0, 0.75); }
+    #wheel-face { display: block; width: 640px; height: 640px; border-radius: 50%; will-change: transform; }
+    #wheel-pointer { position: absolute; left: 50%; top: -30px; width: 0; height: 0; margin-left: -28px; border-left: 28px solid transparent; border-right: 28px solid transparent; border-top: 64px solid #ff3b30; filter: drop-shadow(0 4px 4px rgba(0,0,0,0.5)); }
+    #wheel-hub { position: absolute; left: 50%; top: 50%; width: 110px; height: 110px; margin: -55px 0 0 -55px; display: grid; place-items: center; border-radius: 50%; font-size: 56px;
+      background: radial-gradient(circle at 35% 30%, #fff, #ffd43b 60%, #e8a200); border: 6px solid #fff; box-shadow: 0 4px 14px rgba(0,0,0,0.45); }
+    #wheel-result { position: absolute; left: 50%; top: 50%; width: 660px; padding: 12px 18px 16px; border-radius: 28px; border: 4px solid #fff; box-sizing: border-box; color: #4a1d00;
+      background: linear-gradient(180deg, rgba(255, 224, 102, 0.98), rgba(255, 146, 43, 0.98)); box-shadow: 0 14px 36px rgba(0,0,0,0.5); opacity: 0; transform: translate(-50%, -50%) scale(0.5); transition: opacity 0.2s, transform 0.3s cubic-bezier(.2,1.7,.4,1); }
+    #wheel.landed #wheel-result { opacity: 1; transform: translate(-50%, -50%); }
+    #wheel-result .big { font-size: 66px; font-weight: 800; line-height: 1.1; }
+    #wheel-result .sub { font-size: 34px; font-weight: 700; line-height: 1.15; }
+
+    #live { position: absolute; left: 18px; top: 822px; width: 650px; box-sizing: border-box; padding: 6px 18px 12px; border-radius: 24px; text-align: center; pointer-events: none; opacity: 0;
+      background: linear-gradient(180deg, rgba(8, 56, 98, 0.92), rgba(5, 34, 64, 0.92)); border: 3px solid #ffe066; box-shadow: 0 10px 24px rgba(0,0,0,0.35); transition: opacity 0.3s, top 0.4s, left 0.4s, width 0.4s; }
+    #live.on { opacity: 1; }
+    #live.boss { border-color: #ff6b6b; }
+    /* lúc quay cận thì nằm ngay trên dòng thông báo, không che mặt và tên người đang kéo cá */
+    #stage.focus #live { top: 1124px; left: 150px; width: 780px; }
+    #live-title { font-size: 34px; font-weight: 800; line-height: 1.2; color: #ffe066; }
+    #live.boss #live-title { color: #ffc9c9; }
+    #live-hp { position: relative; height: 34px; margin: 4px 0 6px; border-radius: 12px; background: rgba(0,0,0,0.55); border: 2px solid rgba(255,255,255,0.7); overflow: hidden; }
+    #live-hp[hidden] { display: none; }
+    #live-hp-fill { height: 100%; width: 100%; background: linear-gradient(90deg, #1c7ed6, #4dabf7); transition: width 0.25s; }
+    #live-hp-text { position: absolute; inset: 0; display: grid; place-items: center; font-size: 24px; font-weight: 800; line-height: 1; }
+    #live-top { display: flex; flex-wrap: wrap; justify-content: center; gap: 2px 18px; font-size: 25px; font-weight: 700; line-height: 1.25; }
+    #live-top b { color: #ffe066; }
+    #free .free-ways span.boost { background: #e8366f; animation: rare-glow 0.6s ease-in-out infinite alternate; }
+    .floater.hit { font-size: 46px; color: #d0ebff; -webkit-text-stroke-color: #0b4f8a; }
+
+    @keyframes toast { 0% { opacity: 0; transform: translateY(16px) scale(0.9); } 10%, 85% { opacity: 1; transform: none; } 100% { opacity: 0; transform: translateY(-10px); } }
+
+    #sound-hint { position: absolute; left: 50%; bottom: 40px; transform: translateX(-50%); padding: 6px 20px; border-radius: 999px; background: rgba(0,0,0,0.6); font-size: 24px; }
+    #sound-hint[hidden] { display: none; }
+  </style>
+</head>
+<body>
+  <div id="stage">
+    <canvas id="game" width="1080" height="1920"></canvas>
+    <div id="tags"></div>
+    <div id="floaters"></div>
+    <div id="epic">
+      <div id="epic-rays"><i></i></div>
+      <div id="epic-vignette"></div>
+      <div id="epic-flash"></div>
+      <div class="epic-bar" id="epic-bar-top"></div>
+      <div class="epic-bar" id="epic-bar-bottom"></div>
+      <div id="epic-title"></div>
+    </div>
+
+    <div id="title">
+      <div id="logo">🎣 HỒ <b>CÂU CÁ</b></div><br>
+      <div id="join-hint">Comment <b>“câu”</b> để xuống hồ</div>
+    </div>
+
+    <section class="panel" id="board">
+      <h2>🏆 Bảng xếp hạng</h2>
+      <ol id="top"></ol>
+      <div id="top-dots"></div>
+    </section>
+
+    <section class="panel" id="gear" hidden>
+      <h2>🎣 Trang bị Cần Thủ</h2>
+      <div id="gear-view"><div id="gear-track"></div></div>
+    </section>
+
+    <section class="panel" id="guide">
+      <div id="queue"></div>
+      <h2>🎣 Giật cá</h2>
+      <div id="free"></div>
+      <div id="guide-rows"></div>
+    </section>
+
+    <div id="sky-chip"></div>
+    <div id="rare" hidden><div id="rare-text"></div><div class="track"><div id="rare-fill"></div></div></div>
+    <div id="toasts"></div>
+    <div id="pulling"></div>
+    <div id="banner"><div class="who"></div><div class="what"></div><div class="sub"></div></div>
+    <div id="wheel-chip" hidden><div id="wheel-chip-text"></div><div class="track"><div id="wheel-chip-fill"></div></div></div>
+    <div id="live"><div id="live-title"></div><div id="live-hp" hidden><div id="live-hp-fill"></div><div id="live-hp-text"></div></div><div id="live-top"></div></div>
+    <div id="wheel">
+      <div id="wheel-title"></div>
+      <div id="wheel-who"></div>
+      <div id="wheel-rim">
+        <canvas id="wheel-face"></canvas>
+        <div id="wheel-pointer"></div>
+        <div id="wheel-hub">🎣</div>
+        <div id="wheel-result"></div>
+      </div>
+    </div>
+    <div id="sound-hint">Bấm vào màn hình để bật âm thanh</div>
+  </div>
+  <script type="module" src="/js/main.js"></script>
+</body>
+</html>

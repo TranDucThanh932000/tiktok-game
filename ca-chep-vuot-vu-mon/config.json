@@ -1,0 +1,44 @@
+{
+  "tiktokUsername": "hehe27046",
+  "port": 3001,
+  "roomJoin": true,
+  "welcomeSpeech": "{name} vào bể",
+  "welcomeEverySeconds": 6,
+  "joinSpeech": "{name} đã tham gia",
+  "leaderSpeech": "{name} đang dẫn đầu",
+  "leaderEverySeconds": 10,
+  "winnerSpeech": "{name} đã vượt Vũ Môn, hóa rồng",
+  "roundSeconds": 180,
+  "breakSeconds": 12,
+  "joinSeconds": 60,
+  "joinWords": ["chơi"],
+  "maxFish": 60,
+  "maxPond": 40,
+  "rise": {
+    "like": 0.4,
+    "comment": 2,
+    "follow": 3,
+    "share": 3
+  },
+  "drift": {
+    "afterSeconds": 8,
+    "perSecond": 0.2
+  },
+  "giverBonus": 2,
+  "giftCap": 95,
+  "giftTiers": [
+    { "minCoins": 1, "effect": "splash", "rise": 2, "icon": "/gifts/rose.webp" },
+    { "minCoins": 5, "effect": "wave", "rise": 5, "icon": "/gifts/finger-heart.webp" },
+    { "minCoins": 30, "effect": "surge", "rise": 12, "icon": "/gifts/doughnut.webp" },
+    { "minCoins": 100, "effect": "rain", "rise": 20, "icon": "/gifts/gift-box.webp" },
+    { "minCoins": 1000, "effect": "dragon", "rise": 30, "icon": "/gifts/galaxy.webp" }
+  ],
+  "giftLabels": {
+    "Rose": "Hoa hồng",
+    "Finger Heart": "Bắn tim",
+    "Doughnut": "Bánh donut",
+    "Gift Box": "Hộp quà",
+    "Galaxy": "Thiên hà",
+    "Lucky Pig": "Chú heo may mắn"
+  }
+}

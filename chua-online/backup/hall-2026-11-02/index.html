@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Chùa Online</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="stage">
+    <svg id="scene" viewBox="0 0 1080 1920" aria-hidden="true">
+      <defs>
+        <linearGradient id="g-wall" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#0d0305"/>
+          <stop offset="0.3" stop-color="#260909"/>
+          <stop offset="1" stop-color="#3b0f0a"/>
+        </linearGradient>
+        <linearGradient id="g-ceiling" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#090203"/>
+          <stop offset="1" stop-color="#231008"/>
+        </linearGradient>
+        <linearGradient id="g-floor" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#2b1510"/>
+          <stop offset="0.25" stop-color="#1a0d0b"/>
+          <stop offset="1" stop-color="#0a0506"/>
+        </linearGradient>
+        <radialGradient id="g-glow">
+          <stop offset="0" stop-color="#ffd98a" stop-opacity="0.95"/>
+          <stop offset="1" stop-color="#ffb347" stop-opacity="0"/>
+        </radialGradient>
+        <radialGradient id="g-alcove" cx="0.5" cy="0.6" r="0.65">
+          <stop offset="0" stop-color="#6e240e"/>
+          <stop offset="0.55" stop-color="#360c07"/>
+          <stop offset="1" stop-color="#1a0504"/>
+        </radialGradient>
+        <radialGradient id="g-aura" cx="0.5" cy="0.4" r="0.6">
+          <stop offset="0" stop-color="#ffd98a" stop-opacity="0.6"/>
+          <stop offset="0.6" stop-color="#d9822a" stop-opacity="0.25"/>
+          <stop offset="1" stop-color="#7a2a0e" stop-opacity="0.15"/>
+        </radialGradient>
+        <linearGradient id="g-lacquer" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="#360806"/>
+          <stop offset="0.35" stop-color="#a8261a"/>
+          <stop offset="0.5" stop-color="#d4442e"/>
+          <stop offset="0.75" stop-color="#851b12"/>
+          <stop offset="1" stop-color="#2a0605"/>
+        </linearGradient>
+        <linearGradient id="g-board" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#5e130c"/>
+          <stop offset="1" stop-color="#2a0505"/>
+        </linearGradient>
+        <linearGradient id="g-table" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#8e2016"/>
+          <stop offset="1" stop-color="#4a0c08"/>
+        </linearGradient>
+        <linearGradient id="g-statue" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="#7e4c10"/>
+          <stop offset="0.28" stop-color="#dba443"/>
+          <stop offset="0.5" stop-color="#ffe39a"/>
+          <stop offset="0.72" stop-color="#dba443"/>
+          <stop offset="1" stop-color="#7e4c10"/>
+        </linearGradient>
+        <radialGradient id="g-face" cx="0.45" cy="0.4" r="0.7">
+          <stop offset="0" stop-color="#fff0bd"/>
+          <stop offset="0.6" stop-color="#e8b24c"/>
+          <stop offset="1" stop-color="#a36a1a"/>
+        </radialGradient>
+        <linearGradient id="g-lotus-gold" x1="0" y1="1" x2="0" y2="0">
+          <stop offset="0" stop-color="#a8701c"/>
+          <stop offset="1" stop-color="#ffe7a2"/>
+        </linearGradient>
+        <linearGradient id="g-reflect" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#c0392b" stop-opacity="0.3"/>
+          <stop offset="1" stop-color="#c0392b" stop-opacity="0"/>
+        </linearGradient>
+        <linearGradient id="g-fade-side" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="#000" stop-opacity="0.6"/>
+          <stop offset="1" stop-color="#000" stop-opacity="0"/>
+        </linearGradient>
+        <linearGradient id="g-fade-top" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#0d0305"/>
+          <stop offset="1" stop-color="#0d0305" stop-opacity="0"/>
+        </linearGradient>
+        <linearGradient id="g-bronze" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="#5a3b12"/>
+          <stop offset="0.35" stop-color="#e2bb63"/>
+          <stop offset="0.6" stop-color="#a77a2b"/>
+          <stop offset="1" stop-color="#46300f"/>
+        </linearGradient>
+        <linearGradient id="g-gold" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#fff0b8"/>
+          <stop offset="1" stop-color="#c88d22"/>
+        </linearGradient>
+        <radialGradient id="g-mo" cx="0.38" cy="0.32" r="0.8">
+          <stop offset="0" stop-color="#e65a40"/>
+          <stop offset="0.6" stop-color="#9a2414"/>
+          <stop offset="1" stop-color="#55100a"/>
+        </radialGradient>
+        <linearGradient id="g-petal" x1="0" y1="1" x2="0" y2="0">
+          <stop offset="0" stop-color="#e0507a"/>
+          <stop offset="1" stop-color="#ffe0ec"/>
+        </linearGradient>
+        <!-- Wall of small Buddhas in arched niches (vạn Phật). -->
+        <pattern id="p-niches" width="54" height="70" patternUnits="userSpaceOnUse">
+          <rect width="54" height="70" fill="#2a0b07"/>
+          <path d="M7 66V24Q7 6 27 6Q47 6 47 24V66Z" fill="#150504" stroke="#9a6a24" stroke-width="2"/>
+          <circle cx="27" cy="31" r="11" fill="#ffcf6b" opacity=".14"/>
+          <circle cx="27" cy="31" r="5.5" fill="url(#g-gold)"/>
+          <path d="M15 62Q15 45 27 40Q39 45 39 62Z" fill="url(#g-gold)"/>
+          <rect x="11" y="61" width="32" height="5" rx="2" fill="#b07a2a"/>
+        </pattern>
+        <pattern id="p-curls" width="7" height="7" patternUnits="userSpaceOnUse">
+          <rect width="7" height="7" fill="#8a5414"/>
+          <circle cx="3.5" cy="3.5" r="2.6" fill="#d9a040"/>
+        </pattern>
+        <path id="gold-petal" d="M0 0C-22 -6 -27 -40 0 -64C27 -40 22 -6 0 0Z" fill="url(#g-lotus-gold)" stroke="#7a4a10" stroke-width="1.5"/>
+        <path id="petal" d="M0 0C-17 -18 -15 -52 0 -72C15 -52 17 -18 0 0Z" fill="url(#g-petal)" stroke="#b8395f" stroke-width="1.5"/>
+        <g id="lotus">
+          <use href="#petal" transform="rotate(-64) scale(.78)"/>
+          <use href="#petal" transform="rotate(64) scale(.78)"/>
+          <use href="#petal" transform="rotate(-33) scale(.9)"/>
+          <use href="#petal" transform="rotate(33) scale(.9)"/>
+          <use href="#petal"/>
+        </g>
+        <g id="hanging-lantern">
+          <path d="M0 0V16" stroke="#e0b45a" stroke-width="2"/>
+          <ellipse cy="38" rx="17" ry="22" fill="#d42a2f"/>
+          <ellipse cy="38" rx="8" ry="22" fill="#f04a3a" opacity=".6"/>
+          <rect x="-8" y="14" width="16" height="5" fill="#e0b45a"/>
+          <rect x="-8" y="57" width="16" height="5" fill="#e0b45a"/>
+          <path d="M0 62V74" stroke="#e0b45a" stroke-width="2"/>
+        </g>
+      </defs>
+
+      <rect width="1080" height="1090" fill="url(#g-wall)"/>
+      <rect y="350" width="270" height="740" fill="url(#p-niches)"/>
+      <rect x="810" y="350" width="270" height="740" fill="url(#p-niches)"/>
+      <rect y="350" width="130" height="740" fill="url(#g-fade-side)"/>
+      <rect x="950" y="350" width="130" height="740" fill="url(#g-fade-side)" transform="rotate(180 1015 720)"/>
+      <rect y="350" width="1080" height="160" fill="url(#g-fade-top)"/>
+      <ellipse cx="540" cy="800" rx="470" ry="430" fill="url(#g-glow)" opacity=".16"/>
+
+      <path d="M330 1090V560Q330 420 540 420Q750 420 750 560V1090Z" fill="url(#g-alcove)" stroke="#e0b45a" stroke-width="6"/>
+      <path d="M346 1090V566Q346 438 540 438Q734 438 734 566V1090" fill="none" stroke="#e0b45a" stroke-opacity=".4" stroke-width="2"/>
+      <rect y="1080" width="1080" height="12" fill="#36110b"/>
+      <path d="M0 1080H1080" stroke="#e0b45a" stroke-opacity=".45" stroke-width="2"/>
+
+      <rect x="270" y="150" width="48" height="940" fill="url(#g-lacquer)"/>
+      <rect x="762" y="150" width="48" height="940" fill="url(#g-lacquer)"/>
+      <path d="M262 150H326V178H262ZM754 150H818V178H754ZM260 1062H328V1092H260ZM752 1062H820V1092H752Z" fill="url(#g-gold)"/>
+      <path d="M270 430H318M762 430H810M270 880H318M762 880H810" stroke="#e0b45a" stroke-width="6"/>
+
+      <rect width="1080" height="150" fill="url(#g-ceiling)"/>
+      <rect y="120" width="1080" height="30" fill="#3b1a0e"/>
+      <path d="M0 147H1080M0 122H1080" stroke="#e0b45a" stroke-opacity=".5" stroke-width="2.5"/>
+      <g class="sway" style="transform-origin: 96px 150px">
+        <path d="M96 150V176" stroke="#e0b45a" stroke-width="2"/>
+        <use href="#hanging-lantern" x="96" y="176"/>
+      </g>
+      <g class="sway" style="transform-origin: 984px 150px; animation-delay: -2s">
+        <path d="M984 150V176" stroke="#e0b45a" stroke-width="2"/>
+        <use href="#hanging-lantern" x="984" y="176"/>
+      </g>
+      <!-- Lacquered board (hoành phi) behind the title. -->
+      <rect x="150" y="168" width="780" height="128" rx="12" fill="url(#g-board)" stroke="#e0b45a" stroke-width="5"/>
+      <rect x="166" y="182" width="748" height="100" rx="6" fill="none" stroke="#e0b45a" stroke-opacity=".5" stroke-width="2"/>
+      <path d="M150 192Q118 232 150 272M930 192Q962 232 930 272" fill="none" stroke="#e0b45a" stroke-width="5" stroke-linecap="round"/>
+
+      <g id="buddha">
+        <path d="M540 588C612 618 694 676 704 772C714 868 692 958 664 1006H416C388 958 366 868 376 772C386 676 468 618 540 588Z" fill="url(#g-aura)" stroke="#e8b85c" stroke-width="4"/>
+        <path d="M540 614C598 642 668 692 676 774C684 858 666 944 642 990H438C414 944 396 858 404 774C412 692 482 642 540 614Z" fill="none" stroke="#e8b85c" stroke-opacity=".45" stroke-width="2"/>
+        <circle id="halo" cx="540" cy="718" r="120" fill="url(#g-glow)"/>
+        <circle cx="540" cy="718" r="66" fill="none" stroke="#ffe08a" stroke-opacity=".7" stroke-width="3"/>
+        <use href="#gold-petal" x="400" y="1004"/>
+        <use href="#gold-petal" x="447" y="1004"/>
+        <use href="#gold-petal" x="493" y="1004"/>
+        <use href="#gold-petal" x="540" y="1004"/>
+        <use href="#gold-petal" x="587" y="1004"/>
+        <use href="#gold-petal" x="633" y="1004"/>
+        <use href="#gold-petal" x="680" y="1004"/>
+        <path d="M392 952C392 916 432 892 484 888H596C648 892 688 916 688 952C640 968 440 968 392 952Z" fill="url(#g-statue)"/>
+        <path d="M424 946C470 930 520 932 560 922M470 960C530 950 600 950 660 940" fill="none" stroke="#8a5512" stroke-opacity=".5" stroke-width="2.5"/>
+        <path d="M540 776C590 776 628 784 646 804C664 826 668 860 664 888C660 904 638 908 612 902H468C442 908 420 904 416 888C412 860 416 826 434 804C452 784 490 776 540 776Z" fill="url(#g-statue)"/>
+        <path d="M634 800C606 828 548 866 466 898" fill="none" stroke="#8a5512" stroke-width="4"/>
+        <path d="M642 814C616 840 564 874 494 902" fill="none" stroke="#ffe6a0" stroke-opacity=".5" stroke-width="2"/>
+        <path d="M454 812C462 840 466 872 470 900M626 812C618 840 614 872 610 900" fill="none" stroke="#8a5512" stroke-opacity=".6" stroke-width="2.5"/>
+        <ellipse cx="540" cy="900" rx="42" ry="13" fill="url(#g-face)" stroke="#a46a1c" stroke-width="1.5"/>
+        <path d="M516 893Q540 880 564 893" fill="none" stroke="#a46a1c" stroke-width="2"/>
+        <use href="#gold-petal" transform="translate(424 1018) scale(.8)"/>
+        <use href="#gold-petal" transform="translate(470 1018) scale(.8)"/>
+        <use href="#gold-petal" transform="translate(516 1018) scale(.8)"/>
+        <use href="#gold-petal" transform="translate(564 1018) scale(.8)"/>
+        <use href="#gold-petal" transform="translate(610 1018) scale(.8)"/>
+        <use href="#gold-petal" transform="translate(656 1018) scale(.8)"/>
+        <path d="M524 752V782Q540 788 556 782V752Z" fill="#e2ac50"/>
+        <path d="M527 766Q540 771 553 766M527 776Q540 781 553 776" fill="none" stroke="#a46a1c" stroke-width="1.5"/>
+        <path d="M507 704C497 704 495 724 497 742C499 758 503 768 511 768C514 754 512 724 510 706ZM573 704C583 704 585 724 583 742C581 758 577 768 569 768C566 754 568 724 570 706Z" fill="#d9a040"/>
+        <ellipse cx="540" cy="722" rx="34" ry="41" fill="url(#g-face)"/>
+        <path d="M505 712C503 680 519 670 540 670C561 670 577 680 575 712C566 698 554 692 540 692C526 692 514 698 505 712Z" fill="url(#p-curls)"/>
+        <ellipse cx="540" cy="668" rx="18" ry="12" fill="url(#p-curls)"/>
+        <circle cx="540" cy="646" r="16" fill="url(#g-glow)"/>
+        <path d="M540 634C547 643 549 652 540 658C531 652 533 643 540 634Z" fill="#ffd36b"/>
+        <g fill="none" stroke="#6e420e" stroke-width="2.4" stroke-linecap="round">
+          <path d="M512 706Q524 699 535 705M545 705Q556 699 568 706"/>
+          <path d="M514 719Q524 725 534 719M546 719Q556 725 566 719"/>
+          <path d="M540 709Q537 728 536 735Q540 739 545 735" stroke-width="2"/>
+          <path d="M531 748Q540 753 549 748"/>
+        </g>
+        <circle cx="540" cy="698" r="2.4" fill="#9a5f16"/>
+      </g>
+
+      <!-- Polished floor; game.js draws the tiles, carpet and cushions into #floor in perspective. -->
+      <rect y="1090" width="1080" height="830" fill="url(#g-floor)"/>
+      <ellipse cx="540" cy="1190" rx="470" ry="160" fill="url(#g-glow)" opacity=".14"/>
+      <rect x="262" y="1092" width="64" height="240" fill="url(#g-reflect)"/>
+      <rect x="754" y="1092" width="64" height="240" fill="url(#g-reflect)"/>
+      <g id="floor"></g>
+
+      <ellipse cx="540" cy="1112" rx="236" ry="11" fill="#000" opacity=".5"/>
+      <rect x="344" y="1070" width="18" height="40" fill="#4a0f0a"/>
+      <rect x="718" y="1070" width="18" height="40" fill="#4a0f0a"/>
+      <rect x="339" y="1104" width="28" height="8" rx="2" fill="#e0b45a"/>
+      <rect x="713" y="1104" width="28" height="8" rx="2" fill="#e0b45a"/>
+      <rect x="334" y="1016" width="412" height="58" fill="url(#g-table)"/>
+      <rect x="348" y="1026" width="384" height="38" fill="none" stroke="#e0b45a" stroke-width="2.5" opacity=".8"/>
+      <path d="M370 1045H510M570 1045H710" stroke="#e0b45a" stroke-width="2" opacity=".45"/>
+      <circle cx="540" cy="1045" r="13" fill="none" stroke="#e0b45a" stroke-width="2.5"/>
+      <circle cx="540" cy="1045" r="5" fill="#e0b45a"/>
+      <rect x="322" y="1004" width="436" height="14" rx="4" fill="#7a1a12" stroke="#e0b45a" stroke-width="2.5"/>
+      <rect x="397" y="962" width="14" height="42" rx="2" fill="#f4e4c1"/>
+      <rect x="669" y="962" width="14" height="42" rx="2" fill="#f4e4c1"/>
+      <circle cx="404" cy="950" r="24" fill="url(#g-glow)" opacity=".7"/>
+      <circle cx="676" cy="950" r="24" fill="url(#g-glow)" opacity=".7"/>
+      <ellipse class="flame" cx="404" cy="952" rx="6" ry="11" fill="#ffcf4d"/>
+      <ellipse class="flame" cx="676" cy="952" rx="6" ry="11" fill="#ffcf4d" style="animation-delay: -.4s"/>
+      <g class="vase">
+        <use href="#lotus" transform="translate(452 964) scale(.42)"/>
+        <path d="M440 1006C430 992 432 980 444 975C448 971 448 966 446 962H458C456 966 456 971 460 975C472 980 474 992 464 1006Z" fill="url(#g-bronze)"/>
+      </g>
+      <g class="vase">
+        <use href="#lotus" transform="translate(628 964) scale(.42)"/>
+        <path d="M616 1006C606 992 608 980 620 975C624 971 624 966 622 962H634C632 966 632 971 636 975C648 980 650 992 640 1006Z" fill="url(#g-bronze)"/>
+      </g>
+      <path d="M494 984Q498 1004 524 1006H556Q582 1004 586 984Z" fill="url(#g-bronze)"/>
+      <ellipse cx="540" cy="984" rx="48" ry="9" fill="#3a2a1a" stroke="#e2bb63" stroke-width="3"/>
+
+      <ellipse cx="39" cy="1137" rx="28" ry="6" fill="#000" opacity=".5"/>
+      <ellipse cx="241" cy="1137" rx="28" ry="6" fill="#000" opacity=".5"/>
+      <g id="bell-frame">
+        <rect x="30" y="676" width="18" height="452" fill="url(#g-lacquer)"/>
+        <rect x="232" y="676" width="18" height="452" fill="url(#g-lacquer)"/>
+        <rect x="24" y="1122" width="30" height="14" rx="2" fill="#e0b45a"/>
+        <rect x="226" y="1122" width="30" height="14" rx="2" fill="#e0b45a"/>
+        <path d="M6 680Q20 664 44 662H236Q260 664 274 680L268 690H12Z" fill="#6a1810" stroke="#e0b45a" stroke-width="3"/>
+      </g>
+      <g id="bell">
+        <path d="M140 690V718" stroke="#24150c" stroke-width="7"/>
+        <path d="M82 920C84 790 94 730 140 716C186 730 196 790 198 920Z" fill="url(#g-bronze)"/>
+        <rect x="76" y="912" width="128" height="18" rx="6" fill="url(#g-bronze)"/>
+        <path d="M92 770H188M87 846H193" stroke="#6b4a1f" stroke-width="5"/>
+        <circle cx="140" cy="884" r="13" fill="#7a5520" stroke="#e2bb63" stroke-width="2"/>
+      </g>
+
+      <ellipse cx="920" cy="1126" rx="116" ry="14" fill="#000" opacity=".5"/>
+      <ellipse cx="920" cy="1116" rx="104" ry="20" fill="#b9701a"/>
+      <ellipse cx="920" cy="1110" rx="96" ry="14" fill="#efb54a"/>
+      <g id="mo">
+        <ellipse cx="920" cy="1060" rx="84" ry="58" fill="url(#g-mo)"/>
+        <path d="M858 1070Q920 1102 982 1070" fill="none" stroke="#2b0905" stroke-width="10" stroke-linecap="round"/>
+        <path d="M876 1030Q920 1012 964 1030M868 1046Q920 1026 972 1046" fill="none" stroke="#5a120a" stroke-width="3" opacity=".6"/>
+        <ellipse cx="896" cy="1028" rx="30" ry="12" fill="#fff" opacity=".16"/>
+      </g>
+      <g id="mallet">
+        <path d="M1040 920L934 987" stroke="#7a5230" stroke-width="10" stroke-linecap="round"/>
+        <circle cx="922" cy="995" r="16" fill="#a0522d" stroke="#5a2e14" stroke-width="2"/>
+      </g>
+    </svg>
+
+    <canvas id="fx" width="1080" height="1920"></canvas>
+
+    <header id="hud">
+      <h1>CHÙA ONLINE</h1>
+      <p id="total">✨ Công đức: <b id="total-value">0</b></p>
+    </header>
+    <ul id="guide" class="panel"></ul>
+    <div id="toast"></div>
+    <div id="welcome"></div>
+    <section id="board" class="panel">
+      <h2>🏆 Bảng công đức</h2>
+      <ol id="top"></ol>
+    </section>
+    <button id="sound-hint" type="button" hidden>🔇 Bấm vào màn hình để bật âm thanh</button>
+  </div>
+  <script type="module" src="game.js"></script>
+</body>
+</html>

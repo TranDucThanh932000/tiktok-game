@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Chùa Online</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="stage">
+    <svg id="scene" viewBox="0 0 1080 1920" aria-hidden="true">
+      <defs>
+        <linearGradient id="g-sky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#060a22"/>
+          <stop offset="0.45" stop-color="#1c1745"/>
+          <stop offset="0.75" stop-color="#4b2857"/>
+          <stop offset="0.92" stop-color="#9a4a55"/>
+          <stop offset="1" stop-color="#d9845a"/>
+        </linearGradient>
+        <linearGradient id="g-water" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#2d2b55"/>
+          <stop offset="0.2" stop-color="#171a3c"/>
+          <stop offset="1" stop-color="#05071a"/>
+        </linearGradient>
+        <radialGradient id="g-glow">
+          <stop offset="0" stop-color="#ffd98a" stop-opacity="0.95"/>
+          <stop offset="1" stop-color="#ffb347" stop-opacity="0"/>
+        </radialGradient>
+        <radialGradient id="g-moon">
+          <stop offset="0" stop-color="#fffdf0"/>
+          <stop offset="1" stop-color="#f1d58a"/>
+        </radialGradient>
+        <radialGradient id="g-moonglow">
+          <stop offset="0" stop-color="#fff3c4" stop-opacity="0.45"/>
+          <stop offset="1" stop-color="#fff3c4" stop-opacity="0"/>
+        </radialGradient>
+        <radialGradient id="g-door" cx="0.5" cy="0.4" r="0.75">
+          <stop offset="0" stop-color="#ffd884"/>
+          <stop offset="0.5" stop-color="#c2601f"/>
+          <stop offset="1" stop-color="#4a120c"/>
+        </radialGradient>
+        <linearGradient id="g-roof" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#6a3020"/>
+          <stop offset="1" stop-color="#2a110b"/>
+        </linearGradient>
+        <linearGradient id="g-bronze" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="#5a3b12"/>
+          <stop offset="0.35" stop-color="#e2bb63"/>
+          <stop offset="0.6" stop-color="#a77a2b"/>
+          <stop offset="1" stop-color="#46300f"/>
+        </linearGradient>
+        <linearGradient id="g-gold" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#fff0b8"/>
+          <stop offset="1" stop-color="#c88d22"/>
+        </linearGradient>
+        <radialGradient id="g-mo" cx="0.38" cy="0.32" r="0.8">
+          <stop offset="0" stop-color="#e65a40"/>
+          <stop offset="0.6" stop-color="#9a2414"/>
+          <stop offset="1" stop-color="#55100a"/>
+        </radialGradient>
+        <linearGradient id="g-petal" x1="0" y1="1" x2="0" y2="0">
+          <stop offset="0" stop-color="#e0507a"/>
+          <stop offset="1" stop-color="#ffe0ec"/>
+        </linearGradient>
+        <pattern id="p-tiles" width="14" height="14" patternUnits="userSpaceOnUse">
+          <path d="M7 0V14" stroke="#000" stroke-opacity=".28" stroke-width="3"/>
+        </pattern>
+        <path id="petal" d="M0 0C-17 -18 -15 -52 0 -72C15 -52 17 -18 0 0Z" fill="url(#g-petal)" stroke="#b8395f" stroke-width="1.5"/>
+        <g id="lotus">
+          <use href="#petal" transform="rotate(-64) scale(.78)"/>
+          <use href="#petal" transform="rotate(64) scale(.78)"/>
+          <use href="#petal" transform="rotate(-33) scale(.9)"/>
+          <use href="#petal" transform="rotate(33) scale(.9)"/>
+          <use href="#petal"/>
+        </g>
+        <g id="leaf">
+          <ellipse rx="78" ry="22" fill="#174a31"/>
+          <ellipse rx="70" ry="17" fill="#23653f"/>
+          <path d="M0 0L66 -5M0 0L-60 -8M0 0L20 15M0 0L-28 14" stroke="#174a31" stroke-width="3"/>
+        </g>
+        <g id="hanging-lantern">
+          <path d="M0 0V16" stroke="#e0b45a" stroke-width="2"/>
+          <ellipse cy="38" rx="17" ry="22" fill="#d42a2f"/>
+          <ellipse cy="38" rx="8" ry="22" fill="#f04a3a" opacity=".6"/>
+          <rect x="-8" y="14" width="16" height="5" fill="#e0b45a"/>
+          <rect x="-8" y="57" width="16" height="5" fill="#e0b45a"/>
+          <path d="M0 62V74" stroke="#e0b45a" stroke-width="2"/>
+        </g>
+      </defs>
+
+      <rect width="1080" height="1150" fill="url(#g-sky)"/>
+      <g id="stars"></g>
+      <circle cx="150" cy="585" r="130" fill="url(#g-moonglow)"/>
+      <circle cx="150" cy="585" r="52" fill="url(#g-moon)"/>
+      <path d="M0 930Q90 868 180 902T360 880T560 898T760 868T960 902T1080 886V1150H0Z" fill="#2b1f47"/>
+      <path d="M0 1010Q120 950 240 990T480 984T720 974T960 994T1080 984V1150H0Z" fill="#1b1431"/>
+      <ellipse cx="540" cy="900" rx="340" ry="260" fill="url(#g-glow)" opacity=".22"/>
+
+      <rect y="1080" width="1080" height="70" fill="#22151e"/>
+      <rect y="1080" width="1080" height="3" fill="#43303a"/>
+      <rect y="1146" width="1080" height="774" fill="url(#g-water)"/>
+      <ellipse cx="540" cy="1172" rx="320" ry="26" fill="url(#g-glow)" opacity=".3"/>
+      <path d="M90 1300h130M700 1340h170M300 1420h100M820 1520h140M120 1600h110M560 1660h160M380 1760h120M820 1820h130" stroke="#9fb0ff" stroke-opacity=".12" stroke-width="3" stroke-linecap="round"/>
+      <g class="float" style="animation-duration: 8s"><use href="#leaf" transform="translate(110 1330)"/></g>
+      <g class="float" style="animation-duration: 9s; animation-delay: -2.1s"><use href="#leaf" transform="translate(800 1450)"/></g>
+      <g class="float" style="animation-duration: 7.5s; animation-delay: -3.4s"><use href="#leaf" transform="translate(560 1580) scale(.85)"/></g>
+      <g class="float" style="animation-duration: 8.5s; animation-delay: -1.3s"><use href="#leaf" transform="translate(470 1830) scale(1.2)"/></g>
+      <g class="float lotus" style="animation-duration: 6s; animation-delay: -0.6s">
+        <use href="#leaf" transform="translate(975 1305) scale(.9)"/>
+        <use href="#lotus" transform="translate(980 1300) scale(.62)"/>
+      </g>
+      <g class="float lotus" style="animation-duration: 7s; animation-delay: -2.8s">
+        <use href="#leaf" transform="translate(270 1490) scale(1.1)"/>
+        <use href="#lotus" transform="translate(265 1478) scale(.55)"/>
+      </g>
+      <g class="float lotus" style="animation-duration: 6.5s; animation-delay: -4.2s">
+        <use href="#leaf" transform="translate(930 1690) scale(1.1)"/>
+        <use href="#lotus" transform="translate(935 1680) scale(.62)"/>
+      </g>
+      <g class="float lotus" style="animation-duration: 7.5s; animation-delay: -1.9s">
+        <use href="#leaf" transform="translate(150 1720) scale(1.2)"/>
+        <use href="#lotus" transform="translate(150 1708) scale(.5)"/>
+      </g>
+
+      <g id="temple">
+        <rect x="418" y="610" width="244" height="14" rx="6" fill="#7a3a1c" stroke="#e0b45a" stroke-width="2"/>
+        <circle cx="414" cy="606" r="9" fill="#e0b45a"/>
+        <circle cx="666" cy="606" r="9" fill="#e0b45a"/>
+        <circle cx="540" cy="594" r="30" fill="url(#g-glow)"/>
+        <circle cx="540" cy="596" r="13" fill="url(#g-gold)"/>
+        <path d="M320 638Q345 676 385 682H695Q735 676 760 638Q725 646 660 624H420Q355 646 320 638Z" fill="url(#g-roof)"/>
+        <path d="M320 638Q345 676 385 682H695Q735 676 760 638Q725 646 660 624H420Q355 646 320 638Z" fill="url(#p-tiles)"/>
+        <path d="M320 638Q345 676 385 682H695Q735 676 760 638" fill="none" stroke="#e0b45a" stroke-width="4"/>
+        <circle cx="320" cy="636" r="6" fill="#e0b45a"/>
+        <circle cx="760" cy="636" r="6" fill="#e0b45a"/>
+        <rect x="385" y="682" width="310" height="70" fill="#6e1c15"/>
+        <rect x="460" y="692" width="160" height="50" rx="6" fill="#3b0f0a" stroke="#e0b45a" stroke-width="3"/>
+        <text x="540" y="728" text-anchor="middle" class="plaque">TÂM AN</text>
+        <path d="M275 770Q298 814 340 822H740Q782 814 805 770Q770 778 725 750H355Q310 778 275 770Z" fill="url(#g-roof)"/>
+        <path d="M275 770Q298 814 340 822H740Q782 814 805 770Q770 778 725 750H355Q310 778 275 770Z" fill="url(#p-tiles)"/>
+        <path d="M275 770Q298 814 340 822H740Q782 814 805 770" fill="none" stroke="#e0b45a" stroke-width="5"/>
+        <circle cx="275" cy="768" r="7" fill="#e0b45a"/>
+        <circle cx="805" cy="768" r="7" fill="#e0b45a"/>
+
+        <rect x="340" y="822" width="400" height="258" fill="#5e1a14"/>
+        <rect x="405" y="845" width="270" height="235" fill="url(#g-door)"/>
+        <circle id="halo" cx="540" cy="925" r="100" fill="url(#g-glow)"/>
+        <circle cx="540" cy="925" r="64" fill="none" stroke="#ffe08a" stroke-opacity=".55" stroke-width="3"/>
+        <use href="#lotus" transform="translate(540 978) scale(1.05)"/>
+        <rect x="345" y="822" width="22" height="258" fill="#a8322a"/>
+        <rect x="713" y="822" width="22" height="258" fill="#a8322a"/>
+        <rect x="398" y="822" width="16" height="258" fill="#93291f"/>
+        <rect x="666" y="822" width="16" height="258" fill="#93291f"/>
+        <rect x="340" y="822" width="400" height="9" fill="#e0b45a" opacity=".8"/>
+        <g class="sway" style="transform-origin: 382px 831px"><use href="#hanging-lantern" x="382" y="831"/></g>
+        <g class="sway" style="transform-origin: 698px 831px; animation-delay: -2s"><use href="#hanging-lantern" x="698" y="831"/></g>
+
+        <rect x="405" y="1020" width="270" height="60" fill="#8b1e16" stroke="#e0b45a" stroke-width="3"/>
+        <path d="M418 1040H662" stroke="#e0b45a" stroke-width="4" opacity=".7"/>
+        <path d="M440 1058H640" stroke="#e0b45a" stroke-width="2" opacity=".5"/>
+        <rect x="412" y="984" width="12" height="36" rx="2" fill="#f4e4c1"/>
+        <rect x="656" y="984" width="12" height="36" rx="2" fill="#f4e4c1"/>
+        <ellipse class="flame" cx="418" cy="974" rx="6" ry="11" fill="#ffcf4d"/>
+        <ellipse class="flame" cx="662" cy="974" rx="6" ry="11" fill="#ffcf4d" style="animation-delay: -.4s"/>
+        <g class="vase">
+          <use href="#lotus" transform="translate(452 978) scale(.42)"/>
+          <path d="M440 1020C430 1006 432 994 444 989C448 985 448 980 446 976H458C456 980 456 985 460 989C472 994 474 1006 464 1020Z" fill="url(#g-bronze)"/>
+        </g>
+        <g class="vase">
+          <use href="#lotus" transform="translate(628 978) scale(.42)"/>
+          <path d="M616 1020C606 1006 608 994 620 989C624 985 624 980 622 976H634C632 980 632 985 636 989C648 994 650 1006 640 1020Z" fill="url(#g-bronze)"/>
+        </g>
+        <path d="M490 990Q494 1018 520 1022H560Q586 1018 590 990Z" fill="url(#g-bronze)"/>
+        <ellipse cx="540" cy="990" rx="50" ry="9" fill="#3a2a1a" stroke="#e2bb63" stroke-width="3"/>
+
+        <rect x="290" y="1080" width="500" height="30" fill="#4a2d22" stroke="#6b4434" stroke-width="2"/>
+        <rect x="400" y="1110" width="280" height="18" fill="#3d2620"/>
+        <rect x="430" y="1128" width="220" height="18" fill="#33201b"/>
+      </g>
+
+      <g id="bell-frame">
+        <rect x="30" y="676" width="18" height="470" fill="#3b2216"/>
+        <rect x="232" y="676" width="18" height="470" fill="#3b2216"/>
+        <path d="M6 680Q20 664 44 662H236Q260 664 274 680L268 690H12Z" fill="#4a2a1a" stroke="#e0b45a" stroke-width="3"/>
+      </g>
+      <g id="bell">
+        <path d="M140 690V718" stroke="#24150c" stroke-width="7"/>
+        <path d="M82 920C84 790 94 730 140 716C186 730 196 790 198 920Z" fill="url(#g-bronze)"/>
+        <rect x="76" y="912" width="128" height="18" rx="6" fill="url(#g-bronze)"/>
+        <path d="M92 770H188M87 846H193" stroke="#6b4a1f" stroke-width="5"/>
+        <circle cx="140" cy="884" r="13" fill="#7a5520" stroke="#e2bb63" stroke-width="2"/>
+      </g>
+
+      <ellipse cx="920" cy="1116" rx="104" ry="20" fill="#b9701a"/>
+      <ellipse cx="920" cy="1110" rx="96" ry="14" fill="#efb54a"/>
+      <g id="mo">
+        <ellipse cx="920" cy="1060" rx="84" ry="58" fill="url(#g-mo)"/>
+        <path d="M858 1070Q920 1102 982 1070" fill="none" stroke="#2b0905" stroke-width="10" stroke-linecap="round"/>
+        <path d="M876 1030Q920 1012 964 1030M868 1046Q920 1026 972 1046" fill="none" stroke="#5a120a" stroke-width="3" opacity=".6"/>
+        <ellipse cx="896" cy="1028" rx="30" ry="12" fill="#fff" opacity=".16"/>
+      </g>
+      <g id="mallet">
+        <path d="M1040 920L934 987" stroke="#7a5230" stroke-width="10" stroke-linecap="round"/>
+        <circle cx="922" cy="995" r="16" fill="#a0522d" stroke="#5a2e14" stroke-width="2"/>
+      </g>
+    </svg>
+
+    <canvas id="fx" width="1080" height="1920"></canvas>
+
+    <header id="hud">
+      <h1>CHÙA ONLINE</h1>
+      <p id="total">✨ Công đức: <b id="total-value">0</b></p>
+    </header>
+    <ul id="guide" class="panel"></ul>
+    <div id="toast"></div>
+    <div id="welcome"></div>
+    <section id="board" class="panel">
+      <h2>🏆 Bảng công đức</h2>
+      <ol id="top"></ol>
+    </section>
+    <button id="sound-hint" type="button" hidden>🔇 Bấm vào màn hình để bật âm thanh</button>
+  </div>
+  <script type="module" src="game.js"></script>
+</body>
+</html>

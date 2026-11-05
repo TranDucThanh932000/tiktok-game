@@ -1,0 +1,18 @@
+{
+  "name": "chua-online",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Game TikTok LIVE đi chùa online: like, bình luận, follow, share và quà tặng điều khiển hành động trong chùa",
+  "type": "module",
+  "scripts": {
+    "start": "node --env-file-if-exists=.env server.js",
+    "window": "start \"\" msedge --app=http://127.0.0.1:3000/?capture=landscape --start-fullscreen --window-size=1920,1080 --window-position=0,0 --user-data-dir=D:\\tiktok-cache\\chua-online-window --disable-component-update --no-first-run --no-default-browser-check --autoplay-policy=no-user-gesture-required --disable-backgrounding-occluded-windows --disable-renderer-backgrounding --disable-background-timer-throttling --disable-features=CalculateNativeWinOcclusion"
+  },
+  "engines": {
+    "node": ">=22.9"
+  },
+  "dependencies": {
+    "express": "^5.3.0",
+    "tiktok-live-connector": "^2.5.0"
+  }
+}

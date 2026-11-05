@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bảng điều khiển · Quán Cô Ba</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: "Segoe UI", Arial, sans-serif; background: #1a1410; color: #f6ecdf; }
+    main { display: grid; grid-template-columns: minmax(0, 560px) minmax(0, 1fr); gap: 16px; height: 100vh; padding: 16px; }
+    section { overflow-y: auto; min-width: 0; }
+    h1 { margin: 0 0 10px; font-size: 24px; }
+    h2 { margin: 18px 0 8px; font-size: 14px; color: #f2c14e; text-transform: uppercase; letter-spacing: 1px; }
+    p { margin: 0; }
+    .box { margin-top: 8px; padding: 8px 12px; border-radius: 8px; background: #2a201a; font-size: 14px; }
+    #status { background: #3a1d1d; }
+    #status.on { background: #1d3a26; }
+    #alerts p { margin-top: 8px; padding: 8px 12px; border: 1px solid #c0392b; border-radius: 8px; background: #4a1717; font-size: 14px; }
+    #safe-box { display: flex; align-items: center; gap: 10px; }
+    #safe-box.on { outline: 1px solid #f2c14e; background: #4a3a10; }
+    #safe-box span { flex: 1; }
+    .hint { margin: 0 0 8px; font-size: 13px; color: #c8b8a6; }
+    .fields { display: flex; flex-wrap: wrap; gap: 8px; }
+    label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; }
+    label.check { flex-direction: row; align-items: center; gap: 6px; }
+    input, select { padding: 7px 9px; border: 1px solid #5a4636; border-radius: 8px; background: #2a201a; color: inherit; font: inherit; }
+    input[type="text"] { width: 160px; }
+    input[type="number"] { width: 80px; }
+    .row { display: flex; flex-wrap: wrap; gap: 8px; }
+    button { padding: 8px 12px; border: 1px solid #7a5c44; border-radius: 8px; background: #3a2c22; color: inherit; font: inherit; font-size: 14px; cursor: pointer; }
+    button:hover { background: #4d3a2c; }
+    button.main { border-color: #c98f45; background: #6b4220; }
+    .danger { border-color: #a0403a; background: #3a1d1d; }
+    .gift-icon { width: 26px; height: 26px; margin: -6px 6px -6px -4px; object-fit: contain; vertical-align: middle; }
+    form { display: flex; gap: 8px; margin-top: 8px; }
+    form input { flex: 1; min-width: 0; }
+    #log { margin-top: 8px; min-height: 1.4em; font-size: 14px; color: #c8b8a6; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { padding: 5px 6px; border-bottom: 1px solid #3a2c22; text-align: left; vertical-align: top; }
+    th { color: #c8b8a6; font-weight: 600; }
+    .promo { color: #ffd166; font-weight: 700; }
+    #feed { font-size: 13px; line-height: 1.5; }
+    #feed div { padding: 2px 0; border-bottom: 1px dashed #3a2c22; }
+    .warn { color: #ff9b85; }
+    @media (max-width: 900px) { main { grid-template-columns: 1fr; height: auto; } }
+  </style>
+</head>
+<body>
+  <main>
+    <section>
+      <h1>🍻 Quán Cô Ba · Bảng điều khiển</h1>
+      <p id="status" class="box">Đang kết nối máy chủ game...</p>
+      <p id="session" class="box"></p>
+      <div id="alerts"></div>
+      <div id="safe-box" class="box"><span id="safe"></span><button type="button" id="safe-toggle"></button></div>
+
+      <h2>Người xem giả lập</h2>
+      <p class="hint">Cùng “Mã tài khoản” là cùng một người. Đặt hai mã khác nhau nhưng cùng tên để thử khách trùng tên.</p>
+      <div class="fields">
+        <label>Tên <input type="text" id="name" value="Nam" maxlength="18"></label>
+        <label>Mã tài khoản <input type="text" id="uid" placeholder="(mặc định theo tên)" maxlength="40"></label>
+        <label>Số quà <input type="number" id="count" min="1" max="999" value="1"></label>
+        <label class="check"><input type="checkbox" id="combo"> Gửi kiểu combo (nhiều bản cập nhật)</label>
+      </div>
+
+      <h2>Bình luận</h2>
+      <div class="row">
+        <button type="button" class="main" data-say="vào">💬 vào</button>
+        <button type="button" data-say="Chào cô Ba">Chào cô Ba</button>
+        <button type="button" data-say="Cho một cốc sinh tố lúa mạch">Cho một cốc sinh tố lúa mạch</button>
+        <button type="button" data-say="Quán đông vui quá">Quán đông vui quá</button>
+        <button type="button" data-say="vào bàn 1">🔀 vào bàn 1</button>
+        <button type="button" data-say="vào bàn 8">🔀 vào bàn 8</button>
+        <button type="button" data-say="về">👋 về</button>
+        <button type="button" id="crowd">👥 Thêm 10 khách</button>
+        <button type="button" id="like">❤️ Thả 25 tim</button>
+      </div>
+      <form id="chat">
+        <input id="chat-text" maxlength="200" placeholder="Gõ thử một bình luận...">
+        <button>Gửi</button>
+      </form>
+
+      <h2>Quà tặng</h2>
+      <div class="row" id="gifts"></div>
+
+      <h2>Sự kiện lớn (chỉ một cái chạy, cái sau xếp hàng)</h2>
+      <div class="row">
+        <button type="button" data-event="b1g2">🎉 Cô Ba chơi lớn (mua 1 tặng 2)</button>
+        <button type="button" data-event="wheel">🌀 Chiếc quạt số hên</button>
+        <select id="slot"><option value="">ô ngẫu nhiên</option></select>
+      </div>
+      <div class="row" style="margin-top: 8px">
+        <button type="button" data-event="match">⚽ Bóng đá (ngẫu nhiên)</button>
+        <button type="button" data-event="match" data-outcome="win">Đội nhà thắng</button>
+        <button type="button" data-event="match" data-outcome="draw">Hòa</button>
+        <button type="button" data-event="match" data-outcome="lose">Thua</button>
+        <button type="button" id="stop-promo" class="danger">⏹ Dừng sự kiện đang chạy</button>
+      </div>
+
+      <h2>Chuyện trong quán</h2>
+      <div class="row">
+        <button type="button" data-event="rain">🌧️ Mưa, kéo bạt</button>
+        <button type="button" data-event="cat">🐱 Mèo Mướp ghé bàn</button>
+        <button type="button" data-event="nearMiss">🙃 Tí suýt giao nhầm (chuyến sau)</button>
+        <button type="button" data-event="karaoke">🎤 Karaoke đầu hẻm</button>
+        <button type="button" data-event="crash">💥 Va chạm xe ngoài đường</button>
+        <button type="button" data-event="vendor">🧺 Dì Năm bán hàng rong</button>
+        <button type="button" data-event="toast">🍻 Một, hai, ba, dô!</button>
+        <button type="button" data-event="wife">👩 Vợ tới kiếm</button>
+        <button type="button" data-event="blackout">🔌 Cúp điện</button>
+        <button type="button" data-event="chatter">📺 Chú Tư bình luận</button>
+        <button type="button" data-event="open">📣 Lời mở quán</button>
+        <button type="button" data-event="closing">🌙 Lời cuối ca</button>
+      </div>
+
+      <h2>Ca quán</h2>
+      <div id="shift" class="box"></div>
+      <div class="row" style="margin-top: 8px">
+        <button type="button" id="new-shift">🔁 Bắt đầu ca mới (giữ khách, món)</button>
+        <button type="button" id="telegram-test">📨 Gửi thử Telegram</button>
+        <button type="button" id="reset" class="danger">Mời hết khách về (xóa quán)</button>
+      </div>
+      <p id="log"></p>
+    </section>
+
+    <section>
+      <h2>Đang diễn ra</h2>
+      <div id="now" class="box"></div>
+      <h2>Thực đơn đang áp dụng</h2>
+      <table id="menu"></table>
+      <h2>Quà chưa có trong thực đơn</h2>
+      <div id="unmapped" class="box">Chưa có.</div>
+      <h2>Khách trong quán</h2>
+      <table id="customers"></table>
+      <h2>Nhật ký</h2>
+      <div id="feed"></div>
+    </section>
+  </main>
+
+  <script type="module">
+    const $ = (id) => document.getElementById(id);
+    const post = (url, body = {}) => fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    const who = () => ({ name: $('name').value, id: $('uid').value || $('name').value });
+    const simulate = (body) => post('/api/simulate', { ...who(), ...body });
+    const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+    const time = (at) => new Date(at).toLocaleTimeString('vi-VN');
+    let items = {};
+    let state = null;
+
+    function feed(html, cls = '') {
+      const div = document.createElement('div');
+      div.className = cls;
+      div.innerHTML = `<b>${time(Date.now())}</b> ${html}`;
+      $('feed').prepend(div);
+      while ($('feed').childElementCount > 80) $('feed').lastChild.remove();
+    }
+
+    async function comment(text) {
+      const res = await simulate({ kind: 'comment', text });
+      const { result } = await res.json();
+      const MEAN = { join: 'vào quán', chat: 'hiện bong bóng thoại (nước lã Tí tự mang, comment không gọi món)', hint: 'chưa vào quán nên chỉ hiện hướng dẫn', waiting: 'đang chờ ghế', move: 'đổi bàn (món mang theo)', 'move-full': 'bàn đã đầy rồi (đã báo trên đầu khách)', 'join-full': 'bàn muốn vào đã đầy, xếp sang bàn khác', 'move-same': 'đang ngồi bàn đó rồi', 'move-bad': 'không có bàn số này', 'move-cooldown': 'vừa đổi bàn, chờ 10 giây mới đổi tiếp', home: 'ra về, lên xe chạy đi', 'home-drunk': 'ra về nhưng đã uống nên bị công an giữ xe', 'home-waiting': 'đang chờ ghế thì rời hàng chờ', 'home-pending': 'còn món đang ra, nhận xong rồi mới về', toast: 'góp một tiếng dô', 'toast-cheers': 'đủ tiếng dô, cả quán cụng ly!', 'toast-wait': 'vừa dô xong, chờ 1,5 giây', 'toast-done': 'đang cụng ly rồi', 'toast-cooldown': 'vừa cụng xong, chờ chút mới mở lượt mới' };
+      $('log').textContent = `“${text}” → ${MEAN[result] ?? result}`;
+    }
+    document.querySelectorAll('[data-say]').forEach((el) => (el.onclick = () => comment(el.dataset.say)));
+    $('chat').onsubmit = (e) => {
+      e.preventDefault();
+      if ($('chat-text').value.trim()) comment($('chat-text').value);
+    };
+    $('crowd').onclick = () => post('/api/crowd', { count: 10 });
+    $('like').onclick = async () => {
+      const { likes, order } = await (await simulate({ kind: 'like', count: 25 })).json();
+      $('log').textContent = order ? `Đủ ${likes} tim → ${order.qty} ${items[order.item]?.unit} ${items[order.item]?.name}` : `Đã thả ${likes} tim (cứ 100 tim được 1 phần)`;
+    };
+
+    async function sendGift(gift) {
+      const res = await simulate({ kind: 'gift', gift, count: Number($('count').value) || 1, combo: $('combo').checked });
+      const { units, order } = await res.json();
+      $('log').textContent = order ? `${gift} ×${units} → ${order.qty} ${items[order.item]?.unit} ${items[order.item]?.name}${order.side ? ` + ${order.side} đĩa đậu phộng` : ''}${order.large ? ' (phần lớn)' : ''}` : `${gift} ×${units}: quà chưa có trong thực đơn, đã báo chủ quán.`;
+    }
+
+    function renderGifts(menu) {
+      const buttons = menu.map((m) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.append(Object.assign(new Image(), { className: 'gift-icon', alt: '', src: m.icon }), `${m.label} → ${m.base} ${m.unit} ${m.itemName}`);
+        b.onclick = () => sendGift(m.gift);
+        return b;
+      });
+      const unknown = document.createElement('button');
+      unknown.type = 'button';
+      unknown.textContent = '❓ Quà lạ (Lucky Pig)';
+      unknown.onclick = () => sendGift('Lucky Pig');
+      $('gifts').replaceChildren(...buttons, unknown);
+    }
+
+    document.querySelectorAll('[data-event]').forEach((el) => {
+      el.onclick = async () => {
+        const body = { kind: el.dataset.event };
+        if (el.dataset.outcome) body.outcome = el.dataset.outcome;
+        if (body.kind === 'wheel' && $('slot').value !== '') body.slot = Number($('slot').value);
+        const { result } = await (await post('/api/event', body)).json();
+        $('log').textContent = result === 'queued' ? 'Đang có sự kiện lớn, sự kiện này đã xếp hàng chờ.' : `Đã chạy: ${el.textContent}`;
+      };
+    });
+    $('stop-promo').onclick = () => post('/api/stop-promo');
+    $('new-shift').onclick = () => post('/api/new-shift');
+    $('reset').onclick = () => confirm('Mời tất cả khách về và xóa đơn đang chờ?') && post('/api/reset');
+    $('telegram-test').onclick = async () => {
+      $('log').textContent = 'Đang gửi tin thử Telegram...';
+      $('log').textContent = (await (await post('/api/telegram-test')).json()).message;
+    };
+
+    const EVENT = { b1g2: 'Cô Ba chơi lớn', wheel: 'Vòng quay', match: 'Bóng đá', ambient: 'Chuyện bất ngờ', closing: 'Lời cuối ca', rain: 'Mưa', cat: 'Mèo Mướp', nearMiss: 'Tí giao nhầm', karaoke: 'Karaoke', crash: 'Va chạm xe', vendor: 'Dì Năm bán hàng rong', toast: 'Một hai ba dô', wife: 'Vợ tới kiếm', blackout: 'Cúp điện' };
+    const SLOT = { double: 'Gấp đôi món', side: 'Có đồ nhắm kèm', large: 'Phần lớn cô mời', b1g2: 'Mua 1 tặng 2', b1g3: 'Mua 1 tặng 3' };
+
+    function render() {
+      if (!state) return;
+      const now = state.now;
+      const parts = [];
+      if (state.promo) parts.push(`<span class="promo">🎁 ${esc(state.promo.title)}: ${esc(state.promo.short)}</span> · còn ${Math.max(0, Math.ceil((state.promo.endAt - Date.now()) / 1000))} giây · áp dụng: ${state.promo.gifts.map(esc).join(', ')}`);
+      if (state.stage?.kind === 'match') parts.push(`⚽ ${esc(state.stage.home)} ${state.stage.score.home} - ${state.stage.score.away} ${esc(state.stage.away)} (${state.stage.phase})`);
+      if (state.stage?.kind === 'wheel' && state.stage.phase === 'spin') parts.push(`🌀 Đang quay, quà chỉ định: ${esc(state.stage.gift)}`);
+      if (state.queue.length) parts.push(`⏳ Xếp hàng: ${state.queue.map((k) => EVENT[k] ?? k).join(', ')}`);
+      if (state.runner) parts.push(`🏃 Tí đang mang món ra bàn ${state.runner.table}`);
+      if (state.queueLength) parts.push(`🧾 ${state.queueLength} đơn chờ`);
+      if (state.waitlist.length) parts.push(`🪑 Chờ ghế: ${state.waitlist.map(esc).join(', ')}`);
+      parts.push(`👥 ${state.stats.customers}/${state.stats.seats} khách · đã phục vụ ${state.stats.served} phần món`);
+      $('now').innerHTML = parts.join('<br>');
+
+      const elapsed = Math.floor((Date.now() - state.shift.startAt) / 60000);
+      $('shift').innerHTML = `Ca ${state.shift.minutes} phút, đã ${elapsed} phút. ` + state.shift.plan.map((p) => `${p.fired ? '✔' : '•'} ${EVENT[p.event] ?? p.event} lúc ${time(p.at)}`).join(' · ') + (state.safeMode ? '<br><span class="warn">Chế độ an toàn đang bật: sự kiện tự động tạm dừng.</span>' : '');
+
+      $('menu').innerHTML = '<tr><th>Quà</th><th>Món mỗi quà</th></tr>' + state.menu.map((m) => `<tr><td><img class="gift-icon" src="${esc(m.icon)}" alt="">${esc(m.label)} <small>(${esc(m.gift)})</small></td><td class="${m.promo ? 'promo' : ''}">${esc(m.offer)}</td></tr>`).join('');
+
+      $('unmapped').innerHTML = state.unmapped.length ? state.unmapped.map((u) => `<div class="warn">${time(u.at)} · ${esc(u.name)} gửi ${esc(u.gift)} ×${u.units}${u.coins ? ` (${u.coins} xu)` : ''}${u.reason ? ` · ${esc(u.reason)}` : ''}</div>`).join('') + '<p class="hint">Thêm quà vào "menu" trong config.json rồi chạy lại server để gán món.</p>' : 'Chưa có.';
+
+      const sorted = [...state.customers].sort((a, b) => (a.seat?.table ?? 99) - (b.seat?.table ?? 99));
+      $('customers').innerHTML = '<tr><th>Khách</th><th>Bàn</th><th>Trên bàn</th></tr>' + sorted.map((c) => {
+        const food = c.stacks.map((s) => `${s.qty} ${items[s.item]?.unit ?? ''} ${items[s.item]?.name ?? s.item}${s.large ? ' (lớn)' : ''}`).join(', ');
+        return `<tr><td>${esc(c.name)}</td><td>${c.seat ? c.seat.table : 'chờ'}</td><td>${c.water.has ? '💧 ' : ''}${esc(food)}${c.pending ? ' · <i>đang chờ món</i>' : ''}</td></tr>`;
+      }).join('');
+    }
+    setInterval(render, 1000);
+
+    function showStatus({ connected, text }) {
+      $('status').textContent = text;
+      $('status').classList.toggle('on', connected);
+    }
+    const showAlert = ({ at, text }) => $('alerts').prepend(Object.assign(document.createElement('p'), { textContent: `⚠️ ${time(at)} TikTok cảnh báo: ${text}` }));
+    let safeMode = false;
+    function showSafe(on) {
+      safeMode = on;
+      $('safe-box').classList.toggle('on', on);
+      $('safe').textContent = on ? '🛡️ Chế độ an toàn: BẬT. Đã dừng sự kiện tự động và ẩn chữ bình luận.' : '🛡️ Chế độ an toàn: tắt. Tự bật khi có cảnh báo TikTok.';
+      $('safe-toggle').textContent = on ? 'Tắt chế độ an toàn' : 'Bật ngay';
+    }
+    $('safe-toggle').onclick = () => post('/api/safe-mode', { on: !safeMode });
+    const showSession = ({ roomId, diamonds, gifts, since }) => {
+      $('session').textContent = roomId ? `💎 Phiên live (từ ${time(since)}): ${diamonds.toLocaleString('vi-VN')} kim cương từ ${gifts.toLocaleString('vi-VN')} quà (ước tính).` : '💎 Chưa có phiên live nào từ lúc bật server.';
+    };
+
+    const events = new EventSource('/events');
+    events.onmessage = (event) => {
+      const msg = JSON.parse(event.data);
+      if (msg.type === 'snapshot') {
+        items = msg.config.items;
+        state = msg.state;
+        renderGifts(state.menu);
+        $('slot').replaceChildren(Object.assign(document.createElement('option'), { value: '', textContent: 'ô ngẫu nhiên' }), ...msg.config.wheel.map((e, i) => Object.assign(document.createElement('option'), { value: i, textContent: SLOT[e] ?? e })));
+        showStatus(msg.status);
+        $('alerts').replaceChildren();
+        msg.alerts.forEach(showAlert);
+        showSafe(state.safeMode);
+        showSession(msg.session);
+        render();
+      }
+      if (msg.type === 'state') {
+        state = msg.state;
+        render();
+      }
+      if (msg.type === 'fx') {
+        const d = msg.data;
+        if (msg.fx === 'order') feed(`🧾 ${esc(d.name)} (bàn ${d.table ?? 'chờ'}): ${esc(d.giftLabel)} ×${d.units} → <b>${d.qty} ${esc(d.unit)} ${esc(d.itemName)}</b>${d.side ? ` + ${d.side} đĩa đậu phộng` : ''}${d.large ? ' (phần lớn)' : ''}${d.promo ? ` <span class="promo">[${esc(d.promo.label)}]</span>` : ''}`);
+        if (msg.fx === 'unmapped') feed(`❓ ${esc(d.name)} gửi <b>${esc(d.gift)}</b> ×${d.units}: chưa có món tương ứng`, 'warn');
+        if (msg.fx === 'join') feed(`🚶 ${esc(d.name)} vào bàn ${d.table}`);
+        if (msg.fx === 'move') feed(`🔀 ${esc(d.name)} đổi từ bàn ${d.from.table} sang bàn ${d.to.table}`);
+        if (msg.fx === 'wait') feed(`🪑 ${esc(d.name)} chờ ghế (quán đầy)`);
+        if (msg.fx === 'leave' && d.reason !== 'reset') feed(d.reason === 'wife' ? `👂 ${esc(d.name)} bị vợ xách tai về` : `👋 ${esc(d.name)} ra về${d.drunk ? ' (đã uống: công an giữ xe 🚓)' : ''}`);
+        if (msg.fx === 'say') feed(`<i>${{ coba: 'Cô Ba', ti: 'Tí', chutu: 'Chú Tư' }[d.who]}: ${esc(d.text)}</i>`);
+        if (msg.fx === 'goal') feed(`⚽ Bàn thắng! ${d.score.home} - ${d.score.away}`);
+        if (msg.fx === 'vendor') feed(`🧺 Dì Năm gánh ${esc(d.item)} vào quán: ${d.stops.map((s) => `${esc(s.name)} ${s.buy ? `mua ${s.qty} ${esc(d.unit)}` : 'từ chối'}`).join(', ')}`);
+        if (msg.fx === 'toast') feed(`🍻 Cả quán cụng ly! (${d.count} tiếng dô từ ${d.people} người)`);
+        if (msg.fx === 'wife') feed(`👩 Vợ của ${esc(d.name)} tới kiếm (${d.spare ? 'được ly cuối' : 'bị xách tai về'})`);
+        if (msg.fx === 'queued') feed(`⏳ Sự kiện xếp hàng: ${d.queue.map((k) => EVENT[k] ?? k).join(', ')}`);
+      }
+      if (msg.type === 'status') showStatus(msg);
+      if (msg.type === 'moderation') showAlert(msg);
+      if (msg.type === 'safe-mode') showSafe(msg.on);
+      if (msg.type === 'session') showSession(msg);
+    };
+    events.onerror = () => showStatus({ connected: false, text: 'Mất kết nối tới máy chủ game, kiểm tra cửa sổ đang chạy npm start.' });
+  </script>
+</body>
+</html>

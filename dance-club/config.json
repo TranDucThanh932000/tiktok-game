@@ -1,0 +1,255 @@
+{
+  "tiktokUsername": "linh.phng2903",
+  "port": 3005,
+
+  "join": {
+    "keywords": ["hey"],
+    "commentCooldownMs": 1500
+  },
+
+  "floor": {
+    "maxDancers": 50,
+    "maxWaitlist": 300,
+    "spawnPerSecond": 4,
+    "idleLeaveMinutes": 30,
+    "makeRoomIdleMinutes": 4,
+    "cooldownMs": 4000
+  },
+
+  "gifts": {
+    "comboWindowMs": 2500,
+    "maxQueue": 30,
+    "agingSecondsPerTier": 40,
+    "rushQueueLength": 6,
+    "rushScale": 0.7,
+    "rushMaxTier": 3,
+    "preparingMs": 1800,
+    "returningMs": 1800,
+    "minChillMs": 1500,
+    "unknownCoinValue": 1
+  },
+
+  "tiers": [
+    { "tier": 1, "id": "casual", "name": "Khởi Động", "label": "Khởi động", "minCoins": 1, "seconds": 6, "color": "#4cc9f0", "gift": "Hoa hồng", "icon": "/gifts/rose.webp" },
+    { "tier": 2, "id": "groove", "name": "Nhịp Điệu", "label": "Nhịp điệu", "minCoins": 5, "seconds": 8, "color": "#2ee59d", "gift": "Bắn tim", "icon": "/gifts/finger-heart.webp" },
+    { "tier": 3, "id": "hype", "name": "Bùng Nổ", "label": "Bùng nổ", "minCoins": 30, "seconds": 12, "color": "#ff4d8d", "gift": "Bánh donut", "icon": "/gifts/doughnut.webp" },
+    { "tier": 4, "id": "superstar", "name": "Siêu Sao", "label": "Siêu sao", "minCoins": 100, "seconds": 16, "color": "#ffc93c", "gift": "Hộp quà", "icon": "/gifts/gift-box.webp" },
+    { "tier": 5, "id": "legend", "name": "Huyền Thoại", "label": "Huyền thoại", "minCoins": 1000, "seconds": 22, "color": "#c77dff", "gift": "Galaxy", "icon": "/gifts/galaxy.webp" }
+  ],
+
+  "swapGift": {
+    "enabled": true,
+    "names": ["TikTok"],
+    "giftIds": [],
+    "gift": "TikTok",
+    "label": "Đổi nhân vật",
+    "icon": "/gifts/tiktok.webp",
+    "color": "#25f4ee",
+    "alsoPerform": false
+  },
+
+  "joinFocus": {
+    "enabled": true,
+    "seconds": 1,
+    "onlyWhenChill": true,
+    "maxQueue": 2
+  },
+
+  "choreographies": [
+    { "id": "casual_bounce", "name": "Nhún Nhảy Thư Giãn", "tier": 1, "cameraPreset": "CAM_MEDIUM", "crowdReactionPreset": "casual", "lightingPreset": "casual",
+      "phases": [
+        { "phase": "intro", "share": 0.18, "moves": ["two_step"] },
+        { "phase": "main", "share": 0.42, "moves": ["bounce_step", "roll_arms"] },
+        { "phase": "highlight", "share": 0.18, "moves": ["spin"] },
+        { "phase": "freeze", "share": 0.1, "moves": ["pose_point"] },
+        { "phase": "finale", "share": 0.12, "moves": ["hype_up"] }
+      ] },
+    { "id": "casual_shuffle", "name": "Lướt Chân Vui Vẻ", "tier": 1, "cameraPreset": "CAM_MEDIUM", "crowdReactionPreset": "casual", "lightingPreset": "casual",
+      "phases": [
+        { "phase": "intro", "share": 0.18, "moves": ["hype_up"] },
+        { "phase": "main", "share": 0.42, "moves": ["shuffle"] },
+        { "phase": "highlight", "share": 0.18, "moves": ["spin"] },
+        { "phase": "freeze", "share": 0.1, "moves": ["pose_cool"] },
+        { "phase": "finale", "share": 0.12, "moves": ["bounce_step"] }
+      ] },
+    { "id": "casual_groove", "name": "Lắc Tay Theo Nhạc", "tier": 1, "cameraPreset": "CAM_MEDIUM", "crowdReactionPreset": "casual", "lightingPreset": "casual",
+      "phases": [
+        { "phase": "intro", "share": 0.18, "moves": ["two_step"] },
+        { "phase": "main", "share": 0.42, "moves": ["roll_arms", "bounce_step"] },
+        { "phase": "highlight", "share": 0.18, "moves": ["jump_hype"] },
+        { "phase": "freeze", "share": 0.1, "moves": ["pose_point"] },
+        { "phase": "finale", "share": 0.12, "moves": ["hype_up"] }
+      ] },
+
+    { "id": "groove_pop", "name": "Giật Khớp", "tier": 2, "cameraPreset": "CAM_MEDIUM", "crowdReactionPreset": "groove", "lightingPreset": "groove",
+      "phases": [
+        { "phase": "intro", "share": 0.15, "moves": ["hype_up"] },
+        { "phase": "main", "share": 0.45, "moves": ["pop_lock", "robot"] },
+        { "phase": "highlight", "share": 0.2, "moves": ["body_roll"] },
+        { "phase": "freeze", "share": 0.08, "moves": ["pose_cool"] },
+        { "phase": "finale", "share": 0.12, "moves": ["two_step"] }
+      ] },
+    { "id": "groove_wave", "name": "Sóng Cơ Thể", "tier": 2, "cameraPreset": "CAM_MEDIUM", "crowdReactionPreset": "groove", "lightingPreset": "groove",
+      "phases": [
+        { "phase": "intro", "share": 0.15, "moves": ["two_step"] },
+        { "phase": "main", "share": 0.45, "moves": ["body_roll", "glide"] },
+        { "phase": "highlight", "share": 0.2, "moves": ["kick_step"] },
+        { "phase": "freeze", "share": 0.08, "moves": ["pose_point"] },
+        { "phase": "finale", "share": 0.12, "moves": ["finale_wave"] }
+      ] },
+    { "id": "groove_footwork", "name": "Vũ Điệu Bước Chân", "tier": 2, "cameraPreset": "CAM_MEDIUM", "crowdReactionPreset": "groove", "lightingPreset": "groove",
+      "phases": [
+        { "phase": "intro", "share": 0.15, "moves": ["bounce_step"] },
+        { "phase": "main", "share": 0.45, "moves": ["kick_step", "shuffle"] },
+        { "phase": "highlight", "share": 0.2, "moves": ["spin"] },
+        { "phase": "freeze", "share": 0.08, "moves": ["pose_cool"] },
+        { "phase": "finale", "share": 0.12, "moves": ["hype_up"] }
+      ] },
+
+    { "id": "hype_flip", "name": "Lộn Ngược", "tier": 3, "cameraPreset": "CAM_TRACKING", "crowdReactionPreset": "hype", "lightingPreset": "hype",
+      "phases": [
+        { "phase": "intro", "share": 0.12, "moves": ["hype_up"] },
+        { "phase": "main", "share": 0.43, "moves": ["krump", "shuffle"] },
+        { "phase": "highlight", "share": 0.2, "moves": ["backflip"] },
+        { "phase": "freeze", "share": 0.1, "moves": ["pose_tilt"] },
+        { "phase": "finale", "share": 0.15, "moves": ["jump_hype"] }
+      ] },
+    { "id": "hype_spin", "name": "Xoáy Sàn", "tier": 3, "cameraPreset": "CAM_TRACKING", "crowdReactionPreset": "hype", "lightingPreset": "hype",
+      "phases": [
+        { "phase": "intro", "share": 0.12, "moves": ["two_step"] },
+        { "phase": "main", "share": 0.43, "moves": ["pop_lock", "kick_step"] },
+        { "phase": "highlight", "share": 0.2, "moves": ["spin_fast", "knee_drop"] },
+        { "phase": "freeze", "share": 0.1, "moves": ["pose_tilt"] },
+        { "phase": "finale", "share": 0.15, "moves": ["finale_jump"] }
+      ] },
+    { "id": "hype_split", "name": "Bật Xoạc", "tier": 3, "cameraPreset": "CAM_TRACKING", "crowdReactionPreset": "hype", "lightingPreset": "hype",
+      "phases": [
+        { "phase": "intro", "share": 0.12, "moves": ["hype_up"] },
+        { "phase": "main", "share": 0.43, "moves": ["robot", "krump"] },
+        { "phase": "highlight", "share": 0.2, "moves": ["jump_split"] },
+        { "phase": "freeze", "share": 0.1, "moves": ["pose_cool"] },
+        { "phase": "finale", "share": 0.15, "moves": ["finale_jump"] }
+      ] },
+
+    { "id": "star_vogue", "name": "Tạo Dáng Sân Khấu", "tier": 4, "cameraPreset": "CAM_TRACKING", "crowdReactionPreset": "superstar", "lightingPreset": "superstar",
+      "phases": [
+        { "phase": "intro", "share": 0.1, "moves": ["hype_up"] },
+        { "phase": "main", "share": 0.42, "moves": ["vogue", "body_roll", "glide"] },
+        { "phase": "highlight", "share": 0.2, "moves": ["tornado"] },
+        { "phase": "freeze", "share": 0.1, "moves": ["pose_star"] },
+        { "phase": "finale", "share": 0.18, "moves": ["finale_wave"] }
+      ] },
+    { "id": "star_krump", "name": "Vũ Điệu Rực Lửa", "tier": 4, "cameraPreset": "CAM_TRACKING", "crowdReactionPreset": "superstar", "lightingPreset": "superstar",
+      "phases": [
+        { "phase": "intro", "share": 0.1, "moves": ["two_step"] },
+        { "phase": "main", "share": 0.42, "moves": ["krump", "pop_lock", "kick_step"] },
+        { "phase": "highlight", "share": 0.2, "moves": ["backflip"] },
+        { "phase": "freeze", "share": 0.1, "moves": ["pose_star"] },
+        { "phase": "finale", "share": 0.18, "moves": ["finale_jump"] }
+      ] },
+    { "id": "star_glide", "name": "Lướt Sao", "tier": 4, "cameraPreset": "CAM_TRACKING", "crowdReactionPreset": "superstar", "lightingPreset": "superstar",
+      "phases": [
+        { "phase": "intro", "share": 0.1, "moves": ["hype_up"] },
+        { "phase": "main", "share": 0.42, "moves": ["glide", "vogue", "shuffle"] },
+        { "phase": "highlight", "share": 0.2, "moves": ["spin_fast", "jump_split"] },
+        { "phase": "freeze", "share": 0.1, "moves": ["pose_tilt"] },
+        { "phase": "finale", "share": 0.18, "moves": ["finale_wave"] }
+      ] },
+
+    { "id": "legend_levitate", "name": "Bay Lên", "tier": 5, "cameraPreset": "CAM_CINEMATIC", "crowdReactionPreset": "legend", "lightingPreset": "legend",
+      "phases": [
+        { "phase": "intro", "share": 0.1, "moves": ["hype_up"] },
+        { "phase": "main", "share": 0.38, "moves": ["vogue", "krump", "pop_lock", "glide"] },
+        { "phase": "highlight", "share": 0.22, "moves": ["levitate"] },
+        { "phase": "freeze", "share": 0.08, "moves": ["pose_legend"] },
+        { "phase": "finale", "share": 0.22, "moves": ["finale_jump", "finale_wave"] }
+      ] },
+    { "id": "legend_headspin", "name": "Xoay Đầu", "tier": 5, "cameraPreset": "CAM_CINEMATIC", "crowdReactionPreset": "legend", "lightingPreset": "legend",
+      "phases": [
+        { "phase": "intro", "share": 0.1, "moves": ["two_step", "hype_up"] },
+        { "phase": "main", "share": 0.38, "moves": ["krump", "body_roll", "kick_step", "robot"] },
+        { "phase": "highlight", "share": 0.22, "moves": ["headspin"] },
+        { "phase": "freeze", "share": 0.08, "moves": ["pose_legend"] },
+        { "phase": "finale", "share": 0.22, "moves": ["finale_wave", "finale_jump"] }
+      ] },
+    { "id": "legend_double_flip", "name": "Lộn Kép", "tier": 5, "cameraPreset": "CAM_CINEMATIC", "crowdReactionPreset": "legend", "lightingPreset": "legend",
+      "phases": [
+        { "phase": "intro", "share": 0.1, "moves": ["hype_up"] },
+        { "phase": "main", "share": 0.38, "moves": ["shuffle", "vogue", "krump", "glide"] },
+        { "phase": "highlight", "share": 0.22, "moves": ["double_flip", "tornado"] },
+        { "phase": "freeze", "share": 0.08, "moves": ["pose_star"] },
+        { "phase": "finale", "share": 0.22, "moves": ["finale_jump", "finale_wave"] }
+      ] }
+  ],
+
+  "crowdReactionPresets": {
+    "casual":    { "lookAt": 0.55, "cheer": 0.12, "clap": 0.18, "jump": 0,    "danceAlong": 0,    "makeSpace": 2.0, "finaleSync": 0,   "highlightCheer": 0.25 },
+    "groove":    { "lookAt": 0.8,  "cheer": 0.2,  "clap": 0.22, "jump": 0,    "danceAlong": 0.1,  "makeSpace": 2.2, "finaleSync": 0,   "highlightCheer": 0.4 },
+    "hype":      { "lookAt": 1,    "cheer": 0.3,  "clap": 0.15, "jump": 0.15, "danceAlong": 0.15, "makeSpace": 2.5, "finaleSync": 0.3, "highlightCheer": 0.6 },
+    "superstar": { "lookAt": 1,    "cheer": 0.25, "clap": 0.1,  "jump": 0.1,  "danceAlong": 0.45, "makeSpace": 2.8, "finaleSync": 0.75, "highlightCheer": 0.7 },
+    "legend":    { "lookAt": 1,    "cheer": 0.25, "clap": 0.05, "jump": 0.15, "danceAlong": 0.5,  "makeSpace": 3.1, "finaleSync": 1,   "highlightCheer": 0.85 }
+  },
+
+  "cameraPresets": {
+    "CAM_WIDE":      { "mode": "fixed",  "pos": [0, 6.4, 12.8], "look": [0, 1.0, -1.4], "fov": 56, "frameY": 0.63, "damping": 1.6, "panX": 3.0, "dolly": 1.4, "bob": 0.6, "panSpeed": 0.09 },
+    "CAM_SWEEP":     { "mode": "fixed",  "pos": [-4.3, 3.6, 7.6], "to": [4.3, 3.6, 7.6], "look": [-1.5, 0.9, 0.2], "lookTo": [1.5, 0.9, 0.2], "seconds": 16, "fov": 50, "frameY": 0.68, "damping": 1.8 },
+    "CAM_SWEEP_BACK": { "mode": "fixed", "pos": [4.3, 4.2, 7.0], "to": [-4.3, 3.4, 7.8], "look": [1.5, 0.9, 0.0], "lookTo": [-1.5, 0.9, 0.4], "seconds": 16, "fov": 50, "frameY": 0.68, "damping": 1.8 },
+    "CAM_DJ":        { "mode": "fixed",  "pos": [-1.3, 3.2, 4.2], "to": [1.3, 3.0, 3.6], "look": [0, 2.0, -5.3], "lookTo": [0, 2.0, -5.3], "seconds": 16, "fov": 54, "frameY": 0.74, "damping": 1.8 },
+    "CAM_HIGH":      { "mode": "fixed",  "pos": [0, 11, 10.5], "to": [0, 9.5, 7.5], "look": [0, 0, 0.6], "lookTo": [0, 0.3, 0.2], "seconds": 16, "fov": 52, "frameY": 0.5, "damping": 1.8 },
+    "CAM_MEDIUM":    { "mode": "follow", "dist": 4.8, "height": 2.0, "lookHeight": 0.95, "fov": 44, "frameY": 0.42, "damping": 0.8, "sway": 0.18 },
+    "CAM_CLOSE":     { "mode": "follow", "dist": 2.5, "height": 1.55, "lookHeight": 1.05, "fov": 40, "frameY": 0.42, "damping": 0.6, "sway": 0.1 },
+    "CAM_TRACKING":  { "mode": "follow", "dist": 3.0, "height": 0.8, "lookHeight": 1.0, "fov": 54, "frameY": 0.42, "damping": 0.55, "sway": 0.55, "swaySpeed": 0.35 },
+    "CAM_CINEMATIC": { "mode": "orbit",  "dist": 2.6, "height": 1.35, "lookHeight": 0.95, "fov": 54, "frameY": 0.42, "damping": 0.5, "orbitSpeed": 0.5 },
+    "CAM_FINALE":    { "mode": "follow", "dist": 9.5, "height": 6.0, "lookHeight": 0.6, "fov": 54, "frameY": 0.46, "damping": 0.9, "sway": 0.12 }
+  },
+
+  "chillCamera": {
+    "shots": ["CAM_WIDE", "CAM_SWEEP", "CAM_WIDE", "CAM_DJ", "CAM_WIDE", "CAM_SWEEP_BACK", "CAM_HIGH"],
+    "seconds": 15
+  },
+
+  "lightingPresets": {
+    "chill":     { "palette": ["#7b2ff7", "#00d4ff", "#ff3cac"], "floor": "wave",    "beamSpeed": 0.25, "lasers": false, "strobe": 0,    "spot": false, "confetti": false, "fireworks": false },
+    "casual":    { "palette": ["#4cc9f0", "#ffb347", "#ff5e62"], "floor": "ripple",  "beamSpeed": 0.45, "lasers": false, "strobe": 0,    "spot": true,  "confetti": false, "fireworks": false },
+    "groove":    { "palette": ["#00f5d4", "#f15bb5", "#9b5de5"], "floor": "ripple",  "beamSpeed": 0.6,  "lasers": false, "strobe": 0,    "spot": true,  "confetti": false, "fireworks": false },
+    "hype":      { "palette": ["#ff006e", "#3a86ff", "#ff7a00"], "floor": "checker", "beamSpeed": 1.0,  "lasers": true,  "strobe": 0.2,  "spot": true,  "confetti": false, "fireworks": false },
+    "superstar": { "palette": ["#ffb800", "#ff4d6d", "#8a5cff"], "floor": "rings",   "beamSpeed": 1.1,  "lasers": true,  "strobe": 0.25, "spot": true,  "confetti": true,  "fireworks": false },
+    "legend":    { "palette": ["#ff006e", "#ffbe0b", "#3a86ff", "#8338ec", "#06d6a0"], "floor": "spiral", "beamSpeed": 1.3, "lasers": true, "strobe": 0.3, "spot": true, "confetti": true, "fireworks": true }
+  },
+
+  "auraFx": {
+    "1": { "orbit": ["❤️", "💕"], "orbitCount": 6, "orbitSpeed": 1.1, "rise": ["❤️", "💕", "✨"], "riseRate": 3, "disc": 0.8 },
+    "2": { "orbit": ["🎵", "🎶", "✨"], "orbitCount": 8, "orbitSpeed": 1.3, "rise": ["🎵", "🎶", "✨"], "riseRate": 5, "disc": 0.9 },
+    "3": { "orbit": ["🔥", "⭐"], "orbitCount": 10, "orbitSpeed": 1.5, "rise": ["🔥", "✨"], "riseRate": 8, "rays": true, "disc": 1 },
+    "4": { "orbit": ["⭐", "💖", "🌟"], "orbitCount": 12, "orbitSpeed": 1.5, "rise": ["⭐", "✨", "💛"], "riseRate": 10, "crown": "👑", "rays": true, "disc": 1.1 },
+    "5": { "orbit": ["💎", "👑", "🔥", "🌟"], "orbitCount": 16, "orbitSpeed": 1.7, "orbitSize": 0.38, "rise": ["💎", "✨", "🌟", "💖"], "riseRate": 14, "crown": "👑", "rays": true, "disc": 1.3, "scale": 1.15 }
+  },
+
+  "meme": {
+    "height": 1.75,
+    "performerScale": 1.5
+  },
+
+  "dance": {
+    "sharpness": 0.7
+  },
+
+  "music": {
+    "enabled": false,
+    "bpm": 132,
+    "volume": 0.55
+  },
+
+  "display": {
+    "lightAnimation": false,
+    "calmLights": true,
+    "lightsFollowBeat": false,
+    "lightSpeed": 0.35,
+    "beatPulse": 0,
+    "strobe": false,
+    "renderScale": 1,
+    "bloom": false,
+    "nameTags": true,
+    "rainbowLasers": { "enabled": true, "perEmitter": 7, "sweepSpeed": 0.18, "chillOpacity": 0.32, "performOpacity": 0.6 }
+  }
+}

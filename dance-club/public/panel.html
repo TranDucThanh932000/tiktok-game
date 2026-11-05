@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bảng điều khiển · Virtual Dance Club</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎛️</text></svg>">
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: "Segoe UI", Arial, sans-serif; background: #120b1f; color: #efe7ff; }
+    main { display: grid; grid-template-columns: minmax(0, 560px) minmax(0, 1fr); gap: 16px; height: 100vh; padding: 16px; }
+    section { overflow-y: auto; min-width: 0; }
+    h1 { margin: 0 0 10px; font-size: 24px; }
+    h2 { margin: 18px 0 8px; font-size: 14px; color: #c77dff; text-transform: uppercase; letter-spacing: 1px; }
+    .box { margin-top: 8px; padding: 8px 12px; border-radius: 8px; background: #1f1533; font-size: 14px; }
+    #status { background: #3a1d2a; }
+    #status.on { background: #1d3a2a; }
+    .hint { margin: 0 0 8px; font-size: 13px; color: #b9a8d6; }
+    .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: end; }
+    label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; }
+    label.check { flex-direction: row; align-items: center; gap: 6px; }
+    input { padding: 7px 9px; border: 1px solid #4b3a6b; border-radius: 8px; background: #1f1533; color: inherit; font: inherit; }
+    input[type="text"] { width: 150px; }
+    input[type="number"] { width: 90px; }
+    button { padding: 8px 12px; border: 1px solid #6b4fa0; border-radius: 8px; background: #2c1f47; color: inherit; font: inherit; font-size: 14px; cursor: pointer; }
+    button:hover { background: #3b2a5e; }
+    .tier { border-color: var(--c); box-shadow: inset 0 -3px 0 var(--c); }
+    .danger { border-color: #a0403a; background: #3a1d22; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { padding: 5px 6px; border-bottom: 1px solid #2c1f47; text-align: left; }
+    th { color: #b9a8d6; font-weight: 600; }
+    #feed { font-size: 13px; line-height: 1.55; }
+    #feed div { border-bottom: 1px dashed #2c1f47; padding: 2px 0; }
+    kbd { padding: 1px 6px; border: 1px solid #6b4fa0; border-radius: 4px; font-size: 12px; }
+    @media (max-width: 900px) { main { grid-template-columns: 1fr; height: auto; } }
+  </style>
+</head>
+<body>
+  <main>
+    <section>
+      <h1>💃 Virtual Dance Club</h1>
+      <div id="status" class="box">Đang kết nối server…</div>
+      <div id="session" class="box">Chưa có quà trong phiên live này.</div>
+      <div id="now" class="box">Đang chill.</div>
+
+      <h2>Thử nhanh</h2>
+      <p class="hint">Phím tắt trong cửa sổ game: <kbd>1</kbd> 1 người · <kbd>2</kbd> 10 người · <kbd>3</kbd> đầy sàn · <kbd>Q W E R T</kbd> quà tier 1–5 · <kbd>Y</kbd> quà TikTok (đổi nhân vật) · <kbd>C</kbd> về chill · <kbd>F</kbd> camera debug · <kbd>M</kbd> tắt/bật nhạc</p>
+      <div class="row">
+        <button data-crowd="1">+1 người</button>
+        <button data-crowd="10">+10 người</button>
+        <button data-crowd="50">Đầy sàn (+50)</button>
+      </div>
+      <div class="row" id="tiers" style="margin-top:8px"></div>
+      <div class="row" style="margin-top:8px">
+        <button id="swap">🎭 Quà TikTok: đổi nhân vật (người trên sàn)</button>
+        <button id="chill">⏹ Về Chill (kết thúc màn đang diễn)</button>
+        <button id="clear-queue">🧹 Xóa hàng chờ biểu diễn</button>
+        <button id="reset" class="danger">♻️ Làm mới sàn</button>
+        <button id="reset-board" class="danger">🏆 Xóa bảng xếp hạng</button>
+      </div>
+
+      <h2>Giả lập comment</h2>
+      <form id="comment-form" class="row">
+        <label>Tên<input type="text" name="name" placeholder="vd: Lan Anh"></label>
+        <label>Nội dung<input type="text" name="text" value="hey"></label>
+        <button>Gửi comment</button>
+      </form>
+
+      <h2>Giả lập quà</h2>
+      <form id="gift-form" class="row">
+        <label>Tên (trống = người trên sàn)<input type="text" name="name"></label>
+        <label>Xu / quà<input type="number" name="coins" value="1" min="1"></label>
+        <label>Số lượng<input type="number" name="count" value="1" min="1"></label>
+        <label class="check"><input type="checkbox" name="combo"> combo</label>
+        <button>Tặng</button>
+      </form>
+      <p class="hint">Quà của cùng một người trong vài giây được cộng dồn thành một lượt diễn. Tier được tính theo tổng xu.</p>
+
+      <h2>Telegram</h2>
+      <div class="row"><button id="telegram">Gửi tin thử</button></div>
+      <div id="log" class="box" hidden></div>
+    </section>
+
+    <section>
+      <h2>Bảng xếp hạng (trên màn LED)</h2>
+      <div id="board" class="box">Chưa có ai tặng quà.</div>
+      <h2>Hàng chờ biểu diễn</h2>
+      <table><thead><tr><th>#</th><th>Người</th><th>Tier</th><th>Xu</th></tr></thead><tbody id="queue"></tbody></table>
+      <h2>Trên sàn (<span id="floor-count">0</span>) · Chờ vào sàn: <span id="wait-count">0</span></h2>
+      <div id="floor" class="box"></div>
+      <h2>Nhật ký</h2>
+      <div id="feed"></div>
+    </section>
+  </main>
+  <script>
+    const $ = (s) => document.querySelector(s);
+    const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+    let tiers = [];
+    const post = (url, body = {}) => fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then((r) => (r.status === 204 ? null : r.json()));
+
+    function addFeed({ at, text }) {
+      const div = document.createElement('div');
+      div.textContent = `${new Date(at).toLocaleTimeString('vi-VN')}  ${text}`;
+      $('#feed').prepend(div);
+      while ($('#feed').children.length > 120) $('#feed').lastChild.remove();
+    }
+
+    function render(state) {
+      const tierName = (n) => tiers.find((t) => t.tier === n)?.name ?? n;
+      $('#queue').innerHTML = state.queue.map((r, i) => `<tr><td>${i + 1}</td><td>${esc(r.name)}</td><td>${esc(tierName(r.tier))}</td><td>${r.coins}</td></tr>`).join('') || '<tr><td colspan="4">Trống</td></tr>';
+      $('#board').innerHTML = (state.leaderboard ?? []).map((f) => `#${f.rank} ${esc(f.name)} · ${f.coins} xu`).join('<br>') || 'Chưa có ai tặng quà.';
+      $('#floor-count').textContent = `${state.dancers.length}/${state.maxDancers}`;
+      $('#wait-count').textContent = state.waitlist.count;
+      $('#floor').textContent = state.dancers.map((d) => d.name + (d.status !== 'chill' ? ` (${d.status})` : '')).join(', ') || 'Chưa có ai.';
+      const s = state.session;
+      $('#now').textContent = s ? `Đang diễn: ${s.name} · ${tierName(s.tier)} · ${s.choreoId} · ${s.state}${s.rush ? ' (rút gọn)' : ''}` : `Đang chill.${state.pending.length ? ` Đang gộp combo: ${state.pending.map((p) => `${p.name} ${p.coins} xu`).join(', ')}` : ''}`;
+    }
+
+    const es = new EventSource('/events');
+    es.onmessage = (ev) => {
+      const msg = JSON.parse(ev.data);
+      if (msg.type === 'snapshot') {
+        tiers = msg.config.tiers;
+        $('#tiers').innerHTML = tiers.map((t, i) => `<button class="tier" style="--c:${t.color}" data-tier="${t.tier}">${'QWERT'[i] ?? ''} · ${esc(t.name)} (${t.minCoins} xu)</button>`).join('');
+        $('#feed').innerHTML = '';
+        msg.feed.forEach(addFeed);
+        setStatus(msg.status);
+        setSession(msg.session);
+        render(msg.state);
+      } else if (msg.type === 'state') render(msg.state);
+      else if (msg.type === 'log') addFeed(msg);
+      else if (msg.type === 'status') setStatus(msg);
+      else if (msg.type === 'session') setSession(msg);
+    };
+    es.onerror = () => setStatus({ connected: false, text: 'Mất kết nối server, đang thử lại…' });
+
+    function setStatus(s) {
+      $('#status').textContent = s.text;
+      $('#status').classList.toggle('on', s.connected);
+    }
+    function setSession(s) {
+      if (s.roomId) $('#session').textContent = `Phiên live: ${s.diamonds.toLocaleString('vi-VN')} kim cương từ ${s.gifts} quà`;
+    }
+
+    document.addEventListener('click', (e) => {
+      const b = e.target.closest('button');
+      if (!b) return;
+      if (b.dataset.crowd) post('/api/sim/crowd', { count: Number(b.dataset.crowd) });
+      if (b.dataset.tier) post('/api/sim/tier', { tier: Number(b.dataset.tier) });
+    });
+    $('#chill').onclick = () => post('/api/chill');
+    $('#swap').onclick = () => post('/api/sim/swap');
+    $('#clear-queue').onclick = () => post('/api/clear-queue');
+    $('#reset-board').onclick = () => confirm('Xóa bảng xếp hạng?') && post('/api/reset-board');
+    $('#reset').onclick = () => confirm('Xóa toàn bộ người trên sàn, hàng chờ và lượt diễn?') && post('/api/reset');
+    $('#telegram').onclick = async () => {
+      const r = await post('/api/telegram-test');
+      $('#log').hidden = false;
+      $('#log').textContent = r.message;
+    };
+    $('#comment-form').onsubmit = (e) => {
+      e.preventDefault();
+      const f = new FormData(e.target);
+      post('/api/sim/comment', { name: f.get('name'), text: f.get('text') });
+    };
+    $('#gift-form').onsubmit = (e) => {
+      e.preventDefault();
+      const f = new FormData(e.target);
+      post('/api/sim/gift', { name: f.get('name'), coins: Number(f.get('coins')), count: Number(f.get('count')), combo: f.get('combo') === 'on' });
+    };
+  </script>
+</body>
+</html>
