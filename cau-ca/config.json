@@ -3,10 +3,10 @@
   "port": 3006,
 
   "joinWords": ["câu", "cau"],
-  "seats": 50,
+  "seats": 20,
   "idleLeaveSeconds": 60,
 
-  "likesPerPull": 100,
+  "likesPerPull": 50,
   "maxLikePullsQueued": 3,
   "freePullCooldownSeconds": 60,
   "successRate": 0.6,
@@ -96,9 +96,9 @@
       },
       {
         "id": "hearts", "label": "Mưa tim", "icon": "❤️", "color": "#e8366f",
-        "text": "Chỉ cần 50 tim là giật cá", "voice": "Mưa tim! Chỉ cần năm mươi tim là giật cá",
+        "text": "Chỉ cần 30 tim là giật cá", "voice": "Mưa tim! Chỉ cần ba mươi tim là giật cá",
         "weight": 20,
-        "effect": { "likesPerPull": 50 }
+        "effect": { "likesPerPull": 30 }
       },
       {
         "id": "fat", "label": "Cá béo", "icon": "⚖️", "color": "#f08c00",
@@ -232,6 +232,7 @@
     "join": true,
     "congrats": true,
     "wheel": true,
+    "hutChance": 0.4,
     "nameWaitMs": 2500,
     "text": {
       "hello": "Chúc mừng",
@@ -250,7 +251,8 @@
       "wheelSpin": "đang quay",
       "bossDown": "đã kéo được cá mập",
       "bossFled": "Cá mập đã bơi đi mất",
-      "sprintWin": "thắng thi câu nhanh"
+      "sprintWin": "thắng thi câu nhanh",
+      "hut": "Chòi số {n}"
     }
   },
 
@@ -265,6 +267,7 @@
     "renderScale": 1,
     "shadows": true,
     "nameTags": true,
-    "giftGuide": true
+    "giftGuide": true,
+    "music": { "on": false, "volume": 1 }
   }
 }

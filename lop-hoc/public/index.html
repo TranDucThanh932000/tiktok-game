@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lớp Học · Ai Thông Minh Hơn</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎓</text></svg>">
+  <link rel="stylesheet" href="/fonts/fonts.css">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div id="stage">
+    <div class="wall-top"></div>
+    <div class="wall-low"></div>
+    <div class="floor"></div>
+    <div class="platform"></div>
+
+    <div id="banner"></div>
+
+    <section id="board">
+      <header class="board-head">
+        <span id="subject" class="pill"></span>
+        <span id="roster"></span>
+        <span class="spacer"></span>
+        <span id="counter"></span>
+        <span id="timer" class="pill"></span>
+      </header>
+
+      <div id="play">
+        <h1 id="question"></h1>
+        <div id="options"></div>
+        <p id="footline"></p>
+      </div>
+
+      <div id="recap" hidden>
+        <h2>BAN CÁN SỰ LỚP</h2>
+        <div id="recap-officers"></div>
+        <div id="recap-others"></div>
+      </div>
+
+      <div class="timebar"><i id="timefill"></i></div>
+      <div id="officers"></div>
+
+      <div class="tray">
+        <i class="chalk white"></i><i class="chalk yellow"></i><i class="chalk pink"></i>
+        <i class="eraser"></i>
+      </div>
+    </section>
+
+    <div id="clock">
+      <svg viewBox="0 0 120 120">
+        <circle cx="60" cy="60" r="55" fill="#fffdf3" stroke="#2a211c" stroke-width="7"/>
+        <g stroke="#2a211c" stroke-width="4" stroke-linecap="round">
+          <path d="M60 13v9M60 98v9M13 60h9M98 60h9"/>
+        </g>
+        <path id="hand-h" d="M60 60V34" stroke="#2a211c" stroke-width="5" stroke-linecap="round"/>
+        <path id="hand-m" d="M60 60V22" stroke="#2a211c" stroke-width="4" stroke-linecap="round"/>
+        <circle cx="60" cy="60" r="4.5" fill="#d3263c"/>
+      </svg>
+    </div>
+
+    <aside id="guide"></aside>
+
+    <div id="desk">
+      <i class="book b1"></i><i class="book b2"></i><i class="book b3"></i>
+      <i class="cup"></i>
+      <i class="top"></i><i class="body"></i>
+    </div>
+
+    <div id="teacher"></div>
+    <div id="class"></div>
+    <div id="toast" hidden></div>
+    <div id="bubble" hidden></div>
+    <div id="fx"></div>
+    <div id="sound-hint">Bấm vào màn hình để bật âm thanh</div>
+  </div>
+  <script type="module" src="/js/main.js"></script>
+</body>
+</html>

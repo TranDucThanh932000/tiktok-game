@@ -59,10 +59,19 @@ export function setLineResolution(w, h) {
 }
 
 const SCALE = 1.3;
+
+// Phao đài: que cao có đầu phát sáng. Trời càng tối đầu phao càng sáng (main.js gọi setBobberGlow theo độ tối).
+const tipMat = new THREE.MeshStandardMaterial({ color: '#b6ff8a', emissive: '#6dff4a', emissiveIntensity: 0.25, roughness: 0.3 });
+const tipHalo = new THREE.SpriteMaterial({ map: haloTexture(), color: '#8dff6a', transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, fog: false });
+export function setBobberGlow(amount) {
+  tipMat.emissiveIntensity = 0.25 + amount * 3.2;
+  tipHalo.opacity = amount * 0.9;
+}
 const ROD_SEGS = 4;
 const ROD_LEN = 2.6;
 
 // Cái móc ngoắc ở miệng cá lúc giật lên, cùng màu với món đang dùng. Toạ độ tính theo con cá nên tự to nhỏ theo cá.
+const BOB_TIP = new THREE.SphereGeometry(0.045, 8, 6);
 const HOOK_GEO = new THREE.TorusGeometry(0.07, 0.016, 6, 14, Math.PI * 1.4);
 export function hookMesh(item) {
   const color = item?.color ?? '#c7ced6';
@@ -285,14 +294,22 @@ export class Fisher {
     const bob = this.bobber;
     for (const c of [...bob.children]) {
       bob.remove(c);
-      c.geometry.dispose();
+      if (c.geometry !== BOB_TIP && !c.isSprite) c.geometry.dispose();
     }
     const item = this.look.hook;
     const top = item?.color ?? '#ff3b3b';
     bob.add(part(new THREE.SphereGeometry(0.09, 10, 8, 0, Math.PI * 2, 0, Math.PI / 2), mat(top, { emissive: top, emissiveIntensity: item?.glow ? 0.9 : 0.25 }), V(0, 0, 0)));
     bob.add(part(new THREE.SphereGeometry(0.09, 10, 8, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), mat('#ffffff'), V(0, 0, 0)));
-    bob.add(part(new THREE.CylinderGeometry(0.012, 0.012, 0.14, 4), mat(item?.accent ?? '#ffdd33'), V(0, 0.12, 0)));
+    bob.add(part(new THREE.CylinderGeometry(0.014, 0.014, 0.5, 5), mat(item?.accent ?? '#ffdd33'), V(0, 0.3, 0)));
     bake(bob);
+    const tip = new THREE.Mesh(BOB_TIP, tipMat);
+    tip.position.y = 0.58;
+    bob.add(tip);
+    const halo = new THREE.Sprite(tipHalo);
+    halo.position.y = 0.58;
+    halo.scale.setScalar(0.9);
+    halo.renderOrder = 4;
+    bob.add(halo);
   }
 
   // Viền vàng quanh bệ khi có Ghế VIP, rái cá ngồi cạnh khi có rái cá.
@@ -554,7 +571,7 @@ export class Fisher {
       this.bobber.position.set(this.seat.bobber.x, nibble, this.seat.bobber.z);
     }
     this.bobber.visible = (idle || this.state === 'cheer') && !this.hook && this.state !== 'fall';
-    const end = this.hook ? this.hook.getWorldPosition(new THREE.Vector3()) : this.state === 'struggle' ? this.lineEnd : this.bobber.position.clone().setY(this.bobber.position.y + 0.18);
+    const end = this.hook ? this.hook.getWorldPosition(new THREE.Vector3()) : this.state === 'struggle' ? this.lineEnd : this.bobber.position.clone().setY(this.bobber.position.y + 0.6);
     this.line.visible = !this.lineHidden;
     if (!this.line.visible) return;
     const n = 16;

@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ghi Sớ</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📜</text></svg>">
+  <link rel="stylesheet" href="/fonts/fonts.css">
+  <style>
+    html, body { margin: 0; height: 100%; overflow: hidden; background: #3b0b0f; }
+    #stage { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; transform-origin: 0 0; overflow: hidden; }
+    #game { display: block; width: 1080px; height: 1920px; }
+    #sound-hint { position: absolute; left: 50%; bottom: 40px; transform: translateX(-50%); padding: 6px 20px; border-radius: 999px; background: rgba(0,0,0,0.6); color: #fff; font: 24px "Segoe UI", sans-serif; }
+    #sound-hint[hidden] { display: none; }
+  </style>
+</head>
+<body>
+  <div id="stage">
+    <canvas id="game" width="1080" height="1920"></canvas>
+    <div id="sound-hint">Bấm vào màn hình để bật âm thanh</div>
+  </div>
+  <script type="module" src="/js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,33 @@
+{
+  "tiktokUsername": "linh.phng2903",
+  "port": 3008,
+  "title": "AI THÔNG MINH HƠN",
+
+  "seats": 50,
+  "setSize": 6,
+  "firstRightMultiplier": 2,
+
+  "timing": {
+    "askSeconds": 20,
+    "minAskSeconds": 8,
+    "earlyCloseSeconds": 3,
+    "graceSeconds": 1.5,
+    "revealSeconds": 7,
+    "recapSeconds": 8
+  },
+
+  "newcomerGraceSeconds": 25,
+  "kickGapSeconds": 4,
+  "maxWaiting": 60,
+
+  "boost": {
+    "multiplier": 2,
+    "socialTurns": 1,
+    "socialGapSeconds": 60,
+    "tiers": [
+      { "coins": 1, "turns": 1, "label": "Hoa hồng", "icon": "/gifts/rose.webp" },
+      { "coins": 5, "turns": 6, "label": "Kem", "icon": "/gifts/kem.webp" },
+      { "coins": 10, "turns": 13, "label": "Heo may mắn", "icon": "/gifts/lucky-pig.webp" }
+    ]
+  }
+}

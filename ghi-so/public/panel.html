@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bảng điều khiển · Ghi Sớ</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📜</text></svg>">
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: "Segoe UI", Arial, sans-serif; background: #1d1012; color: #fbeee2; }
+    main { max-width: 620px; padding: 16px; }
+    h1 { margin: 0 0 10px; font-size: 24px; }
+    h2 { margin: 18px 0 8px; font-size: 15px; color: #f2c14e; text-transform: uppercase; letter-spacing: 1px; }
+    #status { margin: 0; padding: 8px 12px; border-radius: 8px; background: #3a1d24; }
+    #status.on { background: #1d3a26; }
+    #queue-info, #session { margin: 8px 0 0; padding: 8px 12px; border-radius: 8px; background: #33201c; font-size: 15px; }
+    #tts { margin: 8px 0 0; font-size: 14px; color: #cdb8a8; }
+    #alerts p { margin: 8px 0 0; padding: 8px 12px; border: 1px solid #c0392b; border-radius: 8px; background: #4a1717; font-size: 14px; }
+    #safe-box { display: flex; align-items: center; gap: 10px; margin-top: 8px; padding: 8px 12px; border: 1px solid #5c4638; border-radius: 8px; font-size: 14px; }
+    #safe-box.on { border-color: #f2c14e; background: #4a3a10; }
+    #safe-box span { flex: 1; }
+    .hint { margin: 0 0 8px; font-size: 14px; color: #cdb8a8; }
+    label { display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px; font-size: 14px; }
+    input { width: 100%; max-width: 280px; padding: 8px 10px; border: 1px solid #5c4638; border-radius: 8px; background: #2a1a18; color: inherit; font: inherit; }
+    .row { display: flex; flex-wrap: wrap; gap: 8px; }
+    button { padding: 9px 14px; border: 1px solid #8a5d3f; border-radius: 8px; background: #47291f; color: inherit; font: inherit; cursor: pointer; }
+    button:hover { background: #5e3829; }
+    .gift-icon { width: 28px; height: 28px; margin: -6px 6px -6px -4px; object-fit: contain; vertical-align: middle; }
+    .danger { border-color: #a0403a; background: #3a1d1d; }
+    #log { min-height: 1.4em; font-size: 14px; color: #cdb8a8; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>📜 Bảng điều khiển · Ghi Sớ</h1>
+    <p id="status">Đang kết nối máy chủ game...</p>
+    <p id="queue-info"></p>
+    <p id="session"></p>
+    <p id="tts"></p>
+    <div id="alerts"></div>
+    <div id="safe-box"><span id="safe"></span><button type="button" id="safe-toggle"></button></div>
+
+    <h2>Người xem giả lập</h2>
+    <label>Tên <input id="name" value="Khách thử" maxlength="20"></label>
+    <label>Link ảnh đại diện (không bắt buộc) <input id="avatar" type="url" maxlength="1000" placeholder="https://..."></label>
+    <label>Số lượng vật phẩm <input id="count" type="number" min="1" max="999" value="1"></label>
+
+    <h2>Thử từng mức</h2>
+    <div class="row" id="gifts">
+      <button type="button" id="like10">❤️ Thả 10 tim</button>
+      <button type="button" id="like-full">❤️ Thả đủ tim</button>
+    </div>
+
+    <h2>Tương tác khác</h2>
+    <div class="row">
+      <button type="button" id="chat">💬 Comment</button>
+      <button type="button" id="follow">➕ Follow</button>
+      <button type="button" id="share">↗️ Share</button>
+    </div>
+
+    <h2>Thử đông người</h2>
+    <p class="hint">Người thử cũng vào hàng chờ và được lưu, nên bấm "Xóa hàng chờ" trước khi live.</p>
+    <div class="row">
+      <button type="button" id="crowd">👥 12 người thả tim</button>
+      <button type="button" id="storm">🎲 Tim + xu ngẫu nhiên 30 giây</button>
+    </div>
+
+    <h2>Tự chạy khi vắng người</h2>
+    <p id="demo-info" class="hint">Đang tải...</p>
+    <div class="row">
+      <button type="button" id="demo-toggle"></button>
+    </div>
+
+    <h2>Quản lý</h2>
+    <div class="row">
+      <button type="button" id="clear" class="danger">🧹 Xóa hàng chờ</button>
+      <button type="button" id="telegram-test">📨 Gửi thử Telegram</button>
+    </div>
+    <p id="log"></p>
+  </main>
+
+  <script type="module">
+    const $ = (id) => document.getElementById(id);
+    const post = (url, body) => fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    const simulate = (body) => post('/api/simulate', { name: $('name').value, avatar: $('avatar').value, ...body });
+    let guide = null;
+
+    const NAMES = ['Lan Anh', 'Minh Tú', 'Hoàng Nam', 'Thu Hà', 'Quốc Bảo', 'Ngọc Mai', 'Đức Huy', 'Bích Ngọc', 'Tuấn Kiệt', 'Hải Yến', 'Gia Hân', 'Thành Đạt'];
+    const pickName = () => NAMES[Math.floor(Math.random() * NAMES.length)];
+
+    function renderGifts() {
+      for (const old of document.querySelectorAll('[data-coins]')) old.remove();
+      for (const tier of guide.tiers.filter((row) => row.minCoins > 0)) {
+        const el = document.createElement('button');
+        el.type = 'button';
+        el.dataset.coins = tier.minCoins;
+        el.append(Object.assign(new Image(), { className: 'gift-icon', alt: '', src: tier.icon }), `${tier.minCoins} xu · ${tier.board}`);
+        el.onclick = () => simulate({ kind: 'gift', coins: tier.minCoins, count: Number($('count').value) || 1 });
+        $('gifts').append(el);
+      }
+    }
+
+    $('like10').onclick = () => simulate({ kind: 'like', count: 10 });
+    $('like-full').onclick = () => simulate({ kind: 'like', count: guide?.likesForName ?? 100 });
+    $('chat').onclick = () => simulate({ kind: 'chat' });
+    $('follow').onclick = () => simulate({ kind: 'follow' });
+    $('share').onclick = () => simulate({ kind: 'share' });
+    $('crowd').onclick = () => NAMES.forEach((name) => post('/api/simulate', { kind: 'like', name, count: guide?.likesForName ?? 100 }));
+
+    let storm = 0;
+    $('storm').onclick = () => {
+      clearInterval(storm);
+      const until = Date.now() + 30_000;
+      $('log').textContent = 'Đang thử 30 giây...';
+      storm = setInterval(() => {
+        if (Date.now() > until) {
+          clearInterval(storm);
+          $('log').textContent = 'Đã thử xong.';
+          return;
+        }
+        const name = pickName();
+        if (Math.random() < 0.7) post('/api/simulate', { kind: 'like', name, count: 5 + Math.floor(Math.random() * 40) });
+        else post('/api/simulate', { kind: 'gift', name, coins: [1, 1, 1, 5, 5, 10][Math.floor(Math.random() * 6)], count: 1 });
+      }, 500);
+    };
+
+    $('clear').onclick = () => {
+      if (confirm('Xóa toàn bộ hàng chờ?')) post('/api/clear', {});
+    };
+    $('telegram-test').onclick = async () => {
+      $('log').textContent = 'Đang gửi tin thử Telegram...';
+      const { message } = await (await post('/api/telegram-test', {})).json();
+      $('log').textContent = message;
+    };
+
+    function showStatus({ connected, text }) {
+      $('status').textContent = text;
+      $('status').classList.toggle('on', connected);
+    }
+    const showAlert = ({ at, text }) =>
+      $('alerts').prepend(Object.assign(document.createElement('p'), { textContent: `⚠️ ${new Date(at).toLocaleTimeString('vi-VN')} TikTok cảnh báo: ${text}` }));
+    let safeMode = false;
+    function showSafeMode(on) {
+      safeMode = on;
+      $('safe-box').classList.toggle('on', on);
+      $('safe').textContent = on ? '🛡️ Chế độ an toàn: BẬT. Đã tạm dừng giọng Vbee.' : '🛡️ Chế độ an toàn: tắt. Tự bật khi có cảnh báo TikTok.';
+      $('safe-toggle').textContent = on ? 'Tắt chế độ an toàn' : 'Bật ngay';
+    }
+    $('safe-toggle').onclick = () => post('/api/safe-mode', { on: !safeMode });
+    const showSession = ({ roomId, diamonds, gifts, since }) => {
+      $('session').textContent = roomId
+        ? `💎 Phiên live này (từ ${new Date(since).toLocaleTimeString('vi-VN')}): ${diamonds.toLocaleString('vi-VN')} kim cương từ ${gifts.toLocaleString('vi-VN')} lượt.`
+        : '💎 Chưa có phiên live nào từ lúc bật server.';
+    };
+    let demoOn = false;
+    $('demo-toggle').onclick = () => post('/api/demo', { on: !demoOn });
+    function showQueue({ total, written, demo }) {
+      demoOn = demo.on;
+      $('queue-info').textContent = `📜 ${total} người đang chờ · đã ghi ${written} tờ (${demo.written} tờ tự chạy)`;
+      $('demo-info').textContent = demo.on
+        ? `🤖 Đang bật: vắng người thì tự viết cho bộ ${demo.people} người. Có người thật vào hàng chờ là dừng ngay để viết cho họ. Tạm dừng khi bật chế độ an toàn.`
+        : '🤖 Đang tắt: vắng người thì ông quan ngồi chờ. Bật lại server sẽ theo mục demo.enabled trong config.json.';
+      $('demo-toggle').textContent = demo.on ? '⏸️ Tắt tự chạy' : '▶️ Bật tự chạy';
+    }
+
+    const events = new EventSource('/events');
+    events.onmessage = (event) => {
+      const msg = JSON.parse(event.data);
+      if (msg.type === 'snapshot') {
+        guide = msg.guide;
+        renderGifts();
+        showStatus(msg.status);
+        $('alerts').replaceChildren();
+        msg.alerts.forEach(showAlert);
+        showSafeMode(msg.safeMode);
+        showSession(msg.session);
+        showQueue(msg);
+        const { enabled, voice } = msg.tts;
+        $('tts').textContent = enabled ? `🔊 Vbee đang bật (giọng ${voice})` : '🔇 Vbee chưa bật: cần VBEE_TOKEN và VBEE_APP_ID trong .env rồi chạy lại server';
+      }
+      if (msg.type === 'queue') showQueue(msg);
+      if (msg.type === 'status') showStatus(msg);
+      if (msg.type === 'moderation') showAlert(msg);
+      if (msg.type === 'safe-mode') showSafeMode(msg.on);
+      if (msg.type === 'session') showSession(msg);
+      if (msg.type === 'speak-error') $('log').textContent = `Vbee lỗi: ${msg.message}`;
+    };
+    events.onerror = () => showStatus({ connected: false, text: 'Mất kết nối tới máy chủ game, kiểm tra cửa sổ đang chạy npm start.' });
+  </script>
+</body>
+</html>

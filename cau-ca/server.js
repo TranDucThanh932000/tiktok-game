@@ -42,7 +42,7 @@ const problems = [
   [!wheelCfg || (Array.isArray(wheelCfg.slots) && wheelCfg.slots.every(slotOk) && wheelCfg.slots.some((s) => s.weight > 0) && new Set(wheelCfg.slots.map((s) => s.id)).size === wheelCfg.slots.length), 'wheel.slots: mỗi ô cần id riêng, label, icon, text, weight và effect hợp lệ (rareStep cần mục rare, boss cần tiers.boss), và ít nhất một ô có weight > 0'],
   [!wheelCfg?.goldenLikes || wheelCfg.slots?.some((s) => s.goldWeight > 0), 'wheel.goldenLikes cần ít nhất một ô có goldWeight > 0, hoặc đặt goldenLikes bằng 0 để tắt vòng vàng'],
   [Array.isArray(config.joinWords) && config.joinWords.length > 0, 'joinWords là danh sách từ để xuống hồ, ví dụ ["câu", "cau"]'],
-  [Number.isInteger(config.seats) && config.seats >= 4 && config.seats <= 60, 'seats (số chỗ ngồi quanh hồ) là số nguyên từ 4 đến 60'],
+  [Number.isInteger(config.seats) && config.seats >= 4 && config.seats <= 20, 'seats (số chòi đang mở) là số nguyên từ 4 đến 20, vì khu hồ có 20 chòi'],
   [inRange(config.likesPerPull, 1, 100_000) && inRange(config.maxLikePullsQueued, 1, 100), 'likesPerPull là số tim cho 1 lần giật, maxLikePullsQueued từ 1 đến 100'],
   [inRange(config.successRate, 0, 1), 'successRate là tỉ lệ thành công từ 0 đến 1, ví dụ 0.6'],
   [inRange(config.focusMs, 800, 10_000) && inRange(config.rushFocusMs, 500, 10_000) && (config.sharkFocusMs === undefined || inRange(config.sharkFocusMs, 800, 20_000)), 'focusMs, rushFocusMs, sharkFocusMs là thời gian quay cận (ms)'],
@@ -242,6 +242,7 @@ const V = {
   bossDown: 'đã kéo được cá mập',
   bossFled: 'Cá mập đã bơi đi mất',
   sprintWin: 'thắng thi câu nhanh',
+  hut: 'Chòi số {n}',
   ...config.voice?.text,
 };
 const HEAVY_TIERS = new Set(['shark', 'rare', 'boss']);
@@ -273,6 +274,8 @@ function eventVoice(msg) {
 function congratsTexts({ p, wins, best, tier }) {
   const name = spokenName(p.name);
   const texts = tier === 'shark' || tier === 'boss' ? [V.sharkIntro] : tier === 'rare' ? [V.rareIntro] : [];
+  // Thỉnh thoảng loa đọc thêm số chòi; không đọc mọi lần để câu ngắn, kẻo đông lượt giật thì giọng đọc bị dồn.
+  if (Math.random() < (VOICE.hutChance ?? 0)) texts.push(V.hut.replace('{n}', p.seat + 1));
   texts.push(V.hello, voice.ready(name) ? name : V.you);
   if (wins > 1) texts.push(wins <= 10 ? V.many.replace('{n}', wins) : V.manyLots);
   else {
@@ -301,6 +304,7 @@ function warmVoice() {
   for (let k = 1; k <= Math.ceil(lightMax * maxMul); k++) texts.add(V.kg.replace('{kg}', k));
   for (let k = 50; k <= Math.ceil(config.tiers.shark.maxKg * maxMul); k += 10) texts.add(V.kg.replace('{kg}', k));
   for (let n = 2; n <= 10; n++) texts.add(V.many.replace('{n}', n));
+  if (VOICE.hutChance > 0) for (let n = 1; n <= config.seats; n++) texts.add(V.hut.replace('{n}', n));
   if (VOICE.wheel && wheelCfg) {
     for (const t of [V.wheelSoon, V.wheelGold, V.wheelSpin, V.bossDown, V.bossFled, V.sprintWin]) texts.add(t);
     for (const s of wheelCfg.slots) if (s.voice) texts.add(s.voice);

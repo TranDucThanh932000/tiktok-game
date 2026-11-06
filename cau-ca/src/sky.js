@@ -1,11 +1,11 @@
-// Giờ trong ngày và thời tiết của hồ câu trong hang. Server giữ trạng thái để mọi cửa sổ game (và lúc tải lại trang)
+// Giờ trong ngày và thời tiết của hồ câu. Server giữ trạng thái để mọi cửa sổ game (và lúc tải lại trang)
 // thấy cùng một cảnh; trình duyệt chỉ lo vẽ và chuyển cảnh mượt.
 
 export const WEATHER = {
-  clear: '✨ Yên ắng',
-  cloudy: '🌫️ Sương mù',
-  windy: '🌬️ Gió lùa',
-  rain: '💧 Nước rỉ',
+  clear: '☀️ Nắng đẹp',
+  cloudy: '⛅ Nhiều mây',
+  windy: '🌬️ Gió to',
+  rain: '🌧️ Mưa',
   storm: '⛈️ Giông bão',
 };
 

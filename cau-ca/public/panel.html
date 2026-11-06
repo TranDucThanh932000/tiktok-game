@@ -55,7 +55,7 @@
       <div class="row">
         <button type="button" id="join">🎣 Comment “câu”</button>
         <button type="button" id="like10">❤️ Thả 10 tim</button>
-        <button type="button" id="like100">❤️ Thả 100 tim (1 lần giật)</button>
+        <button type="button" id="like50">❤️ Thả 50 tim (1 lần giật)</button>
         <button type="button" id="follow">➕ Follow (giật 1 lần)</button>
         <button type="button" id="share">↗️ Share (giật 1 lần)</button>
       </div>
@@ -95,10 +95,10 @@
       <p id="sky-info" class="hint">Đang tải...</p>
       <div class="row" id="sky-weather">
         <button type="button" data-weather="auto">🎲 Tự đổi ngẫu nhiên</button>
-        <button type="button" data-weather="clear">✨ Yên ắng</button>
-        <button type="button" data-weather="cloudy">🌫️ Sương mù</button>
-        <button type="button" data-weather="windy">🌬️ Gió lùa</button>
-        <button type="button" data-weather="rain">💧 Nước rỉ</button>
+        <button type="button" data-weather="clear">☀️ Nắng đẹp</button>
+        <button type="button" data-weather="cloudy">⛅ Nhiều mây</button>
+        <button type="button" data-weather="windy">🌬️ Gió to</button>
+        <button type="button" data-weather="rain">🌧️ Mưa</button>
         <button type="button" data-weather="storm">⛈️ Giông bão</button>
       </div>
       <div class="row" id="sky-hour">
@@ -163,7 +163,7 @@
 
     $('join').onclick = () => simulate({ kind: 'chat', text: guide?.joinWord ?? 'câu' });
     $('like10').onclick = () => simulate({ kind: 'like', count: 10 });
-    $('like100').onclick = () => simulate({ kind: 'like', count: 100 });
+    $('like50').onclick = () => simulate({ kind: 'like', count: 50 });
     $('follow').onclick = () => simulate({ kind: 'follow' });
     $('share').onclick = () => simulate({ kind: 'share' });
     $('chat').onsubmit = (event) => {

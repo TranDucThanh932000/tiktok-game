@@ -1,0 +1,157 @@
+{
+  "fixes": {
+    "H₂O": "hát hai ô",
+    "CO₂": "cê ô hai",
+    "O₂": "ô xy",
+    "NaCl": "na tri clo rua",
+    "TP.": "Thành phố",
+    "Số La Mã X": "Số La Mã ích",
+    "(Olympic)": ", Ô lim pích,"
+  },
+
+  "letters": ["A", "Bê", "Xê", "Đê"],
+
+  "start": [
+    "Cả lớp trật tự, cô bắt đầu hỏi bài nhé.",
+    "Nào các em, chúng ta vào bài mới.",
+    "Cả lớp ngồi ngay ngắn, cô hỏi bài đây."
+  ],
+  "intro": [
+    "Cả lớp nghe câu tiếp theo nhé.",
+    "Câu này nhé các em.",
+    "Nào, nghe cô đọc đây.",
+    "Em nào giỏi trả lời câu này nào."
+  ],
+  "subject": "Câu này môn {subject}.",
+  "go": [
+    "Các em trả lời đi nào.",
+    "Em nào biết thì comment nhé.",
+    "Nào, chọn đáp án đi các em.",
+    "Cô chờ các em đấy."
+  ],
+  "readBoard": [
+    "Câu này các em đọc trên bảng nhé.",
+    "Cả lớp nhìn lên bảng rồi trả lời nhé."
+  ],
+
+  "timeUp": ["Hết giờ.", "Hết giờ rồi các em.", "Nào, cả lớp nhìn lên bảng."],
+  "answerIs": [
+    "Đáp án đúng là {letter}.",
+    "Câu này đáp án {letter} nhé.",
+    "Cô công bố, đáp án là {letter}."
+  ],
+
+  "praisePre": ["Giỏi lắm", "Cô khen", "Tuyên dương", "Rất tốt", "Cả lớp khen"],
+  "praiseOthers": "và các bạn nữa.",
+  "praisePost": [
+    "Các em học tốt lắm.",
+    "Cứ thế phát huy nhé.",
+    "Cô rất vui.",
+    "Cộng điểm cho các em."
+  ],
+  "allRight": [
+    "Cả lớp giỏi quá, cô rất vui.",
+    "Lớp mình hôm nay học bài kỹ đấy, cô khen cả lớp.",
+    "Không làm khó được lớp mình rồi, giỏi lắm."
+  ],
+  "fewRight": [
+    "Câu này nhiều em sai quá, về nhà xem lại bài nhé.",
+    "Câu này hơi khó, em nào đúng là giỏi lắm đấy."
+  ],
+  "noneRight": [
+    "Không em nào đúng cả, cô buồn quá.",
+    "Câu này khó thật, câu sau cả lớp cố lên nhé.",
+    "Ôi, cả lớp sai hết rồi. Cô giảng lại nhé, nhớ bài này đấy."
+  ],
+  "noAnswer": [
+    "Sao cả lớp im ắng thế này? Các em trả lời đi chứ.",
+    "Không em nào giơ tay à? Cô buồn đấy nhé.",
+    "Câu dễ thế mà không em nào trả lời sao?"
+  ],
+  "wrongOne": [
+    "{name} ơi, câu này sai rồi, lần sau cố lên nhé.",
+    "{name} chưa đúng, không sao, câu sau làm lại nhé."
+  ],
+  "firstRight": [
+    "{name} đúng đầu tiên, được nhân đôi điểm câu này.",
+    "{name} nhanh nhất lớp, câu này được gấp đôi điểm."
+  ],
+  "doubled": [
+    "{name} được nhân đôi điểm nhé.",
+    "{name} được cộng gấp đôi, giỏi quá."
+  ],
+  "streak": [
+    "{name} đúng {n} câu liên tiếp rồi, giỏi quá.",
+    "{n} câu liên tiếp đều đúng, cô khen {name}."
+  ],
+
+  "promoteLeader": [
+    "Cả lớp vỗ tay nào! {name} lên làm lớp trưởng.",
+    "Chúc mừng {name}, từ giờ em là lớp trưởng của lớp mình. Cả lớp vỗ tay nào."
+  ],
+  "promoteDeputy": [
+    "Chúc mừng {name} lên làm lớp phó học tập.",
+    "{name} giỏi lắm, em làm lớp phó học tập nhé."
+  ],
+
+  "recapStart": ["Cô tổng kết nhé.", "Nào, cô điểm lại ban cán sự của lớp mình."],
+  "recapLeader": "Lớp trưởng là {name}.",
+  "recapDeputy": "Lớp phó học tập là {name}.",
+  "recapEnd": ["Cả lớp vỗ tay cho các bạn nào.", "Các em khác cố lên để giành chức nhé. Cả lớp vỗ tay nào."],
+
+  "join": [
+    "Chào em {name}, vào lớp ngồi đi em.",
+    "À, {name} đến rồi, ngồi xuống đi em.",
+    "{name} vào lớp rồi, chú ý nghe cô giảng nhé.",
+    "Cô chào {name}, em tìm chỗ ngồi đi."
+  ],
+  "swap": [
+    "{name} ơi, lớp đông quá, em nhường chỗ cho {name2} nhé.",
+    "Lớp đầy rồi, {name} nhường chỗ cho {name2} nhé, học thêm rồi quay lại."
+  ],
+  "gift": [
+    "Cô cảm ơn {name} nhé. Em được nhân đôi điểm {n} lượt tiếp theo.",
+    "{name} ngoan quá, cô cảm ơn em. Em được nhân đôi điểm {n} lượt."
+  ],
+  "giftAnon": "Cô cảm ơn em nhé. Em được nhân đôi điểm {n} lượt tiếp theo.",
+  "social": [
+    "Cô cảm ơn {name}, câu sau em được nhân đôi điểm.",
+    "Cảm ơn {name} nhé, câu sau em được gấp đôi điểm."
+  ],
+  "hint": [
+    "{name} ơi, chat chữ vào để vào lớp với cô đã nhé.",
+    "{name} chưa vào lớp mà, chat chữ vào đi em."
+  ],
+  "first": [
+    "{name} nhanh tay nhất lớp.",
+    "{name} trả lời đầu tiên, nhanh quá.",
+    "Cô thấy {name} giơ tay rồi đấy."
+  ],
+  "urge": [
+    "Nhanh lên các em, sắp hết giờ rồi.",
+    "Còn mấy giây nữa thôi đấy.",
+    "Em nào chưa trả lời thì nhanh lên nào."
+  ],
+  "callout": [
+    "{name} ơi, em có đang nghe cô giảng không đấy?",
+    "{name} đang ngủ gật à? Trả lời đi em.",
+    "Cô gọi {name}, câu này em chọn đáp án nào?",
+    "{name} im lặng lâu quá, cô sắp cho nhường chỗ đấy nhé."
+  ],
+  "invite": [
+    "Các em chat chữ vào để vào lớp với cô nhé.",
+    "Lớp mình còn nhiều chỗ lắm, chat chữ vào đi các em.",
+    "Em nào muốn học thì chat chữ vào nhé, đang có chỗ đấy."
+  ],
+
+  "replies": [
+    { "match": ["chao co", "cho co", "co chao"], "say": ["Chào em {name}.", "Cô chào {name} nhé."] },
+    { "match": ["cam on co"], "say": ["Không có gì đâu {name}, chăm học là được."] },
+    { "match": ["yeu co", "thuong co", "quy co"], "say": ["Cô cũng quý {name}, học giỏi là cô vui rồi."] },
+    { "match": ["co dep", "co xinh"], "say": ["Cảm ơn {name}, nhưng tập trung học bài đi em."] },
+    { "match": ["kho qua", "kho the", "kho vay", "kho ghe"], "say": ["{name} thấy khó à? Cố suy nghĩ đi em.", "Khó mới cần học chứ {name}."] },
+    { "match": ["de qua", "de the", "de vay", "de ot"], "say": ["{name} giỏi nhỉ, để cô hỏi câu khó hơn.", "Dễ thì {name} trả lời ngay đi nào."] },
+    { "match": ["dap an la gi", "dap an gi", "cho dap an", "chon gi"], "say": ["{name} tự làm đi em, không hỏi bài nhau nhé.", "Cô không nói đâu, {name} tự suy nghĩ đi."] },
+    { "match": ["co oi"], "say": ["Cô nghe đây {name}.", "Sao thế {name}?"] }
+  ]
+}

@@ -1,10 +1,10 @@
 import * as THREE from 'three';
 import { buildWorld } from './world.js';
-import { Fisher, setLineResolution, hookMesh } from './fisher.js';
+import { Fisher, setLineResolution, hookMesh, setBobberGlow } from './fisher.js';
 import { makeFish, addSwimmers } from './fish.js';
 import { createFx } from './fx.js';
 import { createWeather, weatherIcon } from './weather.js';
-import { sfx, speak, say, wake, onAudioState, setWeatherSound } from './audio.js';
+import { sfx, speak, say, wake, onAudioState, setWeatherSound, startMusic } from './audio.js';
 import { createWheelUi } from './wheel.js';
 import { createBossShark } from './boss.js';
 import { createEpic } from './epic.js';
@@ -54,7 +54,7 @@ let bossShark = null;
 let epic = null;
 // Sự kiện vòng quay đang chạy, đổi số tim mỗi lần giật và bước đếm cá hiếm.
 let wheelEvent = null;
-const likesPer = () => wheelEvent?.likesPerPull ?? guide?.likesPerPull ?? 100;
+const likesPer = () => wheelEvent?.likesPerPull ?? guide?.likesPerPull ?? 50;
 const wheelUi = createWheelUi({ sfx, onEvent: setWheelEvent });
 const fishers = new Map(); // key -> Fisher
 const tags = new Map(); // key -> { el, bar }
@@ -65,23 +65,24 @@ let spot = null;
 function init(g) {
   guide = g;
   if (world) return;
-  world = buildWorld(scene, { seats: g.seats });
+  world = buildWorld(scene, OVERVIEW);
   swimmers = addSwimmers(scene);
   fx = createFx(scene);
   bossShark = createBossShark(scene, fx, g.tiers.shark.fish[0]);
   epic = createEpic({ scene, fx, sfx, toScreen });
-  weather = createWeather(scene, world);
+  weather = createWeather(scene, world, OVERVIEW);
   weather.onThunder = (power, delay) => setTimeout(() => sfx.thunder(power), delay * 1000);
   weather.onNews = (text) => toast(text, 'sky');
   const d = g.display ?? {};
   renderer.shadowMap.enabled = d.shadows !== false;
   setRenderScale(d.renderScale || 1);
+  startMusic(d.music);
   renderGuide(g);
 }
 
 // ---------------------------------------------------------------- Camera
-// Nhìn chếch từ trên xuống để thấy cả mặt bằng hang; hồ nằm ở nửa dưới khung hình, nửa trên là vách hang phía sau các bảng.
-const OVERVIEW = { pos: new THREE.Vector3(0, 38.6, 22.8), look: new THREE.Vector3(0, 0, -12), fov: 60 };
+// Nhìn chếch từ trên xuống để thấy trọn mặt bằng theo bản vẽ; khu hồ nằm ở nửa dưới khung hình, nửa trên là đồng ruộng và bầu trời phía sau các bảng.
+const OVERVIEW = { pos: new THREE.Vector3(0.45, 43.5, 26), look: new THREE.Vector3(0.45, 0, -11.5), fov: 60 };
 // ?cam=x,y,z,lookX,lookY,lookZ,fov để căn lại góc máy khi cần.
 {
   const c = new URLSearchParams(location.search).get('cam')?.split(',').map(Number);
@@ -187,6 +188,7 @@ function removeFisher(key) {
   if (!f) return;
   fishers.delete(key);
   removeTag(key);
+  world.clearWeigh(f.seat.index);
   f.leave();
   leftovers.push({ update: () => !f.removed && (f.update(1 / 60), true) });
 }
@@ -256,7 +258,8 @@ function addTag(player) {
   el.className = 'tag';
   const img = player.avatar ? `<img class="real" src="${esc(player.avatar)}" alt="" referrerpolicy="no-referrer" onerror="this.classList.add('gone')">` : '<img class="blank" alt="">';
   const ava = `<span class="ava">${img}<b class="ini">${esc([...player.name][0] ?? '?')}</b></span>`;
-  el.innerHTML = `<div class="pill">${ava}<span>${esc(player.name)}</span><em class="perks"></em></div><div class="bar"><i></i></div><div class="gear-line"></div>`;
+  const hut = player.seat + 1;
+  el.innerHTML = `<div class="pill"><b class="hut${hut === 8 || hut === 9 ? ' lucky' : ''}">${hut}</b>${ava}<span>${esc(player.name)}</span><em class="perks"></em></div><div class="bar"><i></i></div><div class="gear-line"></div>`;
   $('tags').append(el);
   tags.set(player.key, { el, bar: el.querySelector('.bar i'), gear: el.querySelector('.gear-line'), perks: el.querySelector('.perks') });
 }
@@ -276,15 +279,15 @@ function toScreen(v) {
   proj.copy(v).project(camera);
   return { x: ((proj.x + 1) / 2) * W, y: ((1 - proj.y) / 2) * H, behind: proj.z > 1 };
 }
-// Đông người (hơn 20) thì chỉ hiện tên người vừa hoạt động, tránh tên chồng lên nhau.
+// Các chòi đứng sát nhau: hơn 10 người thì chỉ hiện tên người vừa hoạt động, tránh tên chồng lên nhau.
 const activeAt = new Map();
 const touch = (key) => activeAt.set(key, performance.now());
 function placeTags() {
-  const crowded = fishers.size > 20;
+  const crowded = fishers.size > 10;
   const now = performance.now();
-  // tối đa 12 tên người vừa hoạt động trong 25 giây
+  // tối đa 8 tên người vừa hoạt động trong 25 giây
   const recent = crowded
-    ? new Set([...activeAt].filter(([k, at]) => now - at < 25_000 && tags.has(k)).sort((a, b) => b[1] - a[1]).slice(0, 12).map(([k]) => k))
+    ? new Set([...activeAt].filter(([k, at]) => now - at < 25_000 && tags.has(k)).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([k]) => k))
     : null;
   for (const [key, tag] of tags) {
     const f = fishers.get(key);
@@ -299,7 +302,8 @@ function placeTags() {
     const half = (tag.w ??= tag.el.offsetWidth) / 2;
     const x = Math.min(W - half - 6, Math.max(half + 6, s.x));
     // thẻ của người đang quay cận luôn nằm trong màn hình, dưới dải đen của hiệu ứng cá lớn
-    const y = focused ? Math.max(180, s.y - 40) : s.y - 6;
+    // chòi số chẵn đẩy thẻ lên một nấc để hai chòi cạnh nhau không đè tên
+    const y = focused ? Math.max(180, s.y - 40) : s.y - 6 - (f.seat.index % 2) * 34;
     tag.el.style.transform = `translate(${x}px, ${y}px) translate(-50%, -100%)`;
     if (focused !== tag.wasFocused) {
       tag.wasFocused = focused;
@@ -480,6 +484,7 @@ function reveal() {
     f.cheer();
     f.hook = spot.hook;
     sfx.win(big || msg.tier === 'large');
+    world.weigh(spot.seat.index, msg.name, spot.kg);
     const above = f.headPos.clone();
     above.y += 0.55;
     floater(`+${kgText(spot.kg)} kg`, above, rare ? 'rare' : '', 2.2, 0.6);
@@ -580,6 +585,15 @@ function flyToBucket(f, result, delay) {
   });
 }
 
+// Cách loa đọc cân nặng: 3,2 kg là "3 ký 2", 0,8 kg là "8 lạng".
+function kyText(kg) {
+  const tenths = Math.round(kg * 10);
+  const whole = Math.floor(tenths / 10);
+  const rest = tenths % 10;
+  if (!whole) return `${rest} lạng`;
+  return rest ? `${whole} ký ${rest}` : `${whole} ký`;
+}
+
 // Người giật cá không còn trên hồ (hiếm): vẫn báo kết quả.
 function showResultOnly(msg) {
   const okList = msg.results.filter((r) => r.ok);
@@ -594,7 +608,7 @@ function showBanner(msg, s) {
   who.textContent = s.ok ? `🎉 ${msg.name} giật được${s.rare ? ' CÁ HIẾM' : ''}` : `${msg.name}`;
   if (s.ok) {
     what.textContent = `${s.shark ? '🦈 ' : s.rare ? '🌟 ' : '🐟 '}${s.best.fish} ${kgText(s.best.kg)} kg`;
-    sub.textContent = msg.count > 1 ? `Dính ${s.wins}/${msg.count} con · tổng +${kgText(s.kg)} kg` : `+${kgText(s.kg)} kg vào bảng xếp hạng`;
+    sub.textContent = msg.count > 1 ? `📢 Chòi số ${msg.seat + 1} lên ${s.wins}/${msg.count} con, tổng ${kyText(s.kg)}` : `📢 Chòi số ${msg.seat + 1} lên cá ${kyText(s.kg)}`;
   } else {
     what.textContent = s.rare ? 'Cá hiếm xổng mất! 😭' : 'Xổng mất rồi! 😭';
     sub.textContent = msg.count > 1 ? `Trượt cả ${msg.count} lần giật` : `${s.best.fish} ~${kgText(s.best.kg)} kg đã bơi mất`;
@@ -805,6 +819,7 @@ function frame(now) {
     skyTick = 0;
     const s = weather.state;
     setWeatherSound({ rain: s.rain, wind: world.env.wind, night: weather.night });
+    setBobberGlow(weather.lamps);
     const h = weather.hour();
     $('sky-chip').textContent = `${weatherIcon(weather.weather(), weather.night > 0.5)} ${String(Math.floor(h)).padStart(2, '0')}:${String(Math.floor((h % 1) * 60)).padStart(2, '0')}`;
   }
@@ -872,7 +887,7 @@ events.onmessage = (event) => {
       break;
     case 'join':
       addFisher(msg.player, true);
-      toast(`🎣 ${msg.player.name} đã xuống hồ câu!`);
+      toast(`🎣 ${msg.player.name} vào chòi số ${msg.player.seat + 1}!`);
       break;
     case 'leave':
       removeFisher(msg.key);
@@ -934,7 +949,7 @@ events.onmessage = (event) => {
       toast(msg.kind === 'share' ? `↗️ ${msg.name} vừa chia sẻ live, cảm ơn bạn!` : `➕ ${msg.name} vừa theo dõi, cảm ơn bạn!`, 'gift');
       break;
     case 'full':
-      toast(`Hồ đã kín chỗ, ${msg.name} chờ chút nhé!`);
+      toast(`🛏️ Hết chòi rồi, ${msg.name} ra quán võng chờ chút nhé!`);
       break;
     case 'speak':
       speak(msg.id, msg.first);

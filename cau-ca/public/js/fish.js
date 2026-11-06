@@ -1,7 +1,7 @@
 // Mô hình cá dựng từ khối cầu/nón. Thân dài theo trục +x (đầu ở +x), đuôi ở -x.
 // makeFish trả về Group có userData.tail để vẫy đuôi và userData.length (mét trong cảnh).
 import * as THREE from 'three';
-import { mat, POND, bake, pondRadius, haloTexture } from './world.js';
+import { mat, POND, bake } from './world.js';
 
 const EYE_WHITE = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.3 });
 const EYE_BLACK = new THREE.MeshStandardMaterial({ color: '#111111', roughness: 0.2 });
@@ -123,40 +123,40 @@ export function makeFish({ color = '#d98c2b', belly = '#f8dd9c', name = '' } = {
   return g;
 }
 
-// Cá phát quang: thân tám mặt, đuôi tam giác, quầng sáng quanh mình. Vẽ sau mặt nước (renderOrder 3) nên không bị nước che mờ.
-const glowBody = new THREE.OctahedronGeometry(0.5, 0).scale(1, 0.3, 0.42);
+// Bóng cá dưới mặt nước: thân tám mặt, đuôi tam giác. Vẽ sau mặt nước (renderOrder 3) nên nhìn rõ từ máy toàn cảnh.
+const swimBody = new THREE.OctahedronGeometry(0.5, 0).scale(1, 0.3, 0.42);
 // đuôi nằm ngang để nhìn từ trên xuống vẫn ra dáng con cá
-const glowTail = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0.06, 0, 0), new THREE.Vector3(-0.36, 0, 0.24), new THREE.Vector3(-0.36, 0, -0.24)]);
-function makeGlowFish(color, length, opacity) {
+const swimTail = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0.06, 0, 0), new THREE.Vector3(-0.36, 0, 0.24), new THREE.Vector3(-0.36, 0, -0.24)]);
+function makeSwimmer(color, length, opacity) {
   const material = new THREE.MeshBasicMaterial({ color, transparent: true, opacity, depthWrite: false, fog: false, side: THREE.DoubleSide });
   const g = new THREE.Group();
-  const body = new THREE.Mesh(glowBody, material);
+  const body = new THREE.Mesh(swimBody, material);
   const tail = new THREE.Group();
   tail.position.set(-0.42, 0, 0);
-  const fin = new THREE.Mesh(glowTail, material);
+  const fin = new THREE.Mesh(swimTail, material);
   tail.add(fin);
-  const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: haloTexture(), color, transparent: true, opacity: opacity * 0.42, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
-  halo.scale.setScalar(2);
-  g.add(body, tail, halo);
-  for (const o of [body, fin, halo]) o.renderOrder = 3;
+  g.add(body, tail);
+  for (const o of [body, fin]) o.renderOrder = 3;
   g.scale.setScalar(length);
   g.userData = { tail };
   return g;
 }
 
-// Đàn cá trong hồ: cá lớn lượn khắp hồ, cá nhỏ tụ ở vùng nông, vài con to mờ dưới vùng sâu (như các chấm sáng trên bản vẽ).
+// Đàn cá trong ao: cá hay tụ quanh hai quạt nước vì nhiều oxy, số còn lại lượn khắp ao.
 export function addSwimmers(scene) {
   const swimmers = [];
-  const add = (color, length, opacity, y, path) => {
-    const f = makeGlowFish(color, length, opacity);
+  const add = (color, length, opacity, y, path, pace = 1) => {
+    const f = makeSwimmer(color, length, opacity);
     f.position.y = y;
     scene.add(f);
-    swimmers.push({ mesh: f, path, a: Math.random() * Math.PI * 2, speed: (0.14 + Math.random() * 0.16) * (Math.random() < 0.5 ? -1 : 1), phase: Math.random() * 6, wobble: 0.05 + Math.random() * 0.1 });
+    swimmers.push({ mesh: f, path, a: Math.random() * Math.PI * 2, speed: pace * (0.14 + Math.random() * 0.16) * (Math.random() < 0.5 ? -1 : 1), phase: Math.random() * 6, wobble: 0.05 + Math.random() * 0.1 });
   };
-  const roam = ['#6ff5da', '#8fe9ff', '#b6a0ff', '#ff9fd0', '#6ff5da', '#a8ffcf'];
-  for (let i = 0; i < 12; i++) add(roam[i % roam.length], 0.55 + Math.random() * 0.4, 0.8, -0.35, { r: 0.42 + Math.random() * 0.42 });
-  for (let i = 0; i < 7; i++) add('#d8fff0', 0.3 + Math.random() * 0.14, 0.9, -0.18, { e: POND.shallow, r: 0.25 + Math.random() * 0.55 });
-  for (let i = 0; i < 3; i++) add('#49c9a4', 1 + Math.random() * 0.4, 0.5, -1.1, { e: POND.deep, r: 0.3 + Math.random() * 0.4 });
+  const roam = ['#1f3a2c', '#24402f', '#d9942f', '#1b3328', '#2a4634', '#e8e0c8'];
+  for (let i = 0; i < 9; i++) add(roam[i % roam.length], 0.6 + Math.random() * 0.45, 0.62, -0.25, { e: { x: 0, z: 0, rx: 8.4, rz: 5.9 }, r: 0.55 + Math.random() * 0.42 });
+  const near = ['#1b3328', '#d9942f', '#24402f', '#1f3a2c', '#c9502c'];
+  for (const fan of POND.fans) {
+    for (let i = 0; i < 7; i++) add(near[i % near.length], 0.45 + Math.random() * 0.3, 0.68, -0.18, { e: { x: fan.x, z: fan.z + 0.5, rx: 2.5, rz: 2.3 }, r: 0.55 + Math.random() * 0.45 }, 2.1);
+  }
   const prev = new THREE.Vector3();
   return {
     update(t, dt) {
@@ -164,14 +164,8 @@ export function addSwimmers(scene) {
         s.a += s.speed * dt;
         const r = s.path.r + Math.sin(t * 0.3 + s.phase) * s.wobble;
         prev.copy(s.mesh.position);
-        if (s.path.e) {
-          s.mesh.position.x = s.path.e.x + Math.cos(s.a) * s.path.e.rx * r;
-          s.mesh.position.z = s.path.e.z + Math.sin(s.a) * s.path.e.rz * r;
-        } else {
-          const R = pondRadius(s.a) * r;
-          s.mesh.position.x = Math.cos(s.a) * R;
-          s.mesh.position.z = Math.sin(s.a) * R;
-        }
+        s.mesh.position.x = s.path.e.x + Math.cos(s.a) * s.path.e.rx * r;
+        s.mesh.position.z = s.path.e.z + Math.sin(s.a) * s.path.e.rz * r;
         const dx = s.mesh.position.x - prev.x;
         const dz = s.mesh.position.z - prev.z;
         if (dx * dx + dz * dz > 1e-8) s.mesh.rotation.y = Math.atan2(-dz, dx);

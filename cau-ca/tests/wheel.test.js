@@ -206,14 +206,14 @@ test('Cá cắn câu: tỉ lệ cao hơn trong lúc sự kiện, cỏ ba lá v�
   assert.equal(pond.queue[1].results[0].ok, false, 'hết sự kiện về 0.6');
 });
 
-test('Mưa tim: 50 tim là giật, hết sự kiện lại cần 100', () => {
+test('Mưa tim: 30 tim là giật, hết sự kiện lại cần 50', () => {
   const { pond } = makePond();
   pond.comment(who(1), 'câu');
   pond.startEvent(slot('hearts').effect);
-  assert.equal(pond.like(who(1), 50), 1);
+  assert.equal(pond.like(who(1), 30), 1);
   pond.endEvent();
-  assert.equal(pond.like(who(1), 50), 0);
-  assert.equal(pond.like(who(1), 50), 1);
+  assert.equal(pond.like(who(1), 30), 0);
+  assert.equal(pond.like(who(1), 20), 1);
 });
 
 test('Cá béo: cá nặng gấp đôi, tính theo lúc nhận quà dù tới lượt sau khi hết sự kiện', () => {
@@ -334,7 +334,7 @@ test('Cá mập: máu theo số người, quà to trừ nhiều, người đánh
   pond.startEvent(slot('boss').effect);
   const max = boss.hpBase + boss.hpPerPlayer * 2;
   assert.equal(pond.liveView().hp, max);
-  pond.like(who(1), 100);
+  pond.like(who(1), 50);
   assert.equal(pond.liveView().hp, max - boss.damage.like);
   pond.gift(who(2), { name: 'Lucky Pig', coins: 10 }, 3);
   assert.equal(pond.liveView().hp, 0);
@@ -359,7 +359,7 @@ test('Cá mập: hết giờ chưa hạ được thì trốn thoát, không ai �
   const { pond, of } = makePond();
   pond.comment(who(1), 'câu');
   pond.startEvent(slot('boss').effect);
-  pond.like(who(1), 100);
+  pond.like(who(1), 50);
   pond.endEvent();
   assert.equal(of('boss-end')[0].down, false);
   assert.equal(pond.queue.every((j) => j.tier !== 'boss'), true);

@@ -1,14 +1,18 @@
 # Hồ Câu Cá 3D (TikTok LIVE)
 
-Game câu cá 3D bằng Three.js cho TikTok LIVE, màn hình dọc 1080×1920. Hồ nằm trong hang đá, dựng theo bản vẽ `cave_fishing_pond_layout.png`.
+Game câu cá 3D bằng Three.js cho TikTok LIVE, màn hình dọc 1080×1920. Khung cảnh là hồ câu dịch vụ kiểu Việt, dựng theo bản vẽ `vietnam_service_fishing_pond_layout.png`.
 
 ## Khung cảnh
 
-- **Hồ** hình dạng tự do, uốn theo vách đá. Vùng nước nông sáng và lấp lánh ở bên trái, vùng nước sâu tối ở bên phải, đảo pha lê ở phía sau. Ánh sáng chủ yếu từ dưới nước hắt lên vách và đáy nhũ đá.
-- **Chỗ ngồi** nằm trên 4 bờ đá cao thấp khác nhau, mỗi bờ 2 bậc, mỗi ghế có bệ đá riêng lệch nhau một chút: bờ thấp phía trước (17 ghế), bờ đá trái (11), bờ đá giữa bên phải (11), vách cao cuối hang (11). Đổi `seats` thì số ghế được chia lại theo cùng tỉ lệ.
-- **Thác ngầm** đổ từ vách bên phải rồi chảy thành suối vào hồ. Có nhũ đá trên trần, măng đá dưới nền, nấm tím và nấm hồng phát sáng, bào tử nấm bay lơ lửng.
-- **Cá phát quang** bơi khắp hồ: cá nhỏ tụ ở vùng nông, vài con to mờ dưới vùng sâu.
-- Vị trí mọi thứ khai báo ở đầu `public/js/world.js` bằng toạ độ pixel của bản vẽ (`P(px, py)`) và bảng `ROWS` (các hàng ghế), đổi layout thì sửa ở đó.
+- **Ao chữ nhật** bờ xi măng, nước xanh rêu, ánh theo màu trời. Bên phải có đường bê tông chạy từ cổng vào lên hết khu hồ.
+- **20 chòi đánh số**: 1–8 bờ trên, 9–16 bờ dưới, 17–20 bờ trái, đúng thứ tự trên bản vẽ. Mái lá dừa, cứ 3 chòi có một mái tôn, cột tre, sàn gỗ chìa ra mép nước. Mỗi chòi có ghế nhựa hoặc ghế xếp, thùng đá, xô, vợt và gói cám. Số chòi sơn to trên biển gỗ, **chòi 8 và 9 là số đẹp** nên sơn đỏ chữ vàng. Người chơi nào cũng có số chòi ở đầu thẻ tên.
+- **2 quạt nước** chạy liên tục, bánh guồng quay, bọt trắng và sóng tròn loang về phía nam. Cá hay tụ quanh quạt.
+- **Quán võng**: 3 võng đong đưa (2 võng có người nằm), quầy cà phê đá, trà đá, mì gói, dây bóng vàng buổi tối.
+- **Bàn cân và loa**: mỗi lần lên cá, màn số trên cân hiện số ký, bảng trắng ghi 4 chòi nhiều ký nhất, loa toả sóng, dòng thông báo ghi kiểu "📢 Chòi số 7 lên cá 3 ký 2". Bảng trắng chỉ tính từ lúc mở trang và xoá dòng khi người đó rời chòi (bảng xếp hạng chính vẫn lưu ở server).
+- **Bãi xe máy**, hàng dừa, hàng rào, ruộng lúa, xóm nhà, rặng cây và núi thấp phía xa, 3 con chó nằm dưới gốc dừa.
+- **Không khí**: từ 15 giờ trời đã ngả vàng cho chiều tà ở lâu trên màn hình. Tối bật đèn tuýp dọc bờ, vệt đèn hắt xuống nước, đầu phao đài phát sáng.
+- **Nhạc bolero** phát qua loa: bài do code tự chơi, giai điệu viết riêng cho game, không lấy từ bài hát nào. Chỉnh ở `display.music` trong `config.json`: `on` bật/tắt, `volume` từ 0 đến 2.
+- Vị trí mọi thứ khai báo ở đầu `public/js/world.js` bằng toạ độ pixel của bản vẽ (`P(px, py)`) và bảng `HUTS` (các chòi), đổi layout thì sửa ở đó. Muốn xem lại hồ trong hang đá trước đây thì lấy từ git, commit `1131e18`.
 
 ## Chạy
 
@@ -20,8 +24,8 @@ Kênh TikTok đặt ở `tiktokUsername` trong `config.json`.
 
 | Người xem làm gì | Kết quả |
 |---|---|
-| Comment **câu** | Rơi từ trần hang xuống, ngồi vào một chỗ trống trên các bờ đá và thả câu |
-| **Câu free**: thả **100 tim**, **follow** hoặc **share** | Giật cá 1 lần (cá tạp 0,3–3 kg). Người chưa ngồi thì tự xuống hồ |
+| Comment **câu** | Rơi từ trên trời xuống, vào một chòi trống và thả câu |
+| **Câu free**: thả **50 tim**, **follow** hoặc **share** | Giật cá 1 lần (cá tạp 0,3–3 kg). Người chưa ngồi thì tự xuống hồ |
 | 1 **Hoa hồng** | Giật luôn, cá nhỏ 1–2 kg |
 | 1 **Bắn tim** (5 xu) | Giật luôn, cá vừa 2–5 kg |
 | 1 **Heo may mắn** (10 xu) | Giật luôn, cá to 5–10 kg |
@@ -36,8 +40,8 @@ Kênh TikTok đặt ở `tiktokUsername` trong `config.json`.
 - Mỗi lần giật, camera quay cận người đó đang vật lộn với cá khoảng 2,4 giây (`focusMs`). Khi có nhiều lượt chờ, mỗi lượt rút xuống 1,7 giây (`rushFocusMs`).
 - Tặng combo (ví dụ 10 hoa hồng) được gộp thành một lần quay cận và giật 10 con một lúc.
 - Bảng xếp hạng tính theo tổng số kg cá câu được; bên cạnh là số lần giật thành công. Màn hình chỉ hiện **5 người** cao điểm nhất (`boardSize`), mỗi lần một người với avatar to, cứ 3 giây trượt từ trái sang phải sang người tiếp theo. Bảng được lưu ở `data/board.json`, bật lại server vẫn còn. Muốn xóa thì bấm **Xóa bảng xếp hạng** trên bảng điều khiển.
-- Mỗi lần giật thành công có giọng Vbee chúc mừng, ví dụ "Chúc mừng Lan Anh câu được cá chép nặng 4 ký". Câu được ghép từ các mẩu có sẵn ("Chúc mừng", tên người chơi, "câu được cá chép", "nặng 4 ký") nên đọc ngay lúc cá lên, không phải chờ Vbee. Các mẩu dùng chung được tạo một lần lúc bật server lần đầu (khoảng 1–2 phút) và lưu ở `data/tts`; tên người chơi được tạo lúc họ comment "câu". Chỉnh câu chữ trong mục `voice.text` của `config.json`.
-- Hồ có 50 chỗ ngồi (`seats`). Khi hồ kín, người lâu nhất chưa giật cá sẽ nhường chỗ. Ai ngồi **1 phút không giật cá** lần nào (`idleLeaveSeconds`) thì tự ra về; comment hay tim chưa đủ 100 không giữ được chỗ, nhưng tim thả dở vẫn được để dành, thả tiếp đủ 100 là tự xuống hồ lại.
+- Mỗi lần giật thành công có giọng Vbee chúc mừng, ví dụ "Chúc mừng Lan Anh câu được cá chép nặng 4 ký". Khoảng 40% số lần (`voice.hutChance`, đặt 0 để tắt) loa đọc thêm số chòi ở đầu câu, ví dụ "Chòi số 7". Lần bật server đầu tiên sau khi có tính năng này sẽ tạo thêm 20 mẩu giọng Vbee. Câu được ghép từ các mẩu có sẵn ("Chúc mừng", tên người chơi, "câu được cá chép", "nặng 4 ký") nên đọc ngay lúc cá lên, không phải chờ Vbee. Các mẩu dùng chung được tạo một lần lúc bật server lần đầu (khoảng 1–2 phút) và lưu ở `data/tts`; tên người chơi được tạo lúc họ comment "câu". Chỉnh câu chữ trong mục `voice.text` của `config.json`.
+- Hồ có 20 chòi (`seats`, tối đa 20 vì khu hồ chỉ dựng từng ấy chòi). Hết chòi thì người lâu nhất chưa giật cá sẽ nhường chỗ. Ai ngồi **1 phút không giật cá** lần nào (`idleLeaveSeconds`) thì tự ra về; comment hay tim chưa đủ 50 không giữ được chỗ, nhưng tim thả dở vẫn được để dành, thả tiếp đủ 50 là tự xuống hồ lại.
 
 ## Trang bị Cần Thủ
 
@@ -89,7 +93,7 @@ Cứ **2 phút** (`wheel.everySeconds`) vòng quay tự chạy một lần, ô t
 | Ô | Hiệu ứng | Trọng số |
 |---|---|---|
 | 🎣 Cá cắn câu | Tỉ lệ dính 75% (`rate`) | 22 |
-| ❤️ Mưa tim | 50 tim là giật 1 lần (`likesPerPull`) | 20 |
+| ❤️ Mưa tim | 30 tim là giật 1 lần (`likesPerPull`) | 20 |
 | ⚖️ Cá béo | Cá nặng gấp đôi (`kgMul`) | 18 |
 | ⏱️ Thi câu nhanh | Ai câu nhiều kg nhất trong giờ thi được cộng 50 kg (`sprint.bonusKg`) | 15 |
 | ⛈️ Giông bão | Trời chuyển bão (`weather`), tỉ lệ dính 40%, cá nặng gấp 3 | 12 |
@@ -108,12 +112,10 @@ Cứ **2 phút** (`wheel.everySeconds`) vòng quay tự chạy một lần, ô t
 
 ## Thời tiết, ngày và đêm
 
-Trong hang không thấy trời, nhưng ngoài kia đổi thì trong hang cũng đổi theo.
-
-- **Ngày** nước hồ màu xanh ngọc, **đêm** nước chuyển tím, nấm và pha lê sáng hơn. Mặc định **1 ngày đêm = 24 phút** (`sky.cycleMinutes`, mỗi phút là một giờ trong game). Đặt `sky.realClock: true` để chạy theo giờ thật của máy.
-- Thời tiết tự đổi ngẫu nhiên sau mỗi 40–150 giây (`sky.weatherSeconds`): ✨ yên ắng (`clear`), 🌫️ sương mù (`cloudy`), 🌬️ gió lùa (`windy`), 💧 nước rỉ từ nhũ đá (`rain`), ⛈️ giông bão (`storm`, nước rỉ nặng hạt, chớp loé qua khe trần, sấm dội). Kiểu nào hay ra hơn thì tăng trọng số trong `sky.weather`; đặt 0 để tắt hẳn kiểu đó.
-- Gió giật thất thường, có lúc đổi chiều: bào tử nấm, sương và giọt nước bay theo gió. Nước rỉ làm mặt hồ nổi gợn tròn và đá ướt sẫm màu.
-- Có tiếng giọt nước tí tách vọng trong hang, tiếng nước rỉ, gió, sấm. Góc phải phía trên hiện giờ trong game và thời tiết; mỗi lần đổi có thông báo nhỏ.
+- **Ngày** trời xanh, nắng trắng. **Chiều tà** (từ 15 giờ) nắng vàng, mặt trời lặn phía bên phải màn hình. **Đêm** có trăng sao, đèn tuýp dọc bờ tự bật, đầu phao sáng. Mặc định **1 ngày đêm = 24 phút** (`sky.cycleMinutes`, mỗi phút là một giờ trong game). Đặt `sky.realClock: true` để chạy theo giờ thật của máy.
+- Thời tiết tự đổi ngẫu nhiên sau mỗi 40–150 giây (`sky.weatherSeconds`): ☀️ nắng đẹp (`clear`), ⛅ nhiều mây (`cloudy`), 🌬️ gió to (`windy`), 🌧️ mưa (`rain`), ⛈️ giông bão (`storm`, trời tối sầm nên đèn cũng bật, chớp và sấm). Kiểu nào hay ra hơn thì tăng trọng số trong `sky.weather`; đặt 0 để tắt hẳn kiểu đó.
+- Gió giật thất thường, có lúc đổi chiều: tàu dừa, võng, mây, mưa và lá bay theo gió. Mưa làm mặt ao nổi gợn tròn.
+- Có tiếng máy quạt nước, dế kêu ban đêm, mưa, gió, sấm. Góc phải phía trên hiện giờ trong game và thời tiết; mỗi lần đổi có thông báo nhỏ.
 - Trên bảng điều khiển, mục **Thời tiết & giờ** cho chọn thời tiết (bấm 🎲 để quay về tự đổi), nhảy tới bình minh, trưa, hoàng hôn, đêm, hoặc dừng giờ.
 
 ## Quà

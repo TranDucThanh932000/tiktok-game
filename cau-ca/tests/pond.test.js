@@ -37,11 +37,11 @@ test('quà theo tên và theo xu', () => {
   assert.equal(giftTier(config, { name: 'Lạ', coins: 5 }), 'medium');
 });
 
-test('100 tim là 1 lần giật, người chưa ngồi đủ tim thì tự xuống hồ', () => {
+test('50 tim là 1 lần giật, người chưa ngồi đủ tim thì tự xuống hồ', () => {
   const { pond, of } = make();
-  assert.equal(pond.like(who(1), 60), 0);
+  assert.equal(pond.like(who(1), 30), 0);
   assert.equal(pond.players.size, 0);
-  assert.equal(pond.like(who(1), 50), 1);
+  assert.equal(pond.like(who(1), 30), 1);
   assert.equal(pond.players.get('u1').likes, 10);
   assert.equal(of('join').length, 1);
   assert.equal(pond.queue[0].tier, 'like');
@@ -50,7 +50,7 @@ test('100 tim là 1 lần giật, người chưa ngồi đủ tim thì tự xu�
 test('tim dồn không quá maxLikePullsQueued lượt', () => {
   const { pond } = make();
   pond.comment(who(1), 'câu');
-  pond.like(who(1), 100 * 10);
+  pond.like(who(1), 50 * 10);
   assert.equal(pond.queue[0].count, config.maxLikePullsQueued);
 });
 
@@ -119,13 +119,13 @@ test('ngồi quá idleLeaveSeconds mà không giật cá thì tự về, comment
   advance(idleMs - 1000);
   pond.comment(who(1), 'câu');
   pond.comment(who(1), 'hello');
-  pond.like(who(1), 40);
+  pond.like(who(1), 20);
   advance(1001);
   pond.tick();
   assert.equal(pond.players.size, 0);
   assert.ok(pond.seats.every((s) => s === null));
-  // tim thả dở được để dành: thả thêm 60 tim là đủ 100, tự xuống hồ và giật
-  assert.equal(pond.like(who(1), 60), 1);
+  // tim thả dở được để dành: thả thêm 30 tim là đủ 50, tự xuống hồ và giật
+  assert.equal(pond.like(who(1), 30), 1);
   assert.ok(pond.players.has('u1'));
 });
 
@@ -134,7 +134,7 @@ test('giật cá xong thì đếm lại từ đầu thời gian rời hồ', () 
   const { pond, advance } = make();
   pond.comment(who(1), 'câu');
   advance(idleMs - 5000);
-  pond.like(who(1), 100);
+  pond.like(who(1), 50);
   pond.tick();
   assert.ok(pond.current, 'đang giật');
   advance(config.focusMs);
@@ -397,7 +397,7 @@ test('cá hiếm chỉ dính 30%, cỏ ba lá không tăng', () => {
   pond.comment(who(1), 'câu');
   pond.gift(who(1), { name: 'Clover', coins: 1 }, 1);
   pond.setHooked(config.rare.every * 7 - 1);
-  pond.like(who(1), 100);
+  pond.like(who(1), 50);
   drain(pond, advance);
   const pull = of('pull').at(-1);
   assert.equal(pull.tier, 'rare');

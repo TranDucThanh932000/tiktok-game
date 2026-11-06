@@ -1,0 +1,139 @@
+{
+  "tiktokUsername": "linh.phng2903",
+  "port": 3007,
+
+  "likesForName": 100,
+  "fairEvery": 4,
+  "boardNames": 4,
+
+  "tiers": [
+    {
+      "id": "name", "minCoins": 0,
+      "board": "Ghi tên", "icon": "heart",
+      "seal": "ĐÃ GHI", "bubble": "Đã ghi!", "holdMs": 1000
+    },
+    {
+      "id": "avatar", "minCoins": 1, "avatar": true,
+      "board": "Tên + ảnh", "icon": "/gifts/rose.webp",
+      "seal": "ĐÃ GHI", "bubble": "Đẹp lắm!", "holdMs": 1600
+    },
+    {
+      "id": "wish", "minCoins": 5, "avatar": true, "wish": true,
+      "board": "+ Chúc lành", "icon": "/gifts/finger-heart.webp",
+      "seal": "AN LÀNH", "bubble": "An lành!", "holdMs": 2400
+    },
+    {
+      "id": "thanks", "minCoins": 10, "avatar": true, "wish": true, "thanks": true,
+      "board": "+ Đa tạ", "icon": "/gifts/lucky-pig.webp",
+      "seal": "ĐA TẠ", "bubble": "Đa tạ!", "holdMs": 3600
+    }
+  ],
+
+  "demo": {
+    "enabled": true,
+    "idleSeconds": 4,
+    "gapSeconds": [1.5, 4],
+    "inviteEvery": 6,
+    "inviteSeconds": 12,
+    "weights": { "name": 3, "avatar": 5, "wish": 2, "thanks": 0 }
+  },
+
+  "wishes": [
+    "Kính chúc an lành, vạn sự như ý",
+    "Kính chúc bình an, gia đạo hưng thịnh",
+    "Kính chúc an lành, tài lộc đầy nhà",
+    "Kính chúc an khang, tâm an trí sáng",
+    "Kính chúc an lành, thân tâm thường lạc",
+    "Kính chúc bình an, phúc lộc đầy nhà",
+    "Kính chúc an khang, thịnh vượng dài lâu",
+    "Kính chúc an lành, gia đình hòa thuận",
+    "Kính chúc bình an, sức khỏe dồi dào",
+    "Kính chúc an lành, công việc hanh thông",
+    "Kính chúc bình an, làm ăn thuận lợi",
+    "Kính chúc an khang, phúc thọ song toàn",
+    "Kính chúc an lành, mọi điều suôn sẻ",
+    "Kính chúc bình an, tâm luôn thanh thản",
+    "Kính chúc an lành, đường xa bình yên",
+    "Kính chúc bình an, cửa nhà ấm êm",
+    "Kính chúc an khang, vui khỏe mỗi ngày",
+    "Kính chúc an lành, lộc đến đầy tay",
+    "Kính chúc bình an, con cháu sum vầy",
+    "Kính chúc an lành, may mắn theo chân",
+    "Kính chúc bình an, tiền vào như nước",
+    "Kính chúc an khang, vạn sự hanh thông",
+    "Kính chúc an lành, ngày mới rạng rỡ",
+    "Kính chúc bình an, gặp nhiều quý nhân",
+    "Kính chúc an lành, lòng luôn nhẹ nhõm",
+    "Kính chúc bình an, trên dưới thuận hòa",
+    "Kính chúc an khang, tuổi thọ dồi dào",
+    "Kính chúc an lành, ước gì được nấy",
+    "Kính chúc bình an, tai qua nạn khỏi",
+    "Kính chúc an lành, nụ cười luôn nở",
+    "Kính chúc bình an, phúc đức đầy nhà",
+    "Kính chúc an khang, mọi sự viên mãn",
+    "Kính chúc an lành, học hành tấn tới",
+    "Kính chúc bình an, sự nghiệp vững vàng",
+    "Kính chúc an lành, tình duyên thắm đượm",
+    "Kính chúc bình an, ăn ngon ngủ yên",
+    "Kính chúc an khang, gia đạo yên vui",
+    "Kính chúc an lành, vận may rộn ràng",
+    "Kính chúc bình an, thuận buồm xuôi gió",
+    "Kính chúc an lành, phúc đến tận nhà"
+  ],
+  "thanks": [
+    "Đa tạ tấm lòng vàng, ơn này xin ghi nhớ mãi",
+    "Đội ơn quý nhân, xin đa tạ muôn phần",
+    "Đa tạ quý nhân đã ghé công đường, ơn này xin khắc ghi",
+    "Đa tạ tấm lòng quý nhân, công đường xin ghi ơn",
+    "Hạ quan xin cúi đầu đa tạ tấm lòng của quý nhân",
+    "Đa tạ muôn phần, ơn này hạ quan không dám quên",
+    "Tấm lòng này quý hơn vàng, hạ quan xin đa tạ",
+    "Đội ơn quý nhân, công đường rạng rỡ nhờ có người",
+    "Hạ quan xin ghi tạc ơn này vào sổ vàng",
+    "Đa tạ quý nhân, xin kính cẩn ghi ơn",
+    "Ơn này nặng tựa non cao, hạ quan xin đa tạ",
+    "Đa tạ tấm chân tình, hạ quan xin ghi lòng tạc dạ",
+    "Đội ơn quý nhân đã thương đến công đường",
+    "Công đường có quý nhân, hạ quan mừng khôn xiết",
+    "Xin đa tạ ngàn lần, tấm lòng này xin nhớ mãi",
+    "Hạ quan vái tạ quý nhân, ơn sâu nghĩa nặng",
+    "Đa tạ quý nhân, tình này nghĩa này xin ghi nhớ",
+    "Ghi lòng tạc dạ tấm lòng của quý nhân",
+    "Đa tạ quý nhân rộng lòng, hạ quan xin bái tạ",
+    "Có quý nhân ghé thăm, công đường thêm sáng rỡ",
+    "Hạ quan xin đa tạ, mong quý nhân ở lại chơi lâu",
+    "Ơn quý nhân như biển rộng, hạ quan xin đa tạ",
+    "Đa tạ quý nhân, xin chép ơn này vào sớ",
+    "Tấm lòng quý nhân, hạ quan xin ghi trọn vào sớ"
+  ],
+
+  "timing": {
+    "sheetMs": 450,
+    "avatarMs": 2600,
+    "nameCharMs": 190,
+    "nameMinMs": 1000,
+    "nameMaxMs": 3000,
+    "lineCharMs": 62,
+    "lineMinMs": 1200,
+    "lineMaxMs": 3200,
+    "sealMs": 1000
+  },
+
+  "rush": {
+    "backlog": 30,
+    "nameSpeed": 2.5,
+    "paidSpeed": 1.4
+  },
+
+  "voice": {
+    "enabled": true,
+    "demo": true,
+    "nameTierMaxQueue": 5,
+    "nameWaitMs": 8000,
+    "text": {
+      "record": "Ghi danh",
+      "thanks": "Đa tạ",
+      "guest": "quý khách"
+    }
+  }
+}
