@@ -325,6 +325,39 @@ test('xem trước câu sắp hỏi đúng là câu sẽ được hỏi', () => 
   assert.equal(deck.next(), second);
 });
 
+test('thách đấu: cô giới thiệu hai bạn, công bố người thắng một lần kèm vỗ tay', () => {
+  const { room, teacher, lastSay } = setup();
+  for (const name of ['Lan', 'Hà']) room.comment(who(name), 'vào');
+  teacher.asking(QUESTION, { inSet: 3, setSize: 6, duel: { challenger: 'Hà', leader: 'Lan', seats: [1, 0] } });
+  const intro = spoken(lastSay());
+  assert.ok(intro.includes('Hà') && intro.includes('Lan'));
+  assert.ok(intro.indexOf('Hà') < intro.indexOf('Lan'));
+
+  const results = [
+    { seat: 1, ok: true, delta: 4, streak: 1, boosted: true, first: true },
+    { seat: 0, ok: false, delta: 0, streak: 0, boosted: false, first: false },
+  ];
+  const duel = { outcome: 'won', bonus: 0, challenger: { name: 'Hà', seat: 1, score: 6 }, leader: { name: 'Lan', seat: 0, score: 3 } };
+  teacher.revealing({ question: QUESTION, results, promoted: [{ name: 'Hà', title: 'Lớp trưởng', rank: 0 }], duel });
+  const msg = lastSay();
+  assert.equal(msg.clips.filter((clip) => clip.sfx === 'applause').length, 1);
+  const tails = lines.promoteLeader.flatMap((line) => line.split('{name}')).map((part) => part.replace(/^[\s,.!?:]+/, '').trim()).filter(Boolean);
+  assert.ok(!spoken(msg).some((w) => tails.includes(w)), 'không chúc lên lớp trưởng lần nữa');
+  assert.match(msg.text, /Hà/);
+});
+
+test('câu cuối tiết cô nhắc, quà thách đấu được cảm ơn trước lời chào', () => {
+  const { room, teacher, advance, lastSay } = setup();
+  teacher.asking(QUESTION, { inSet: 6, setSize: 6 });
+  assert.ok(spoken(lastSay()).some((w) => lines.lastQuestion.includes(w)));
+  room.tick();
+  advance(room.timerFrom - 1_000_000);
+  room.comment(who('Hà'), 'vào');
+  teacher.onEvent({ type: 'challenge', name: 'Lan', leader: 'Hà', ahead: 0 });
+  teacher.pump();
+  assert.ok(spoken(lastSay()).includes('Lan'));
+});
+
 test('lời cô không có từ cần tránh, câu mẫu tách mẩu đúng', () => {
   const all = JSON.stringify({ ...lines, fixes: undefined });
   for (const word of ['tặng quà', 'quà', 'đánh', 'máu', 'kick']) assert.ok(!all.toLowerCase().includes(word), word);

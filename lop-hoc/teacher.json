@@ -12,15 +12,19 @@
   "letters": ["A", "Bê", "Xê", "Đê"],
 
   "start": [
-    "Cả lớp trật tự, cô bắt đầu hỏi bài nhé.",
-    "Nào các em, chúng ta vào bài mới.",
-    "Cả lớp ngồi ngay ngắn, cô hỏi bài đây."
+    "Vào tiết mới, cả lớp lại bằng điểm nhau nhé.",
+    "Tiết mới bắt đầu, em nào cũng có cơ hội làm lớp trưởng.",
+    "Cả lớp ngồi ngay ngắn, vào tiết mới nào."
   ],
   "intro": [
     "Cả lớp nghe câu tiếp theo nhé.",
     "Câu này nhé các em.",
     "Nào, nghe cô đọc đây.",
     "Em nào giỏi trả lời câu này nào."
+  ],
+  "lastQuestion": [
+    "Câu cuối của tiết rồi, ai sẽ làm lớp trưởng đây?",
+    "Câu cuối tiết nhé, cố lên các em."
   ],
   "subject": "Câu này môn {subject}.",
   "go": [
@@ -94,10 +98,31 @@
     "{name} giỏi lắm, em làm lớp phó học tập nhé."
   ],
 
-  "recapStart": ["Cô tổng kết nhé.", "Nào, cô điểm lại ban cán sự của lớp mình."],
-  "recapLeader": "Lớp trưởng là {name}.",
+  "recapStart": ["Hết tiết rồi, cô tổng kết nhé.", "Hết tiết, cô điểm lại ban cán sự của lớp mình."],
+  "recapLeader": "Lớp trưởng tiết này là {name}.",
   "recapDeputy": "Lớp phó học tập là {name}.",
-  "recapEnd": ["Cả lớp vỗ tay cho các bạn nào.", "Các em khác cố lên để giành chức nhé. Cả lớp vỗ tay nào."],
+  "recapEnd": ["Tiết sau điểm tính lại từ đầu nhé. Cả lớp vỗ tay nào.", "Các em khác tiết sau cố lên để giành chức nhé. Cả lớp vỗ tay nào."],
+
+  "duelStart": [
+    "{name} thách đấu lớp trưởng {name2}. Ai đúng nhanh hơn sẽ thắng.",
+    "Câu này {name} thách đấu lớp trưởng {name2}, cả lớp xem nhé."
+  ],
+  "duelWon": [
+    "{name} thắng thách đấu, giành ghế lớp trưởng. Cả lớp vỗ tay nào.",
+    "Giỏi quá, {name} thắng rồi, em lên làm lớp trưởng nhé."
+  ],
+  "duelDefended": [
+    "Lớp trưởng {name} giữ được ghế, được cộng thêm điểm.",
+    "{name} xứng đáng là lớp trưởng, giữ ghế thành công."
+  ],
+  "duelVoid": [
+    "Câu này không ai thắng, lớp trưởng vẫn giữ ghế nhé.",
+    "Hai bạn chưa ai đúng, lớp trưởng giữ ghế."
+  ],
+  "challenge": [
+    "{name} xin thách đấu lớp trưởng, cả lớp chờ xem nhé.",
+    "Ồ, {name} muốn thách đấu lớp trưởng đấy."
+  ],
 
   "join": [
     "Chào em {name}, vào lớp ngồi đi em.",

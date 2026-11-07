@@ -24,17 +24,17 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #2b1d12; }
 #stage { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; transform-origin: 0 0; overflow: hidden; background: var(--wall); font-family: var(--hand); }
 #stage > * { position: absolute; }
 
-.wall-top { left: 0; top: 0; width: 100%; height: 165px; background: var(--wall-top); }
-.wall-low { left: 0; top: 985px; width: 100%; height: 75px; background: var(--wall-low); border-top: 4px solid #d9c57f; }
-.platform { left: 0; top: 1040px; width: 100%; height: 44px; background: linear-gradient(var(--wood-light) 0 12px, var(--wood) 12px 40px, #6f4526 40px); }
+.wall-top { left: 0; top: 0; width: 100%; height: 92px; background: var(--wall-top); }
+.wall-low { left: 0; top: 930px; width: 100%; height: 64px; background: var(--wall-low); border-top: 4px solid #d9c57f; }
+.platform { left: 0; top: 990px; width: 100%; height: 44px; background: linear-gradient(var(--wood-light) 0 12px, var(--wood) 12px 40px, #6f4526 40px); }
 .floor {
-  left: 0; top: 1084px; width: 100%; height: 836px; background-color: var(--floor);
+  left: 0; top: 1034px; width: 100%; height: 886px; background-color: var(--floor);
   background-image: linear-gradient(var(--floor-line) 2px, transparent 2px), linear-gradient(90deg, var(--floor-line) 2px, transparent 2px);
   background-size: 120px 120px;
 }
 
 #banner {
-  left: 50%; top: 178px; width: 800px; height: 62px; transform: translateX(-50%);
+  left: 50%; top: 14px; width: 800px; height: 64px; transform: translateX(-50%);
   display: flex; align-items: center; justify-content: center;
   background: var(--red); border-radius: 6px; box-shadow: 0 5px 0 rgba(90, 50, 20, .25);
   color: var(--gold); font: 700 38px var(--bold); letter-spacing: 3px;
@@ -42,7 +42,7 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #2b1d12; }
 
 /* ---------- Bảng ---------- */
 #board {
-  left: 20px; top: 258px; width: 884px; height: 730px;
+  left: 12px; top: 92px; width: 1056px; height: 730px;
   padding: 24px 30px 30px; display: flex; flex-direction: column;
   background: var(--board); border: 18px solid #7b4f2e; border-radius: 18px;
   box-shadow: 0 8px 0 rgba(90, 50, 20, .3), inset 0 0 40px rgba(0, 0, 0, .18);
@@ -110,19 +110,43 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #2b1d12; }
 #recap-others { width: 100%; margin-top: 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 4px 28px; font-size: 32px; color: var(--chalk-dim); }
 #recap-others div { display: flex; gap: 10px; }
 #recap-others span { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+#recap-hall { width: 100%; margin: 12px 0 0; display: flex; gap: 8px 20px; overflow: hidden; white-space: nowrap; font-size: 28px; color: #fff6c8; }
+#recap-hall label { flex: none; color: var(--gold); }
+#recap-hall span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 
-/* ---------- Cột phải: đồng hồ, cách có x2, cô giáo ---------- */
-#clock { left: 932px; top: 262px; width: 112px; height: 112px; }
+#banner.duel { gap: 14px; padding: 0 16px; font-size: 30px; letter-spacing: 0; background: linear-gradient(90deg, #8e1d6b, var(--red) 50%, #8e1d6b); color: #fff; animation: duel-pulse 1s ease-in-out infinite alternate; }
+#banner.duel span { flex: 0 1 auto; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+#banner.duel .leader { color: var(--gold); }
+#banner.duel i { flex: none; font: 400 26px var(--hand); font-style: normal; color: #ffd1e3; }
+#banner.duel.done { animation: none; background: var(--red); color: var(--gold); }
+#banner.duel.done span { max-width: 760px; }
+#footline .closing { color: #ff9fbf; animation: beat .6s ease-in-out infinite alternate; display: inline-block; transform-origin: 0 50%; }
+
+/* ---------- Dưới bảng: đồng hồ, bảng x2 nằm ngang giữa màn, cô giáo ---------- */
+#clock { left: 974px; top: 4px; width: 84px; height: 84px; }
 #clock svg { display: block; width: 100%; height: 100%; }
 
-#guide { left: 916px; top: 388px; width: 148px; padding: 8px 6px 6px; border: 3px solid var(--wood); border-radius: 12px; background: #fff9de; text-align: center; color: #5a3519; }
-#guide h3 { margin: 0 0 4px; font: 700 25px var(--bold); color: var(--red); }
-#guide div { display: flex; align-items: center; justify-content: center; gap: 4px; height: 58px; font-size: 26px; white-space: nowrap; }
-#guide img { width: 48px; height: 48px; object-fit: contain; }
-#guide .social { flex-direction: column; gap: 0; line-height: 1.05; }
-#guide .social small { font-size: 22px; }
+/* Bảng x2: to và sáng nhất vùng giữa màn để người xem thấy ngay. Mỗi quà: hình to ở trên, số lượt ở dưới. */
+#guide {
+  left: 50%; top: 828px; z-index: 4; transform: translateX(-50%); width: max-content; height: 128px;
+  display: flex; align-items: center; gap: 16px; padding: 4px 20px;
+  border: 5px solid #f0b43a; border-radius: 20px; background: linear-gradient(#fffcef, #ffeeb3); color: #5a3519;
+  box-shadow: 0 5px 0 rgba(90, 50, 20, .3); animation: guide-glow 1.4s ease-in-out infinite alternate;
+}
+#guide h3 { margin: 0; width: 2.4em; font: 700 34px var(--bold); line-height: 1.05; text-align: center; color: var(--red); }
+#guide div { display: flex; flex-direction: column; align-items: center; gap: 0; font: 700 30px var(--bold); line-height: 1.1; white-space: nowrap; color: #6b3a14; }
+#guide img { width: 74px; height: 74px; object-fit: contain; filter: drop-shadow(0 3px 2px rgba(90, 50, 20, .3)); animation: guide-bob 1.2s ease-in-out infinite alternate; }
+#guide div:nth-of-type(2) img { animation-delay: .3s; }
+#guide div:nth-of-type(3) img { animation-delay: .6s; }
+#guide .challenge img { animation-delay: .9s; }
+#guide .social small { font-size: 24px; }
+#guide .challenge {
+  flex-direction: row; gap: 6px; align-self: center; padding: 6px 12px 6px 8px;
+  border: 3px dashed #e8347f; border-radius: 14px; background: #ffe1ee; white-space: normal;
+}
+#guide .challenge small { flex: none; white-space: pre; font: 700 24px var(--bold); line-height: 1.1; color: #c2185b; }
 
-#teacher { left: 926px; top: 690px; width: 134px; height: 356px; z-index: 3; transform-origin: 50% 100%; }
+#teacher { left: 982px; top: 826px; width: 77px; height: 204px; z-index: 3; transform-origin: 50% 100%; }
 #teacher svg { display: block; width: 100%; height: 100%; overflow: visible; }
 #teacher .pointer { transform-origin: 34px 148px; animation: point 2.6s ease-in-out infinite alternate; }
 #teacher.happy { animation: hop .45s ease-out 2; }
@@ -133,13 +157,13 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #2b1d12; }
 
 /* Lời cô, cho người xem đang tắt tiếng. Có tin khác thì nhường chỗ. */
 #bubble {
-  right: 170px; top: 996px; z-index: 140; max-width: 860px; padding: 8px 24px; border: 3px solid #4f9ee2; border-radius: 22px;
+  right: 120px; top: 966px; z-index: 140; max-width: 900px; padding: 8px 24px; border: 3px solid #4f9ee2; border-radius: 22px;
   background: #fffdf3; color: #2a211c; font-size: 34px; line-height: 1.1; box-shadow: 0 4px 12px rgba(0, 0, 0, .25);
 }
 #bubble::after { content: ""; position: absolute; right: -16px; top: 18px; border: 9px solid transparent; border-left: 16px solid #4f9ee2; border-right: 0; }
 #toast:not([hidden]) ~ #bubble { visibility: hidden; }
 
-#desk { left: 70px; top: 992px; width: 230px; height: 48px; }
+#desk { left: 24px; top: 942px; width: 230px; height: 48px; }
 #desk .top { position: absolute; left: 0; bottom: 30px; width: 100%; height: 12px; background: var(--wood-light); }
 #desk .body { position: absolute; left: 12px; bottom: 0; width: 206px; height: 30px; background: var(--wood); border: 4px solid var(--wood-dark); }
 .book { position: absolute; left: 22px; height: 6px; }
@@ -153,6 +177,9 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #2b1d12; }
 .desk, .bench { position: absolute; border-radius: 3px; }
 .desk { background: linear-gradient(#bb8656 0 22%, var(--wood-light) 22%); }
 .bench { background: var(--wood); box-shadow: 0 3px 0 rgba(70, 40, 15, .35); }
+/* Bàn đầu: khăn đỏ viền vàng, chỗ của bạn có x2 từ quà. */
+.desk.front { background: linear-gradient(#e0b54a 0 22%, #b3263f 22%); box-shadow: 0 0 0 2px #e0b54a; }
+.bench.front { background: #8e1d33; box-shadow: 0 3px 0 rgba(70, 15, 25, .4); }
 
 .seat { position: absolute; }
 .sprite { position: absolute; left: 50%; transform: translateX(-50%); transform-origin: 50% 100%; }
@@ -196,6 +223,17 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #2b1d12; }
 }
 .seat.boosted .turns { display: block; }
 
+.gifticon { position: absolute; display: none; object-fit: contain; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, .35)); animation: bob 1.4s ease-in-out infinite alternate; }
+.seat.vip .gifticon { display: block; }
+.seat.vip:not(.officer-1, .officer-2, .officer-3) .plate { background: #8e1d6b; box-shadow: 0 0 0 3px #ff8fc4, 0 0 16px 4px rgba(255, 111, 165, .85); }
+.seat.vip .sprite::after {
+  content: ""; position: absolute; z-index: -1; left: 50%; top: 30%; width: 150%; aspect-ratio: 1; transform: translate(-50%, -50%);
+  background: radial-gradient(circle, rgba(255, 143, 196, .8), rgba(255, 143, 196, 0) 68%);
+}
+.stars { position: absolute; font: 700 18px var(--bold); line-height: 1; color: #fff; text-shadow: 0 1px 2px #000; white-space: nowrap; }
+.seat.ghost .stars, .seat.ghost .gifticon { display: none; }
+.seat.duelist .plate { outline: 4px solid #ff3355; outline-offset: 2px; animation: duel-ring .5s ease-in-out infinite alternate; }
+
 .card {
   position: absolute; display: none; place-items: center; background: #fff; border: 4px solid #1c1411; border-radius: 9px;
   font: 700 34px var(--bold); color: #1c1411; box-shadow: 0 3px 0 rgba(0, 0, 0, .25);
@@ -212,7 +250,7 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #2b1d12; }
 #fx { left: 0; top: 0; width: 1080px; height: 1920px; pointer-events: none; z-index: 200; }
 
 #toast {
-  left: 50%; top: 1000px; z-index: 150; transform: translateX(-50%); width: max-content; max-width: 1000px;
+  left: 50%; top: 966px; z-index: 150; transform: translateX(-50%); width: max-content; max-width: 1000px;
   display: flex; align-items: center; gap: 10px; padding: 8px 26px; border-radius: 999px;
   background: rgba(40, 24, 12, .92); color: #fff7e6; font-size: 40px; line-height: 1.1; box-shadow: 0 4px 14px rgba(0, 0, 0, .35);
 }
@@ -235,3 +273,8 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #2b1d12; }
 @keyframes rise { from { opacity: 0; transform: translateY(16px); } }
 @keyframes point { from { transform: rotate(-5deg); } to { transform: rotate(5deg); } }
 @keyframes hop { 0%, 100% { transform: translateY(0); } 45% { transform: translateY(-14px); } }
+@keyframes bob { from { transform: translateY(0); } to { transform: translateY(-5px); } }
+@keyframes guide-bob { from { transform: translateY(2px) scale(.96); } to { transform: translateY(-4px) scale(1.06); } }
+@keyframes guide-glow { from { box-shadow: 0 5px 0 rgba(90, 50, 20, .3), 0 0 6px 2px rgba(255, 200, 60, .45); } to { box-shadow: 0 5px 0 rgba(90, 50, 20, .3), 0 0 24px 8px rgba(255, 200, 60, .95); } }
+@keyframes duel-pulse { from { box-shadow: 0 0 6px 2px rgba(255, 80, 140, .5); } to { box-shadow: 0 0 22px 8px rgba(255, 80, 140, .95); } }
+@keyframes duel-ring { from { outline-color: #ff3355; } to { outline-color: #ffe066; } }

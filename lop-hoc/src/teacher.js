@@ -4,7 +4,8 @@
 // Phần phụ (chào, khen nhanh, gọi tên...) xếp hàng, chỉ nói khi đang rảnh; không kịp thì bỏ, trừ lời cảm ơn.
 import { readableName, speakText } from './spoken.js';
 
-const PRIORITY = { gift: 5, urge: 4, swap: 3, first: 3, social: 2, reply: 2, join: 2, hint: 2, callout: 1, invite: 1 };
+const PRIORITY = { gift: 5, challenge: 5, urge: 4, swap: 3, first: 3, social: 2, reply: 2, join: 2, hint: 2, callout: 1, invite: 1 };
+const URGENT = new Set(['gift', 'challenge']);
 const SIDE_GAP_MS = 1500;
 const MAX_SIDE_QUEUE = 6;
 const VOICE_BACKLOG_LIMIT = 12;
@@ -92,7 +93,7 @@ export class Teacher {
 
   enqueue(kind, filled, { ttlMs = 15_000, sfx } = {}) {
     if (!this.on || !filled) return;
-    const urgent = kind === 'gift';
+    const urgent = URGENT.has(kind);
     if (!urgent && this.queue.length >= MAX_SIDE_QUEUE) return;
     if (!urgent && this.voice.busy() > VOICE_BACKLOG_LIMIT) return;
     filled.parts.forEach((part) => this.voice.clip(part, { urgent }));
@@ -154,7 +155,7 @@ export class Teacher {
       }
     };
     const { lines } = this;
-    for (const key of ['start', 'intro', 'go', 'readBoard', 'timeUp', 'praisePre', 'praisePost', 'allRight', 'fewRight', 'noneRight', 'noAnswer', 'wrongOne', 'firstRight', 'doubled', 'promoteLeader', 'promoteDeputy', 'recapStart', 'recapEnd', 'join', 'swap', 'social', 'hint', 'first', 'urge', 'callout', 'invite']) {
+    for (const key of ['start', 'intro', 'lastQuestion', 'go', 'readBoard', 'timeUp', 'praisePre', 'praisePost', 'allRight', 'fewRight', 'noneRight', 'noAnswer', 'wrongOne', 'firstRight', 'doubled', 'promoteLeader', 'promoteDeputy', 'recapStart', 'recapEnd', 'join', 'swap', 'social', 'hint', 'first', 'urge', 'callout', 'invite', 'duelStart', 'duelWon', 'duelDefended', 'duelVoid', 'challenge']) {
       lines[key].forEach((line) => add(line));
     }
     for (const line of [lines.praiseOthers, lines.recapLeader, lines.recapDeputy]) add(line);
@@ -189,15 +190,19 @@ export class Teacher {
   }
 
   // ---------- Vòng chơi ----------
-  asking(question, { inSet }) {
+  asking(question, { inSet, setSize, duel } = {}) {
     this.q = {};
-    this.queue = this.queue.filter((entry) => entry.kind === 'gift');
+    this.queue = this.queue.filter((entry) => URGENT.has(entry.kind));
     if (!this.on) return 0;
     const { lines } = this;
     const clips = [];
     const subjectChanged = question.subject !== this.lastSubject;
     this.lastSubject = question.subject;
-    if (inSet === 1) clips.push({ say: this.say(this.pick('start')) });
+    // Thách đấu chỉ báo khi đọc được cả hai tên, không thì câu nói bị hụt tên.
+    const duelLine = duel && this.fill(this.pick('duelStart'), { name: duel.challenger, name2: duel.leader });
+    if (duelLine && duelLine.parts.every((part) => this.voice.ready(part))) duelLine.parts.forEach((say) => clips.push({ say }));
+    else if (inSet === 1) clips.push({ say: this.say(this.pick('start')) });
+    else if (inSet === setSize) clips.push({ say: this.say(this.pick('lastQuestion')) });
     else if (subjectChanged) clips.push({ say: this.say(lines.subject.replace('{subject}', question.subject)) });
     else clips.push({ say: this.say(this.pick('intro')) });
     // Giọng câu này chưa kịp có thì bảo đọc trên bảng, không đọc "A, Bê, Xê, Đê" trống không.
@@ -216,7 +221,7 @@ export class Teacher {
     return ms;
   }
 
-  revealing({ question, results, promoted }) {
+  revealing({ question, results, promoted, duel = null }) {
     if (!this.on) return 0;
     const clips = [];
     const add = (filled) => filled?.parts.forEach((say) => clips.push({ say }));
@@ -273,8 +278,19 @@ export class Teacher {
       if (doubled && speakable([doubled]).length) remark(this.fill(this.pick('doubled'), { name: nameOf(doubled) }));
     }
 
-    // Lên chức là chuyện lớn nhất của câu này, nói sau cùng, kèm tiếng vỗ tay.
-    const top = promoted.find((p) => this.voice.ready(readableName(p.name)));
+    // Kết quả thách đấu, rồi tới lên chức: chuyện lớn nhất của câu nói sau cùng, kèm tiếng vỗ tay.
+    let duelLine = null;
+    if (duel) {
+      if (duel.outcome === 'won') duelLine = this.fill(this.pick('duelWon'), { name: duel.challenger.name });
+      else if (duel.outcome === 'defended') duelLine = this.fill(this.pick('duelDefended'), { name: duel.leader.name });
+      else duelLine = this.fill(this.pick('duelVoid'));
+      if (duelLine && !duelLine.parts.every((part) => this.voice.ready(part))) duelLine = null;
+    }
+    if (duelLine) {
+      duelLine.parts.forEach((say, i) => clips.push({ say, sfx: i === 0 && duel.outcome === 'won' ? 'applause' : undefined }));
+      text = duelLine.text;
+    }
+    const top = promoted.find((p) => this.voice.ready(readableName(p.name)) && !(duelLine && duel.outcome === 'won' && p.name === duel.challenger.name));
     if (top) {
       const filled = this.fill(this.pick(top.rank === 0 ? 'promoteLeader' : 'promoteDeputy'), { name: top.name });
       if (filled) {
@@ -315,6 +331,9 @@ export class Teacher {
         this.enqueue('gift', filled, { ttlMs: 60_000, sfx: 'boost' });
         break;
       }
+      case 'challenge':
+        this.enqueue('challenge', this.fill(this.pick('challenge'), { name: msg.name }), { ttlMs: 60_000 });
+        break;
       case 'hint':
         this.enqueue('hint', this.fill(this.pick('hint'), { name: msg.name }));
         break;

@@ -41,6 +41,8 @@ export class Classroom {
       socialGap: config.boost.socialGapSeconds * 1000,
     };
     this.tiers = [...config.boost.tiers].sort((a, b) => b.coins - a.coins);
+    this.vipSeats = Math.min(config.vipSeats ?? 0, config.seats);
+    this.challengeRule = config.challenge?.coins > 0 ? config.challenge : null;
     this.stateDirty = false;
     this.clear();
   }
@@ -48,6 +50,11 @@ export class Classroom {
   clear() {
     this.seats = Array(this.config.seats).fill(null);
     this.boosts = new Map(); // id -> số lượt x2 còn lại; giữ cả khi ra khỏi lớp.
+    this.patrons = new Map(); // id -> hình quà gần nhất; còn lượt x2 thì được ngồi bàn đầu.
+    this.stars = new Map(); // id -> số tiết làm lớp trưởng.
+    this.hall = []; // Bảng vàng: lớp trưởng các tiết, mới nhất đứng đầu.
+    this.challenges = []; // hàng chờ thách đấu lớp trưởng.
+    this.duel = null;
     this.waiting = []; // những người đang chờ ngoài cửa, đầu mảng vào trước.
     this.officers = [];
     this.hinted = new Map();
@@ -74,7 +81,40 @@ export class Classroom {
   }
 
   publicStudent(student) {
-    return { name: student.name, score: student.score, look: student.look, turns: this.boosts.get(student.id) ?? 0 };
+    const { id } = student;
+    return {
+      name: student.name,
+      score: student.score,
+      look: student.look,
+      turns: this.boosts.get(id) ?? 0,
+      patron: this.patrons.has(id),
+      icon: this.patrons.get(id),
+      stars: this.stars.get(id) ?? 0,
+    };
+  }
+
+  isVip(id) {
+    return this.patrons.has(id) && (this.boosts.get(id) ?? 0) > 0;
+  }
+
+  // Người có x2 từ quà lên bàn đầu: ưu tiên ghế trống, không thì đổi chỗ với bạn thấp điểm nhất ở bàn đầu.
+  // Chỉ đổi chỗ, không ai mất ghế.
+  moveToFront(id) {
+    if (!this.vipSeats || !this.isVip(id)) return;
+    const from = this.seatOf(id);
+    if (from < this.vipSeats) return;
+    const front = this.seats.slice(0, this.vipSeats);
+    let to = front.indexOf(null);
+    if (to < 0) {
+      front.forEach((s, i) => {
+        if (!this.isVip(s.id) && (to < 0 || s.score < front[to].score)) to = i;
+      });
+    }
+    if (to < 0) return;
+    [this.seats[from], this.seats[to]] = [this.seats[to], this.seats[from]];
+    for (const officer of this.officers) officer.seat = this.seatOf(officer.id);
+    this.stateDirty = true;
+    this.emit({ type: 'move', from, to, officers: this.publicOfficers() });
   }
 
   // Người bị mời ra: điểm thấp nhất, bằng điểm thì ai im lâu nhất.
@@ -107,6 +147,7 @@ export class Classroom {
       count: this.count,
       waiting: this.waiting.length,
     });
+    this.moveToFront(who.id);
   }
 
   // Vào ghế trống đầu tiên (hàng trên trước vì hàng cuối hay bị khung comment của TikTok che),
@@ -218,7 +259,74 @@ export class Classroom {
   gift(who, coins, count = 1) {
     const reward = this.turnsFor(coins);
     if (!reward) return null;
-    return this.addTurns(who, reward.turns * count, { icon: reward.icon, front: true });
+    const rule = this.challengeRule;
+    const challenging = Boolean(rule && coins >= rule.coins);
+    const icon = challenging ? rule.icon : reward.icon;
+    this.patrons.set(who.id, icon);
+    const result = this.addTurns(who, reward.turns * count, { icon, front: true });
+    if (challenging) this.queueChallenge(who);
+    return result;
+  }
+
+  // ---------- Thách đấu lớp trưởng ----------
+  // Mỗi người chờ tối đa một lượt; lớp trưởng không tự thách mình.
+  queueChallenge(who) {
+    const leader = this.officers[0];
+    if (leader?.id === who.id) return;
+    if ((this.phase === 'asking' && this.duel?.challenger.id === who.id) || this.challenges.some((c) => c.id === who.id)) return;
+    this.challenges.push({ id: who.id, name: who.name });
+    this.stateDirty = true;
+    this.emit({ type: 'challenge', name: who.name, leader: leader?.name ?? null, ahead: this.challenges.length - 1 + (this.duel && this.phase === 'asking' ? 1 : 0) });
+  }
+
+  // Đầu mỗi câu: lấy người đầu hàng đang ngồi trong lớp ra đấu với lớp trưởng.
+  // Chưa có lớp trưởng (đầu tiết) thì cả hàng chờ câu sau.
+  startDuel() {
+    this.duel = null;
+    const leader = this.officers[0];
+    if (!leader || this.seatOf(leader.id) < 0) return;
+    this.challenges = this.challenges.filter((c) => c.id !== leader.id);
+    const at = this.challenges.findIndex((c) => this.seatOf(c.id) >= 0);
+    if (at < 0) return;
+    const [challenger] = this.challenges.splice(at, 1);
+    this.duel = { challenger: { id: challenger.id, name: this.seats[this.seatOf(challenger.id)].name }, leader: { id: leader.id, name: leader.name } };
+    this.stateDirty = true;
+  }
+
+  publicDuel() {
+    if (!this.duel) return null;
+    const { challenger, leader } = this.duel;
+    return { challenger: challenger.name, leader: leader.name, seats: [this.seatOf(challenger.id), this.seatOf(leader.id)] };
+  }
+
+  // Ai đúng trước người đó thắng. Người thách thắng thì lấy điểm cao hơn của hai người (đổi điểm),
+  // lớp trưởng thắng thì được cộng thêm điểm, không ai đúng thì giữ nguyên.
+  resolveDuel(t, correct, results) {
+    if (!this.duel) return null;
+    const c = this.seats[this.seatOf(this.duel.challenger.id)];
+    const l = this.seats[this.seatOf(this.duel.leader.id)];
+    let outcome = 'void';
+    let bonus = 0;
+    if (c && l) {
+      const winner = [...this.answers].find(([id, a]) => (id === c.id || id === l.id) && a.choice === correct)?.[0];
+      if (winner === c.id) {
+        outcome = 'won';
+        if (l.score > c.score) [c.score, l.score] = [l.score, c.score];
+        c.reachedAt = t - 1;
+        l.reachedAt = t;
+      } else if (winner === l.id) {
+        outcome = 'defended';
+        bonus = this.challengeRule?.defendBonus ?? 0;
+        l.score += bonus;
+        l.reachedAt = t;
+      }
+      for (const r of results) {
+        const student = this.seats[r.seat];
+        if (student === c || student === l) r.score = student.score;
+      }
+    }
+    const side = (s, fallback) => ({ name: s?.name ?? fallback.name, seat: s ? this.seatOf(s.id) : -1, score: s?.score ?? 0 });
+    return { outcome, bonus, challenger: side(c, this.duel.challenger), leader: side(l, this.duel.leader) };
   }
 
   // Follow, share: mỗi người tính tối đa một lần mỗi socialGap (dùng chung cho cả hai).
@@ -238,9 +346,10 @@ export class Classroom {
     this.stateDirty = true;
     // Người chưa vào lớp vẫn được vào ngay, không thì không thấy gì xảy ra.
     if (this.seatOf(who.id) < 0) this.join(who, { front });
+    this.moveToFront(who.id);
     const seat = this.seatOf(who.id);
     if (seat >= 0) this.seats[seat].lastActive = this.now();
-    this.emit({ type: 'boost', name: who.name, seat, added, turns, icon, kind });
+    this.emit({ type: 'boost', name: who.name, seat, added, turns, icon, kind, patron: this.patrons.has(who.id) });
     return { added, turns };
   }
 
@@ -284,25 +393,42 @@ export class Classroom {
 
   numbering() {
     const { setSize } = this.config;
-    return { no: this.no, inSet: ((this.no - 1) % setSize) + 1, setSize };
+    const no = Math.max(1, this.no);
+    return { no: this.no, inSet: ((no - 1) % setSize) + 1, setSize, period: Math.floor((no - 1) / setSize) + 1 };
+  }
+
+  // Tiết mới: điểm cả lớp về 0 để ai cũng có cơ hội làm lớp trưởng. Bảng vàng, sao, lượt x2 giữ nguyên.
+  startPeriod(period) {
+    const t = this.now();
+    for (const student of this.seats) {
+      if (!student) continue;
+      student.score = 0;
+      student.reachedAt = t;
+    }
+    this.officers = [];
+    this.emit({ type: 'period', period });
   }
 
   ask() {
     const t = this.now();
     this.no++;
+    const numbering = this.numbering();
+    if (numbering.inSet === 1 && numbering.period > 1) this.startPeriod(numbering.period);
     this.question = this.questions.next();
     this.answers = new Map();
     this.revealInfo = null;
     this.recapInfo = null;
     this.phase = 'asking';
     this.startedAt = t;
+    this.startDuel();
+    const duel = this.publicDuel();
     // Nhận đáp án ngay từ lúc hiện câu hỏi, nhưng đồng hồ chỉ chạy sau khi cô đọc xong.
-    const readMs = this.director?.asking(this.question, this.numbering()) ?? 0;
+    const readMs = this.director?.asking(this.question, { ...numbering, duel }) ?? 0;
     this.timerFrom = t + readMs;
     this.endsAt = this.timerFrom + this.ms.ask;
     this.stateDirty = true;
     this.admitWaiting();
-    this.emit({ type: 'question', ...this.numbering(), question: this.publicQuestion(), timerFrom: this.timerFrom, endsAt: this.endsAt });
+    this.emit({ type: 'question', ...numbering, question: this.publicQuestion(), duel, timerFrom: this.timerFrom, endsAt: this.endsAt });
   }
 
   reveal() {
@@ -336,20 +462,31 @@ export class Classroom {
       }
     }
     const before = new Map(this.officers.map((o) => [o.id, o.rank]));
+    const duel = this.resolveDuel(t, correct, results);
     this.officers = this.computeOfficers();
     const promoted = this.officers.filter((o) => !before.has(o.id) || before.get(o.id) > o.rank).map(({ name, title, rank }) => ({ name, title, rank }));
-    this.revealInfo = { correct, explain, results };
+    this.revealInfo = { correct, explain, results, duel };
     this.phase = 'reveal';
-    const talkMs = this.director?.revealing({ question: this.question, results, promoted }) ?? 0;
+    const talkMs = this.director?.revealing({ question: this.question, results, promoted, duel }) ?? 0;
     this.endsAt = t + Math.max(this.ms.reveal, talkMs + 800);
     this.stateDirty = true;
     this.emit({ type: 'reveal', ...this.revealInfo, tally: this.tally(), officers: this.publicOfficers(), promoted, endsAt: this.endsAt });
   }
 
+  // Hết tiết: lớp trưởng tiết được ghi Bảng vàng và thêm một sao.
   recap() {
+    const { period } = this.numbering();
+    const [winner] = this.officers;
+    this.stars.set(winner.id, (this.stars.get(winner.id) ?? 0) + 1);
+    this.hall.unshift({ period, name: winner.name, score: winner.score });
+    this.hall.length = Math.min(this.hall.length, 6);
+    this.stateDirty = true;
     this.recapInfo = {
+      period,
       officers: this.publicOfficers(),
       others: this.ranking().slice(OFFICER_TITLES.length, OFFICER_TITLES.length + 4).map((s) => ({ name: s.name, score: s.score })),
+      hall: this.hall,
+      star: { seat: this.seatOf(winner.id), stars: this.stars.get(winner.id) },
     };
     this.phase = 'recap';
     const talkMs = this.director?.recapping(this.recapInfo) ?? 0;
@@ -374,8 +511,10 @@ export class Classroom {
   snapshot() {
     return {
       phase: this.phase,
-      ...(this.question ? this.numbering() : { no: 0, inSet: 0, setSize: this.config.setSize }),
+      ...(this.question ? this.numbering() : { no: 0, inSet: 0, setSize: this.config.setSize, period: 1 }),
       question: this.question && this.publicQuestion(),
+      duel: this.phase === 'asking' ? this.publicDuel() : null,
+      hall: this.hall,
       timerFrom: this.timerFrom,
       endsAt: this.endsAt,
       seats: this.seats.map((s) => s && this.publicStudent(s)),
@@ -390,7 +529,17 @@ export class Classroom {
   }
 
   exportState() {
-    return { no: this.no, seats: this.seats, boosts: Array.from(this.boosts) };
+    // Đang đấu dở mà tắt server thì người thách được xếp lại đầu hàng, không mất lượt.
+    const live = this.phase === 'asking' && this.duel ? [{ id: this.duel.challenger.id, name: this.duel.challenger.name }] : [];
+    return {
+      no: this.no,
+      seats: this.seats,
+      boosts: Array.from(this.boosts),
+      patrons: Array.from(this.patrons),
+      stars: Array.from(this.stars),
+      hall: this.hall,
+      challenges: [...live, ...this.challenges],
+    };
   }
 
   importState(state) {
@@ -399,6 +548,10 @@ export class Classroom {
       if (s?.id && s.name && Number.isFinite(s.score)) this.seats[i] = s;
     });
     this.boosts = new Map((state.boosts ?? []).filter(([id, turns]) => id && turns > 0));
+    this.patrons = new Map((state.patrons ?? []).filter(([id]) => id));
+    this.stars = new Map((state.stars ?? []).filter(([id, n]) => id && n > 0));
+    this.hall = (state.hall ?? []).filter((row) => row?.name).slice(0, 6);
+    this.challenges = (state.challenges ?? []).filter((c) => c?.id && c.name);
     this.no = Number.isInteger(state.no) && state.no > 0 ? state.no : 0;
     this.officers = this.computeOfficers();
   }

@@ -126,11 +126,13 @@
     };
 
     function renderGifts() {
+      const rows = guide.tiers.map((tier) => ({ ...tier, text: `${tier.label} ${tier.coins} xu · ${tier.turns} lượt` }));
+      if (guide.challenge) rows.push({ ...guide.challenge, text: `${guide.challenge.label} ${guide.challenge.coins} xu · thách đấu` });
       $('gifts').replaceChildren(
-        ...guide.tiers.map((tier) => {
+        ...rows.map((tier) => {
           const button = document.createElement('button');
           button.type = 'button';
-          button.append(Object.assign(new Image(), { className: 'gift-icon', alt: '', src: tier.icon }), `${tier.label} ${tier.coins} xu · ${tier.turns} lượt`);
+          button.append(Object.assign(new Image(), { className: 'gift-icon', alt: '', src: tier.icon }), tier.text);
           button.onclick = () => post('/api/simulate', { kind: 'gift', name: $('name').value, coins: tier.coins, count: 1 });
           return button;
         }),
@@ -141,6 +143,7 @@
     const students = new Map();
     let officers = [];
     let waiting = 0;
+    let hall = [];
     let phaseNote = '';
     function renderRanks() {
       seated = [...students.values()].map((s) => s.name);
@@ -149,12 +152,13 @@
       $('ranks').replaceChildren(
         ...rows.map(([seat, s]) => {
           const tr = document.createElement('tr');
-          const label = [s.name, titles.get(seat) && `(${titles.get(seat)})`, s.turns > 0 && `x2 còn ${s.turns} lượt`].filter(Boolean).join(' ');
+          const label = [s.name, titles.get(seat) && `(${titles.get(seat)})`, s.stars > 0 && `⭐${s.stars}`, s.turns > 0 && `x2 còn ${s.turns} lượt`, s.patron && s.turns > 0 && '· bàn đầu'].filter(Boolean).join(' ');
           tr.append(Object.assign(document.createElement('td'), { textContent: label }), Object.assign(document.createElement('td'), { textContent: s.score }));
           return tr;
         }),
       );
-      $('class-info').textContent = `🎒 Sĩ số ${students.size}/${guide?.seats ?? 0}${waiting ? `, ${waiting} bạn chờ ngoài cửa` : ''}. ${phaseNote}`;
+      const hallText = hall.length ? ` 🏆 ${hall.map((h) => `T${h.period} ${h.name}`).join(', ')}.` : '';
+      $('class-info').textContent = `🎒 Sĩ số ${students.size}/${guide?.seats ?? 0}${waiting ? `, ${waiting} bạn chờ ngoài cửa` : ''}. ${phaseNote}${hallText}`;
     }
 
     function loadGame(game) {
@@ -162,7 +166,8 @@
       game.seats.forEach((s, i) => s && students.set(i, { ...s }));
       officers = game.officers;
       waiting = game.waiting;
-      phaseNote = game.no ? `Đang ở câu ${game.no}.` : '';
+      hall = game.hall ?? [];
+      phaseNote = game.no ? `Đang ở tiết ${game.period}, câu ${game.inSet}/${game.setSize}.` : '';
       renderRanks();
     }
 
@@ -216,15 +221,39 @@
           renderRanks();
           break;
         case 'boost':
-          if (students.has(msg.seat)) students.get(msg.seat).turns = msg.turns;
+          if (students.has(msg.seat)) Object.assign(students.get(msg.seat), { turns: msg.turns, patron: msg.patron });
           renderRanks();
           break;
+        case 'move': {
+          const [a, b] = [students.get(msg.from), students.get(msg.to)];
+          if (a) students.set(msg.to, a);
+          else students.delete(msg.to);
+          if (b) students.set(msg.from, b);
+          else students.delete(msg.from);
+          officers = msg.officers;
+          renderRanks();
+          break;
+        }
+        case 'period':
+          for (const s of students.values()) s.score = 0;
+          officers = [];
+          renderRanks();
+          break;
+        case 'recap':
+          hall = msg.hall;
+          if (msg.star && students.has(msg.star.seat)) students.get(msg.star.seat).stars = msg.star.stars;
+          renderRanks();
+          break;
+        case 'challenge':
+          $('log').textContent = `⚔️ ${msg.name} xin thách đấu lớp trưởng${msg.ahead ? `, còn ${msg.ahead} lượt trước` : ''}.`;
+          break;
         case 'question':
-          phaseNote = `Đang ở câu ${msg.no}.`;
+          phaseNote = `Đang ở tiết ${msg.period}, câu ${msg.inSet}/${msg.setSize}.${msg.duel ? ` ⚔️ ${msg.duel.challenger} thách đấu ${msg.duel.leader}.` : ''}`;
           renderRanks();
           break;
         case 'reveal':
           for (const r of msg.results) if (students.has(r.seat)) students.get(r.seat).score = r.score;
+          for (const side of msg.duel ? [msg.duel.challenger, msg.duel.leader] : []) if (students.has(side.seat)) students.get(side.seat).score = side.score;
           officers = msg.officers;
           renderRanks();
           break;

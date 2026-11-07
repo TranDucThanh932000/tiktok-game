@@ -25,8 +25,10 @@ if (bankProblems.length) throw new Error(`questions.json: ${bankProblems.join(';
 const guide = {
   title: config.title,
   seats: config.seats,
+  vipSeats: config.vipSeats ?? 0,
   tiers: config.boost.tiers.map(({ coins, turns, label, icon }) => ({ coins, turns, label, icon })),
   socialTurns: config.boost.socialTurns,
+  challenge: config.challenge?.coins > 0 ? { coins: config.challenge.coins, label: config.challenge.label, icon: config.challenge.icon } : null,
 };
 
 const vbee = {

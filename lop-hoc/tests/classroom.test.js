@@ -456,3 +456,186 @@ test('bộ câu hỏi lỗi thì báo rõ', () => {
   assert.equal(validateBank([{ s: 'Toán', q: 'x', o: ['1', '2', '3'] }]).length, 1);
   assert.equal(validateBank([{ s: 'Toán', q: 'x', o: ['1', '1', '3', '4'] }]).length, 1);
 });
+
+// ---------- Bàn đầu ----------
+test('có x2 từ quà thì lên bàn đầu, đổi chỗ với bạn thấp điểm nhất, không ai mất ghế', () => {
+  const ctx = setup();
+  const { room } = ctx;
+  fill(room, 12);
+  for (let i = 0; i < 10; i++) if (i !== 4) room.comment(who(`hs${i}`), 'A');
+  finishQuestion(ctx);
+  room.gift(who('hs11'), 1);
+  assert.equal(room.seatOf('hs11'), 4, 'hs4 0 điểm nên nhường chỗ');
+  assert.equal(room.seatOf('hs4'), 11);
+  assert.equal(room.count, 12);
+  assert.deepEqual(ctx.last('move'), { type: 'move', from: 11, to: 4, officers: room.publicOfficers() });
+  assert.equal(room.publicStudent(room.seats[4]).patron, true);
+});
+
+test('follow, share không lên bàn đầu; bàn đầu toàn người có quà thì giữ nguyên chỗ', () => {
+  const ctx = setup();
+  const { room } = ctx;
+  fill(room, 12);
+  room.social(who('hs11'), 'share');
+  assert.equal(room.seatOf('hs11'), 11);
+  for (let i = 0; i < 10; i++) room.gift(who(`hs${i}`), 1);
+  room.gift(who('hs10'), 1);
+  assert.equal(room.seatOf('hs10'), 10);
+  assert.equal(ctx.events.filter((e) => e.type === 'move').length, 0);
+});
+
+test('bàn đầu còn ghế trống thì lên ghế trống, không bắt ai đổi chỗ', () => {
+  const ctx = setup();
+  const { room } = ctx;
+  fill(room, 12);
+  room.seats[3] = null; // giả lập có người rời lớp
+  room.gift(who('hs11'), 5);
+  assert.equal(room.seatOf('hs11'), 3);
+  assert.equal(room.seats[11], null);
+  assert.deepEqual(room.seats.slice(0, 10).map((s) => s.id), ['hs0', 'hs1', 'hs2', 'hs11', 'hs4', 'hs5', 'hs6', 'hs7', 'hs8', 'hs9']);
+});
+
+test('người ngoài lớp có quà thì vào lớp rồi lên thẳng bàn đầu', () => {
+  const ctx = setup();
+  const { room } = ctx;
+  fill(room, 12);
+  room.gift(who('Mới'), 10);
+  assert.ok(room.seatOf('Mới') < config.vipSeats);
+  assert.equal(room.count, 13);
+  assert.equal(ctx.last('boost').seat, room.seatOf('Mới'));
+});
+
+// ---------- Tiết học ----------
+test('hết tiết: lớp trưởng lên Bảng vàng và được sao, tiết sau điểm về 0 nhưng giữ lượt x2', () => {
+  const ctx = setup({ setSize: 2 });
+  const { room } = ctx;
+  for (const name of ['Lan', 'Hà']) room.comment(who(name), 'vào');
+  room.gift(who('Hà'), 5);
+  for (let i = 0; i < 2; i++) {
+    room.comment(who('Lan'), 'A');
+    finishQuestion(ctx);
+    nextQuestion(ctx);
+  }
+  assert.equal(room.phase, 'recap');
+  assert.deepEqual(ctx.last('recap').hall[0], { period: 1, name: 'Lan', score: 4 });
+  assert.deepEqual(ctx.last('recap').star, { seat: 0, stars: 1 });
+  ctx.advance(config.timing.recapSeconds * 1000);
+  assert.equal(room.phase, 'asking');
+  assert.equal(ctx.last('period').period, 2);
+  assert.equal(ctx.last('question').period, 2);
+  assert.equal(ctx.last('question').inSet, 1);
+  assert.deepEqual(room.seats.filter(Boolean).map((s) => s.score), [0, 0]);
+  assert.equal(room.officers.length, 0);
+  assert.equal(room.boosts.get('Hà'), 6);
+  assert.equal(room.publicStudent(room.seats[0]).stars, 1);
+});
+
+// ---------- Thách đấu ----------
+const CHALLENGE = config.challenge.coins;
+function withLeader() {
+  const ctx = setup();
+  const { room } = ctx;
+  for (const name of ['Lớp trưởng', 'Thách', 'Khác']) room.comment(who(name), 'vào');
+  room.comment(who('Lớp trưởng'), 'A');
+  room.comment(who('Khác'), 'A');
+  finishQuestion(ctx);
+  nextQuestion(ctx);
+  assert.equal(room.officers[0].name, 'Lớp trưởng');
+  return ctx;
+}
+
+test('quà thách đấu vẫn được lượt x2, câu sau đấu với lớp trưởng; người thách đúng trước thì đổi điểm và lên lớp trưởng', () => {
+  const ctx = withLeader();
+  const { room } = ctx;
+  assert.equal(room.gift(who('Thách'), CHALLENGE).turns, room.turnsFor(CHALLENGE).turns);
+  assert.equal(ctx.last('challenge').name, 'Thách');
+  assert.equal(ctx.last('challenge').leader, 'Lớp trưởng');
+  assert.equal(room.duel, null, 'câu đang hỏi không bị đổi giữa chừng');
+  finishQuestion(ctx);
+  nextQuestion(ctx);
+  assert.deepEqual(ctx.last('question').duel, { challenger: 'Thách', leader: 'Lớp trưởng', seats: [room.seatOf('Thách'), room.seatOf('Lớp trưởng')] });
+  room.comment(who('Thách'), 'A');
+  room.comment(who('Lớp trưởng'), 'A');
+  finishQuestion(ctx);
+  const { duel } = ctx.last('reveal');
+  assert.equal(duel.outcome, 'won');
+  // Thách đúng đầu tiên và có x2: 0 + 4 = 4; lớp trưởng 2 + 1 = 3. Thách đã cao hơn nên giữ điểm của mình.
+  assert.equal(duel.challenger.score, 4);
+  assert.equal(room.officers[0].name, 'Thách');
+  assert.ok(ctx.last('reveal').promoted.some((p) => p.name === 'Thách' && p.rank === 0));
+});
+
+test('thắng thách đấu mà điểm thấp hơn thì lấy điểm của lớp trưởng', () => {
+  const ctx = withLeader();
+  const { room } = ctx;
+  room.seats[room.seatOf('Lớp trưởng')].score = 10;
+  room.officers = room.computeOfficers();
+  room.gift(who('Thách'), CHALLENGE);
+  finishQuestion(ctx);
+  nextQuestion(ctx);
+  room.comment(who('Lớp trưởng'), 'B');
+  room.comment(who('Thách'), 'A');
+  finishQuestion(ctx);
+  const score = (name) => room.seats[room.seatOf(name)].score;
+  assert.equal(score('Thách'), 10);
+  assert.equal(score('Lớp trưởng'), 4);
+  assert.equal(room.officers[0].name, 'Thách');
+  const row = ctx.last('reveal').results.find((r) => r.seat === room.seatOf('Thách'));
+  assert.equal(row.score, 10, 'bảng kết quả gửi màn hình cũng là điểm sau khi đổi');
+});
+
+test('lớp trưởng đúng trước thì giữ ghế và được cộng thêm, không ai đúng thì giữ nguyên', () => {
+  const ctx = withLeader();
+  const { room } = ctx;
+  room.gift(who('Thách'), CHALLENGE);
+  finishQuestion(ctx);
+  nextQuestion(ctx);
+  room.comment(who('Lớp trưởng'), 'A');
+  room.comment(who('Thách'), 'A');
+  finishQuestion(ctx);
+  assert.equal(ctx.last('reveal').duel.outcome, 'defended');
+  assert.equal(room.seats[room.seatOf('Lớp trưởng')].score, 2 + 2 + config.challenge.defendBonus);
+  assert.equal(room.officers[0].name, 'Lớp trưởng');
+
+  room.gift(who('Thách'), CHALLENGE);
+  nextQuestion(ctx);
+  room.comment(who('Thách'), 'B');
+  finishQuestion(ctx);
+  assert.equal(ctx.last('reveal').duel.outcome, 'void');
+  assert.equal(room.officers[0].name, 'Lớp trưởng');
+});
+
+test('chưa có lớp trưởng thì thách đấu chờ; lớp trưởng không tự thách mình; mỗi người chờ một lượt', () => {
+  const ctx = setup();
+  const { room } = ctx;
+  room.comment(who('Lan'), 'vào');
+  room.gift(who('Hà'), CHALLENGE);
+  room.gift(who('Hà'), CHALLENGE);
+  assert.equal(room.challenges.length, 1);
+  finishQuestion(ctx);
+  nextQuestion(ctx);
+  assert.equal(ctx.last('question').duel, null);
+  room.comment(who('Lan'), 'A');
+  finishQuestion(ctx);
+  nextQuestion(ctx);
+  assert.equal(ctx.last('question').duel.challenger, 'Hà');
+  assert.equal(room.challenges.length, 0);
+  room.gift(who('Lan'), CHALLENGE);
+  assert.equal(room.challenges.length, 0);
+});
+
+test('lưu và nạp lại giữ bàn đầu, sao, Bảng vàng và lượt thách đấu đang đấu dở', () => {
+  const ctx = withLeader();
+  ctx.room.gift(who('Thách'), CHALLENGE);
+  finishQuestion(ctx);
+  nextQuestion(ctx);
+  assert.ok(ctx.room.duel);
+  ctx.room.stars.set('Lớp trưởng', 2);
+  ctx.room.hall = [{ period: 1, name: 'Lớp trưởng', score: 5 }];
+  const fresh = setup().room;
+  fresh.importState(JSON.parse(JSON.stringify(ctx.room.exportState())));
+  assert.deepEqual(fresh.challenges, [{ id: 'Thách', name: 'Thách' }]);
+  assert.equal(fresh.isVip('Thách'), true);
+  assert.equal(fresh.stars.get('Lớp trưởng'), 2);
+  assert.equal(fresh.hall[0].name, 'Lớp trưởng');
+});

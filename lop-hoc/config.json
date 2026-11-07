@@ -3,7 +3,7 @@
   "port": 3008,
   "title": "AI NHANH HƠN",
 
-  "seats": 50,
+  "seats": 60,
   "setSize": 6,
   "firstRightMultiplier": 2,
 
@@ -19,6 +19,9 @@
   "newcomerGraceSeconds": 25,
   "kickGapSeconds": 4,
   "maxWaiting": 60,
+  "vipSeats": 10,
+
+  "challenge": { "coins": 99, "defendBonus": 2, "label": "Hạc giấy", "icon": "/gifts/paper-crane.webp" },
 
   "boost": {
     "multiplier": 2,

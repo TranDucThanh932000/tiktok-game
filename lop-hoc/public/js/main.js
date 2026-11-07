@@ -26,36 +26,41 @@ onAudioState((running) => {
 
 $('teacher').innerHTML = teacherSvg();
 
-// ---------- Chỗ ngồi: 5 hàng, mỗi hàng 5 + 5, càng xuống dưới càng gần và càng to ----------
-const ROWS = 5;
+// ---------- Chỗ ngồi: mỗi hàng 5 + 5, số hàng theo sĩ số, càng xuống dưới càng gần và càng to ----------
+// Các hàng giãn ra cho kín từ bục giảng tới đáy màn hình.
 const PER_ROW = 10;
 const PER_BLOCK = PER_ROW / 2;
-const ROW_SCALE = [0.74, 0.81, 0.88, 0.95, 1.02];
-const ROW_BASE_H = 158;
-const ROWS_TOP = 1096;
+const SCALE_BACK = 0.72;
+const SCALE_FRONT = 1.02;
+const ROWS_TOP = 1036;
+const ROWS_BOTTOM = 1912;
 const AISLE = 34;
 const PLATE_H = 36;
 
 const seats = [];
-function buildClass(total) {
+function buildClass(total, vipSeats = 0) {
   const root = $('class');
   root.replaceChildren();
   seats.length = 0;
+  const ROWS = Math.ceil(total / PER_ROW);
+  const scales = Array.from({ length: ROWS }, (_, row) => SCALE_BACK + ((SCALE_FRONT - SCALE_BACK) * row) / Math.max(1, ROWS - 1));
+  const baseH = (ROWS_BOTTOM - ROWS_TOP) / scales.reduce((sum, s) => sum + s, 0);
   let y = ROWS_TOP;
   for (let row = 0; row < ROWS; row++) {
-    const s = ROW_SCALE[row];
-    const rowH = ROW_BASE_H * s;
-    const rowW = 1020 + ((1064 - 1020) * row) / (ROWS - 1);
+    const s = scales[row];
+    const rowH = baseH * s;
+    const rowW = 1020 + ((1064 - 1020) * row) / Math.max(1, ROWS - 1);
     const cell = (rowW - AISLE) / PER_ROW;
     const left = (W - rowW) / 2;
     const z = row * 10 + 10;
     const plateH = Math.max(32, PLATE_H * s);
+    const frontRow = row * PER_ROW < vipSeats;
 
     for (let block = 0; block < 2; block++) {
       const x = left + block * (cell * PER_BLOCK + AISLE);
-      const desk = el('div', 'desk');
+      const desk = el('div', frontRow ? 'desk front' : 'desk');
       Object.assign(desk.style, { left: `${x}px`, top: `${y + rowH * 0.42}px`, width: `${cell * PER_BLOCK}px`, height: `${rowH * 0.2}px`, zIndex: z });
-      const bench = el('div', 'bench');
+      const bench = el('div', frontRow ? 'bench front' : 'bench');
       Object.assign(bench.style, { left: `${x}px`, top: `${y + rowH - plateH + 2}px`, width: `${cell * PER_BLOCK}px`, height: `${plateH}px`, zIndex: z + 2 });
       root.append(desk, bench);
     }
@@ -94,10 +99,16 @@ function buildClass(total) {
       Object.assign(badge.style, { left: '2px', top: `${spriteTop + 2}px`, zIndex: z + 4 });
       const turns = el('div', 'turns');
       Object.assign(turns.style, { left: '2px', bottom: `${plateH + 2}px`, zIndex: z + 4 });
+      // Hình quà của bạn ngồi bàn đầu, cạnh đầu phía bên kia thẻ đáp án.
+      const giftSize = Math.round(44 * s);
+      const gift = Object.assign(new Image(), { className: 'gifticon', alt: '' });
+      Object.assign(gift.style, { width: `${giftSize}px`, height: `${giftSize}px`, left: `${Math.max(0, cell / 2 - spriteW * 0.5 - giftSize * 0.4)}px`, top: `${spriteTop + spriteH * 0.18}px`, zIndex: z + 4 });
+      const stars = el('div', 'stars');
+      Object.assign(stars.style, { right: '2px', top: `${spriteTop + 2}px`, zIndex: z + 4 });
 
-      seat.append(sprite, plate, score, card, badge, turns);
+      seat.append(sprite, plate, score, card, badge, turns, gift, stars);
       root.append(seat);
-      seats.push({ root: seat, sprite, name, score, card, badge, turns, data: null, ghostLook: look, center: { x: x + cell / 2, y: y + rowH * 0.3 } });
+      seats.push({ root: seat, sprite, name, score, card, badge, turns, gift, stars, data: null, ghostLook: look, center: { x: x + cell / 2, y: y + rowH * 0.3 } });
     }
     y += rowH;
   }
@@ -110,15 +121,47 @@ function setStudent(index, student, { pop = false } = {}) {
   seat.sprite.innerHTML = studentSvg(student ? student.look : seat.ghostLook);
   seat.name.textContent = student?.name ?? '';
   seat.score.textContent = student?.score ?? '';
+  setStars(index, student?.stars ?? 0);
   setTurns(index, student?.turns ?? 0);
   clearAnswer(index);
+  seat.root.classList.remove('duelist');
   if (pop) restart(seat.root, 'popin');
 }
 
+// Còn lượt x2 thì không bị mời ra (khóa); có lượt từ quà thì thêm viền bàn đầu và hình quà.
 function setTurns(index, turns) {
   const seat = seats[index];
+  if (seat.data) seat.data.turns = turns;
+  const vip = Boolean(seat.data?.patron && turns > 0);
   seat.root.classList.toggle('boosted', turns > 0);
-  seat.turns.textContent = `x2 · ${turns}`;
+  seat.root.classList.toggle('vip', vip);
+  seat.turns.textContent = `🔒 x2 · ${turns}`;
+  if (vip && seat.data.icon && seat.gift.getAttribute('src') !== seat.data.icon) seat.gift.src = seat.data.icon;
+}
+
+function setStars(index, stars) {
+  const seat = seats[index];
+  if (seat.data) seat.data.stars = stars;
+  seat.stars.textContent = stars > 0 ? `⭐${stars > 1 ? stars : ''}` : '';
+}
+
+// Đổi chỗ hai ghế, giữ nguyên thẻ đáp án, đúng sai và thách đấu đang hiện.
+const CARRIED = ['up', 'ok', 'wrong', 'duelist'];
+function swapSeats(a, b) {
+  const grab = (index) => {
+    const { root, card, data } = seats[index];
+    return { data, classes: CARRIED.filter((c) => root.classList.contains(c)), text: card.textContent, x2: card.classList.contains('x2') };
+  };
+  const put = (index, state) => {
+    setStudent(index, state.data, { pop: Boolean(state.data) });
+    const { root, card } = seats[index];
+    CARRIED.forEach((c) => root.classList.toggle(c, state.classes.includes(c)));
+    card.textContent = state.text;
+    card.classList.toggle('x2', state.x2);
+  };
+  const [first, second] = [grab(a), grab(b)];
+  put(a, second);
+  put(b, first);
 }
 
 function restart(node, className) {
@@ -191,7 +234,7 @@ function showQuestion(msg) {
   $('recap').hidden = true;
   const q = msg.question;
   $('subject').textContent = q.subject;
-  $('counter').textContent = `Câu ${msg.inSet}/${msg.setSize}`;
+  $('counter').textContent = `Tiết ${msg.period} · ${msg.inSet}/${msg.setSize}`;
   $('question').textContent = q.text;
   fitByLength($('question'), q.text, 44, 76);
   $('options').replaceChildren(
@@ -202,12 +245,51 @@ function showQuestion(msg) {
       return box;
     }),
   );
-  setAskFootline();
+  setAskFootline(msg);
+  setDuel(msg.duel);
 }
 
-function setAskFootline() {
+function setAskFootline({ inSet, setSize }) {
   const foot = $('footline');
-  foot.replaceChildren(el('span', '', 'Comment A, B, C, D · '), el('small', '', 'Chat "VÀO" để vào lớp'), el('br'), el('span', '', 'Đúng đầu tiên được x2 điểm'));
+  const left = setSize - inSet;
+  const closing = left === 0 ? 'Câu cuối tiết · ai làm lớp trưởng?' : left === 1 ? 'Còn 2 câu là hết tiết' : 'Đúng đầu tiên được x2 điểm';
+  foot.replaceChildren(el('span', '', 'Comment A, B, C, D · '), el('small', '', 'Chat "VÀO" để vào lớp'), el('br'), el('span', left <= 1 ? 'closing' : '', closing));
+}
+
+// Thách đấu: băng rôn đổi thành "người thách ⚔ lớp trưởng", hai ghế được viền đỏ.
+function setDuel(duel) {
+  const banner = $('banner');
+  seats.forEach((seat) => seat.root.classList.remove('duelist'));
+  banner.classList.toggle('duel', Boolean(duel));
+  if (!duel) {
+    banner.textContent = guide?.title ?? '';
+    return;
+  }
+  banner.replaceChildren(el('span', '', duel.challenger), el('i', '', 'thách đấu'), el('span', 'leader', `👑 ${duel.leader}`));
+  for (const index of duel.seats) seats[index]?.root.classList.add('duelist');
+}
+
+function showDuelResult(duel, { quiet = false } = {}) {
+  const banner = $('banner');
+  banner.classList.add('duel', 'done');
+  const winner = duel.outcome === 'won' ? duel.challenger : duel.leader;
+  if (duel.outcome === 'void') banner.replaceChildren(el('span', '', `👑 ${duel.leader.name} giữ ghế`));
+  else banner.replaceChildren(el('span', '', `🏆 ${winner.name} thắng`));
+  for (const side of [duel.challenger, duel.leader]) {
+    const seat = seats[side.seat];
+    if (!seat?.data) continue;
+    seat.data.score = side.score;
+    seat.score.textContent = side.score;
+  }
+  if (quiet) return;
+  const seat = seats[winner.seat];
+  if (duel.outcome !== 'void' && seat) {
+    sparks(seat.center.x, seat.center.y, 30);
+    floatText(winner.seat, duel.outcome === 'won' ? '👑' : `+${duel.bonus}`);
+  }
+  if (duel.outcome === 'won') toast([{ b: duel.challenger.name }, ' thắng thách đấu, giành ghế lớp trưởng!'], { big: true, first: true });
+  else if (duel.outcome === 'defended') toast(['Lớp trưởng ', { b: duel.leader.name }, ` giữ ghế · +${duel.bonus} điểm`], { big: true, first: true });
+  else toast(['Không ai thắng · ', { b: duel.leader.name }, ' giữ ghế'], { first: true });
 }
 
 function setTally(tally) {
@@ -223,9 +305,10 @@ function showReveal({ correct, explain, tally }) {
   $('footline').textContent = `Đáp án đúng: ${LETTERS[correct]} — ${explain}`;
 }
 
-function showRecap({ officers, others }) {
+function showRecap({ period, officers, others, hall = [], star }) {
   $('play').hidden = true;
   $('recap').hidden = false;
+  $('recap-title').textContent = `TỔNG KẾT TIẾT ${period}`;
   $('recap-officers').replaceChildren(
     ...officers.map((officer, i) => {
       const row = el('div', 'recap-row');
@@ -241,6 +324,11 @@ function showRecap({ officers, others }) {
       return row;
     }),
   );
+  // Bảng vàng: lớp trưởng các tiết trước (tiết này đã ở dòng đầu).
+  const past = hall.filter((row) => row.period !== period).slice(0, 4);
+  $('recap-hall').hidden = !past.length;
+  $('recap-hall').replaceChildren(el('label', '', '🏆 Bảng vàng'), ...past.map((row) => el('span', '', `T${row.period} ${row.name}`)));
+  if (star && seats[star.seat]?.data) setStars(star.seat, star.stars);
 }
 
 // from: lúc đồng hồ bắt đầu chạy; trước đó (cô đang đọc) đồng hồ đứng nguyên ở mức đầy.
@@ -353,8 +441,9 @@ function flyIcon(src, index) {
   node.style.left = `${center.x - 48}px`;
   node.style.top = `${center.y - 48}px`;
   fx.append(node);
-  const fromX = 990 - center.x;
-  const fromY = 520 - center.y;
+  // Hình quà bay ra từ bảng x2 giữa màn.
+  const fromX = 540 - center.x;
+  const fromY = 894 - center.y;
   node.animate([{ transform: `translate(${fromX}px, ${fromY}px) scale(.6)`, opacity: 0 }, { transform: `translate(${fromX * 0.5}px, ${fromY * 0.5 - 60}px) scale(1.3)`, opacity: 1, offset: 0.5 }, { transform: 'translate(0,0) scale(.8)', opacity: 1, offset: 0.92 }, { transform: 'translate(0,0) scale(1.5)', opacity: 0 }], { duration: 950, easing: 'ease-in-out' }).onfinish = () => {
     node.remove();
     sparks(center.x, center.y, 12);
@@ -369,14 +458,15 @@ function applyGame(game) {
   seats.forEach((_, i) => setStudent(i, game.seats[i]));
   renderOfficers(game.officers);
   setRoster(game.count, game.waiting);
-  if (!game.question) return;
-  showQuestion({ question: game.question, inSet: game.inSet, setSize: game.setSize });
+  if (!game.question) return setDuel(null);
+  showQuestion({ question: game.question, inSet: game.inSet, setSize: game.setSize, period: game.period, duel: game.duel });
   for (const { seat, choice, boosted } of game.answers) showAnswer(seat, choice, boosted);
   setTally(game.tally);
   startTimer(game.phase, game.phase === 'asking' ? game.timerFrom : Date.now(), game.endsAt);
   if (game.phase === 'reveal' && game.reveal) {
     showReveal({ ...game.reveal, tally: game.tally });
     markResults(game.reveal.results, false);
+    if (game.reveal.duel) showDuelResult(game.reveal.duel, { quiet: true });
   }
   if (game.phase === 'recap' && game.recap) showRecap(game.recap);
 }
@@ -398,6 +488,12 @@ function socialGuide() {
   return row;
 }
 
+function challengeGuide() {
+  const row = el('div', 'challenge');
+  row.append(Object.assign(new Image(), { src: guide.challenge.icon, alt: guide.challenge.label }), el('small', '', 'Thách đấu\nlớp trưởng'));
+  return row;
+}
+
 const handlers = {
   snapshot(msg) {
     guide = msg.guide;
@@ -410,8 +506,9 @@ const handlers = {
         return row;
       }),
       socialGuide(),
+      ...(guide.challenge ? [challengeGuide()] : []),
     );
-    if (seats.length !== guide.seats) buildClass(guide.seats);
+    if (seats.length !== guide.seats) buildClass(guide.seats, guide.vipSeats);
     applyGame(msg.game);
   },
   'snapshot-game'(msg) {
@@ -442,6 +539,7 @@ const handlers = {
     showReveal(msg);
     markResults(msg.results, true);
     renderOfficers(msg.officers);
+    if (msg.duel) showDuelResult(msg.duel);
     const anyRight = msg.results.some((r) => r.ok);
     if (anyRight) {
       sfx.right();
@@ -494,11 +592,34 @@ const handlers = {
   boost(msg) {
     sfx.boost();
     if (msg.seat >= 0) {
+      const { data } = seats[msg.seat];
+      if (data && msg.patron) Object.assign(data, { patron: true, icon: msg.icon ?? data.icon });
       setTurns(msg.seat, msg.turns);
       if (msg.icon) flyIcon(msg.icon, msg.seat);
     }
     if (msg.kind) toast([{ b: msg.name }, ' x2 điểm câu tiếp theo']);
     else toast([{ b: msg.name }, ` x2 điểm · ${msg.added} lượt`], { icon: msg.icon, first: true });
+  },
+  move(msg) {
+    swapSeats(msg.from, msg.to);
+    renderOfficers(msg.officers);
+    const { data, center } = seats[msg.to];
+    if (!data) return;
+    sparks(center.x, center.y, 18);
+    toast([{ b: data.name }, ' lên bàn đầu'], { icon: data.icon });
+  },
+  period(msg) {
+    seats.forEach((seat) => {
+      if (!seat.data) return;
+      seat.data.score = 0;
+      seat.score.textContent = 0;
+    });
+    renderOfficers([]);
+    toast([`Tiết ${msg.period} · điểm tính lại từ đầu`], { big: true, first: true });
+  },
+  challenge(msg) {
+    sfx.fanfare();
+    toast([{ b: msg.name }, msg.leader ? ` thách đấu lớp trưởng ${msg.leader}` : ' xin thách đấu lớp trưởng'], { big: true, first: true, icon: guide.challenge?.icon });
   },
 };
 
