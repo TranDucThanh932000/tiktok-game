@@ -251,6 +251,31 @@ export class Fisher {
     this.root.position.y = this.fallFrom;
     this.onLand = null;
     this.tmp = new THREE.Vector3();
+    // cá rỉa mồi: peck là độ nhún của đầu cần (lò xo), onPeck(mạnh 0..1) báo cho main.js làm gợn nước
+    this.peck = 0;
+    this.peckV = 0;
+    this.pecksLeft = 0;
+    this.nextPeck = this.t + 2 + Math.random() * 7;
+    this.onPeck = null;
+  }
+
+  // Cứ vài giây có một đợt cá rỉa 2–5 nhịp, mỗi người một nhịp riêng. Lúc cá sắp cắn câu thì giật dồn dập hơn.
+  updatePeck(dt) {
+    const biting = this.t < (this.biteUntil ?? 0);
+    if (this.state !== 'idle') {
+      this.pecksLeft = 0;
+      this.nextPeck = Math.max(this.nextPeck, this.t + 1.5);
+    } else if (this.t >= this.nextPeck) {
+      if (this.pecksLeft <= 0) this.pecksLeft = 2 + Math.floor(Math.random() * 4);
+      this.pecksLeft--;
+      const strength = biting ? 1 : 0.35 + Math.random() * 0.65;
+      this.peckV += lerp(7, 16, strength);
+      this.onPeck?.(strength);
+      this.nextPeck = this.t + (biting ? 0.15 + Math.random() * 0.2 : this.pecksLeft > 0 ? 0.22 + Math.random() * 0.55 : 4 + Math.random() * 9);
+    }
+    // lò xo: nhấp xuống rồi nảy lại
+    this.peckV += (-260 * this.peck - 13 * this.peckV) * dt;
+    this.peck += this.peckV * dt;
   }
 
   // Dựng lại cần câu theo món đang dùng (đổi lúc đang ngồi vẫn được, dáng cần giữ nguyên vì nằm ở nhóm rod).
@@ -394,6 +419,7 @@ export class Fisher {
   // cá cắn câu: phao giật liên hồi trong lúc chờ tới lượt giật
   bite() {
     this.biteUntil = this.t + 6;
+    this.nextPeck = Math.min(this.nextPeck, this.t);
   }
   struggle() {
     this.biteUntil = 0;
@@ -419,7 +445,7 @@ export class Fisher {
     this.stateT += dt;
     const t = this.t;
     const st = this.stateT;
-    const target = { lean: 0.1, arm: -1.25, elbow: -0.55, thigh: 1.45, knee: 1.45, rodPitch: 0.95, bend: 0.03 + Math.sin(t * 1.4) * 0.008, head: 0.05 + Math.sin(t * 0.7) * 0.05, bounce: 0 };
+    const target = { lean: 0.1, arm: -1.25, elbow: -0.55, thigh: 1.45, knee: 1.45, rodPitch: 0.95 + Math.sin(t * 0.8) * 0.018, bend: 0.03 + Math.sin(t * 1.4) * 0.012, head: 0.05 + Math.sin(t * 0.7) * 0.05, bounce: 0 };
     let rate = 8;
     let shake = 0;
     let face = 'smile';
@@ -521,6 +547,13 @@ export class Fisher {
       }
     }
 
+    this.updatePeck(dt);
+    if (this.state === 'idle') {
+      // đang có cá rỉa: chồm người nhìn phao, dây căng theo từng nhịp giật
+      if (this.pecksLeft > 0) Object.assign(target, { lean: 0.17, head: 0.15 });
+      this.lineSlack = Math.max(0.25, 1 - this.peck * 2.2);
+    }
+
     // nội suy dáng
     const k = damp(rate, dt);
     const p = this.pose;
@@ -538,8 +571,8 @@ export class Fisher {
       l.thigh.rotation.x = -p.thigh + kickA;
       l.knee.rotation.x = p.knee - kickA * 0.8;
     }
-    this.rod.rotation.x = p.rodPitch;
-    for (const s of this.rodSegs) s.rotation.x = p.bend * (6 / ROD_SEGS);
+    this.rod.rotation.x = p.rodPitch + this.peck * 0.07;
+    for (const s of this.rodSegs) s.rotation.x = (p.bend + this.peck * 0.075) * (6 / ROD_SEGS);
     this.body.position.set(shake ? (Math.random() - 0.5) * shake : 0, p.bounce, shake ? (Math.random() - 0.5) * shake : 0);
 
     this.eyes.visible = face === 'smile' || face === 'open';
@@ -565,14 +598,13 @@ export class Fisher {
     const idle = this.state === 'idle' || this.state === 'land';
     if (idle) {
       const biting = this.t < (this.biteUntil ?? 0);
-      const nibble = biting
-        ? -Math.abs(Math.sin(this.t * 13)) * 0.14 - (Math.sin(this.t * 3.1) > 0.4 ? 0.1 : 0)
-        : Math.sin(this.t * 1.7) * 0.025 + (Math.sin(this.t * 0.37) > 0.92 ? Math.sin(this.t * 30) * 0.04 : 0);
-      this.bobber.position.set(this.seat.bobber.x, nibble, this.seat.bobber.z);
+      const nibble = biting ? -Math.abs(Math.sin(this.t * 13)) * 0.14 - (Math.sin(this.t * 3.1) > 0.4 ? 0.1 : 0) : Math.sin(this.t * 1.7) * 0.025;
+      // phao chìm xuống theo từng nhịp cá rỉa
+      this.bobber.position.set(this.seat.bobber.x, nibble - Math.max(0, this.peck) * 0.32, this.seat.bobber.z);
     }
     this.bobber.visible = (idle || this.state === 'cheer') && !this.hook && this.state !== 'fall';
     const end = this.hook ? this.hook.getWorldPosition(new THREE.Vector3()) : this.state === 'struggle' ? this.lineEnd : this.bobber.position.clone().setY(this.bobber.position.y + 0.6);
-    this.line.visible = !this.lineHidden;
+    this.line.visible = !this.lineHidden && this.root.visible;
     if (!this.line.visible) return;
     const n = 16;
     const sag = this.lineSlack * Math.min(1.2, tip.distanceTo(end) * 0.18);

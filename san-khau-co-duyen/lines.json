@@ -1,0 +1,225 @@
+{
+  "opening": [
+    ["duy", "Chào cả nhà đến với Sân khấu Có Duyên! Vào rồi thì tìm một chỗ ngồi nhé, biết đâu hôm nay mình lại được chứng kiến một cuộc làm quen dễ thương."],
+    ["linh", "Anh Duy nói khán giả ngồi, còn anh cứ đi qua đi lại. Anh dẫn chương trình hay anh cũng đang chờ tới lượt?"],
+    ["duy", "Anh kiểm tra sân khấu thôi. Hai chiếc ghế đẹp thế này, phải nhường người có duyên chứ."],
+    ["linh", "Vậy mình nói cách tham gia nhé. Bạn nào muốn vào hàng Nam thì gửi quà Heo; vào hàng Nữ thì gửi Cỏ ba lá."],
+    ["duy", "Đã vào hàng thì cứ chờ đúng lượt, gửi thêm cũng không phải để chen lên đâu nhé."],
+    ["linh", "Còn ai thích ngồi xem thì cứ ngồi cùng bọn mình. Không cần gửi quà mới được chung vui."],
+    ["duy", "Thấy cặp nào dễ thương, cả nhà gõ đúng hai chữ ‘đẹp đôi’. Mỗi bình luận hợp lệ là thêm một điểm cho cặp ấy."],
+    ["linh", "Quà chúc mừng thì bao nhiêu xu cộng bấy nhiêu điểm. Nhưng điểm là lời cổ vũ thôi, không chọn thay hai bạn được."],
+    ["duy", "Đến phần quyết định, mỗi người có mười giây để gõ ‘đồng ý’ hoặc ‘không đồng ý’."],
+    ["linh", "Cả hai cùng đồng ý thì mình chúc mừng. Chưa cùng ý thì vẫn vui vẻ, vì thành thật với nhau cũng là một điều đáng quý."],
+    ["duy", "Luật rõ rồi, ghế cũng sẵn rồi."],
+    ["linh", "Giờ chỉ còn chờ hai vị khách đầu tiên thôi!"]
+  ],
+
+  "invite": [
+    ["duy", "Bên Heo đã có người, bên Cỏ cũng vừa đủ. Mời {TEN_NAM} và {TEN_NU} lên sân khấu nào!"],
+    ["linh", "Khán đài mình nhường lối nhé. Hai bạn cứ thong thả, hồi hộp quá thì để anh Duy hồi hộp cùng."],
+    ["duy", "Anh nhận phần đấy. Hai bạn chỉ cần thoải mái là được."]
+  ],
+
+  "demoInvite": [
+    ["duy", "Trong lúc chờ khách, mời hai diễn viên của chương trình là {TEN_NAM} và {TEN_NU} lên diễn mẫu một lượt nhé."],
+    ["linh", "Đây là cặp diễn mẫu thôi cả nhà. Có đủ hai bạn thật là mình nhường sân khấu ngay."]
+  ],
+  "demoIntro": [
+    ["linh", "Lên sân khấu rồi, mỗi người kể một điều mình thích trong một buổi gặp đầu tiên nhé."],
+    ["duy", "Làm quen nhẹ nhàng như vậy thôi, rồi tới phần chọn."]
+  ],
+  "demoYield": [
+    ["duy", "Có đủ hai bạn thật rồi, cặp diễn mẫu xin nhường sân khấu nhé!"]
+  ],
+
+  "inviteNoName": [
+    ["duy", "Bên Heo đã có người, bên Cỏ cũng vừa đủ. Mời hai bạn lên sân khấu nào!"]
+  ],
+
+  "intro": [
+    ["linh", "Hai bạn đang cùng ngồi đây rồi. Nếu muốn, mỗi người kể một điều mình thích trong một buổi gặp đầu tiên nhé."],
+    ["duy", "Một chỗ dễ nói chuyện, hay một buổi đi dạo nhẹ nhàng chẳng hạn."],
+    ["linh", "Anh đừng đưa đáp án sẵn, để hai bạn còn có chuyện kể chứ."],
+    ["duy", "Được, anh cất ví dụ. Hôm nay anh phụ trách lắng nghe."]
+  ],
+  "shareMale": [
+    ["linh", "{TEN_NAM} vừa nhắc đến {Y_NGAN}. Cảm ơn bạn đã chia sẻ nhé."],
+    ["duy", "{TEN_NU} có muốn kể một ý của mình không? Không cần trả lời giống nhau đâu, mình đang làm quen mà."]
+  ],
+  "shareFemale": [
+    ["linh", "{TEN_NU} vừa nhắc đến {Y_NGAN}. Cảm ơn bạn đã chia sẻ nhé."],
+    ["duy", "{TEN_NAM} có muốn kể một ý của mình không? Không cần trả lời giống nhau đâu, mình đang làm quen mà."]
+  ],
+  "noShare": [
+    ["linh", "Chưa nghĩ ra cũng không sao. Hai bạn cứ ngồi thoải mái, đây không phải phần thi vấn đáp."],
+    ["duy", "May quá, thế anh cũng bớt căng thẳng. Mình nghe khán đài gửi lời chúc nhé."]
+  ],
+
+  "cheer": [
+    ["duy", "Cả nhà thấy hai bạn dễ thương thì gửi một lời ‘đẹp đôi’ nhé. Mỗi bình luận hợp lệ thêm một điểm cổ vũ."],
+    ["linh", "Một câu chúc cũng đủ làm sân khấu vui rồi. Ai muốn gửi hoa thì cứ tùy lòng mình nhé."]
+  ],
+  "scoreUp": [
+    ["duy", "Bảng điểm đang lên rồi, cặp mình đã có {DIEM} điểm đẹp đôi!"],
+    ["linh", "Khán đài nhiệt tình quá. Còn hai bạn cứ giữ nhịp của mình, không phải vội theo đâu."]
+  ],
+  "scoreUpNoNumber": [
+    ["duy", "Bảng điểm đang lên rồi, cả nhà xem kìa!"],
+    ["linh", "Khán đài nhiệt tình quá. Còn hai bạn cứ giữ nhịp của mình, không phải vội theo đâu."]
+  ],
+  "scoreQuiet": [
+    ["duy", "Khán đài hôm nay nghe chăm chú ghê."],
+    ["linh", "Có khi mọi người cũng đang hồi hộp đấy. Mình đừng làm hai bạn hồi hộp thêm, anh nhé."]
+  ],
+
+  "guide": [
+    ["duy", "Đến lượt hai bạn chọn rồi. Khi tiếng chuông vang lên, hãy gõ ‘đồng ý’ hoặc ‘không đồng ý’ trong mười giây."],
+    ["linh", "Muốn đổi ý thì gửi lại trước khi hết giờ nhé. Mình nhận lựa chọn cuối cùng của mỗi bạn."]
+  ],
+
+  "decide": [
+    { "at": 0, "who": "duy", "text": "Mười giây, bắt đầu!" },
+    { "at": 2000, "who": "linh", "text": "Hai bạn cứ chọn theo lòng mình nhé." },
+    { "at": 4500, "who": "duy", "text": "Khán đài cùng chờ câu trả lời nào." },
+    { "at": 7000, "who": "linh", "text": "Ba." },
+    { "at": 8000, "who": "duy", "text": "Hai." },
+    { "at": 9000, "who": "linh", "text": "Một." }
+  ],
+
+  "matched": [
+    ["duy", "Hết giờ!"],
+    ["duy", "Cả hai đều đồng ý! Chúc mừng {TEN_NAM} và {TEN_NU}!"],
+    ["linh", "Vậy là mình có một cơ hội làm quen rồi. Cảm ơn hai bạn đã cùng mở lời nhé."],
+    ["duy", "Anh xin góp một tràng pháo tay."],
+    ["linh", "Lần này em đồng ý với anh ngay. Cả nhà cùng chúc hai bạn nói chuyện thật vui nào!"]
+  ],
+  "mismatch": [
+    ["duy", "Hết giờ!"],
+    ["linh", "Lần này hai bạn chưa cùng lựa chọn. Cảm ơn cả hai đã nói thật lòng nhé."],
+    ["duy", "Mình có một cuộc gặp ngắn thôi, chưa hợp cũng là chuyện bình thường."],
+    ["linh", "Cả nhà vẫn gửi hai bạn một lời chúc tử tế nhé."],
+    ["duy", "Cảm ơn {TEN_NAM} và {TEN_NU}. Mời hai bạn trở lại khán đài, chung vui cùng mọi người."]
+  ],
+  "mismatchBigGifts": [
+    ["linh", "Lời chúc của khán đài vẫn rất quý. Còn lựa chọn là của hai bạn."]
+  ],
+  "noresponse": [
+    ["duy", "Hết giờ!"],
+    ["duy", "Mình chưa nhận đủ hai câu trả lời trong thời gian quy định."],
+    ["linh", "Vậy lượt này chưa thể ghép đôi. Bọn mình không đoán thay lựa chọn của hai bạn nhé."],
+    ["duy", "Cảm ơn hai bạn đã tham gia. Mình cùng trở lại khán đài nào."]
+  ],
+  "withdrawn": [
+    ["linh", "Bạn đã chọn dừng lượt này. Mình tôn trọng lựa chọn của bạn nhé."]
+  ],
+  "removed": [
+    ["duy", "Lượt này xin dừng tại đây. Cảm ơn cả nhà đã thông cảm."]
+  ],
+
+  "nextReady": [
+    ["linh", "Sân khấu vừa trống là hàng chờ đã đủ hai bạn tiếp theo rồi."],
+    ["duy", "Mình tiếp tục nhé. Mời cặp số {SO_CAP_MOI}!"]
+  ],
+  "nextWait": [
+    ["linh", "Mình nghỉ một nhịp để đón thêm người bạn tiếp theo."],
+    ["duy", "Cả nhà cứ ngồi chơi. Khi hai hàng đủ người, bọn mình mời lên ngay."]
+  ],
+
+  "pausedConnection": [
+    ["duy", "Kết nối đang gián đoạn, mình tạm dừng để không ghi sai lựa chọn của hai bạn."]
+  ],
+  "pausedOperator": [
+    ["duy", "Mình tạm dừng một chút nhé, cả nhà chờ bọn mình giây lát."]
+  ],
+  "reconfirm": [
+    ["linh", "Kết nối ổn định rồi. Hai bạn còn muốn tiếp tục thì gõ ‘tiếp tục’ nhé."],
+    ["duy", "Không cần gửi lại gì đâu. Đủ hai lời xác nhận là mình mở lượt mới với mười giây mới."]
+  ],
+  "resumedEmpty": [
+    ["linh", "Kết nối ổn định rồi, mình tiếp tục chương trình nhé."]
+  ],
+  "reconfirmEnd": [
+    ["duy", "Cảm ơn hai bạn. Mời hai bạn trở lại khán đài, chung vui cùng mọi người."]
+  ],
+
+  "joinOne": [
+    ["duy", "Chào {TEN_KHAN_GIA}, mời bạn vào khán đài nhé!"],
+    ["linh", "Vừa kịp lúc đấy. Ngồi xem cùng bọn mình, thấy vui thì góp một lời chúc."]
+  ],
+  "joinMany": [
+    ["linh", "Khán đài vừa đón thêm một nhóm bạn mới. Chào cả nhà!"],
+    ["duy", "Mình vào từ từ nhé, chỗ ngồi đang được xếp thêm đây."]
+  ],
+
+  "wishes": {
+    "rose": [
+      [["duy", "Một bông hồng từ {TEN_KHAN_GIA}. Cảm ơn lời chúc của bạn!"], ["linh", "Bông hoa nhỏ thôi mà sân khấu tươi hẳn lên. Chúc {TEN_NAM} và {TEN_NU} có một buổi làm quen thật vui."]],
+      [["linh", "Cảm ơn {TEN_KHAN_GIA} đã gửi hoa hồng. Bạn có tấm lòng đẹp quá!"], ["duy", "Có hoa là có lời chúc. Chúc hai bạn trò chuyện thật vui nhé."]],
+      [["duy", "{TEN_KHAN_GIA} vừa gửi hoa chúc phúc cho hai bạn đấy."], ["linh", "Cảm ơn bạn nhiều nhé. Mong lời chúc này mang may mắn đến với đôi bạn mình."]]
+    ],
+    "heart": [
+      [["linh", "Có một lượt Bắn tim từ {TEN_KHAN_GIA} gửi tới hai bạn này!"], ["duy", "Tim bay lên sân khấu, lời cảm ơn gửi về khán đài. Chúc hai bạn luôn vui vẻ."]],
+      [["duy", "Cảm ơn {TEN_KHAN_GIA} đã gửi trái tim tới đôi bạn mình."], ["linh", "Trái tim nhỏ mà ấm áp thật. Chúc hai bạn có những phút làm quen thật dễ thương."]],
+      [["linh", "{TEN_KHAN_GIA} ơi, cảm ơn trái tim của bạn nhé."], ["duy", "Mình xin nhận thay hai bạn. Chúc bạn cũng thật nhiều niềm vui."]]
+    ],
+    "box": [
+      [["duy", "Cảm ơn {TEN_KHAN_GIA} đã gửi Hộp quà chúc mừng cặp mình!"], ["linh", "Mình nhận lời chúc thật vui. Còn lựa chọn thì vẫn để hai bạn tự nhiên nhé."]],
+      [["linh", "Ôi, Hộp quà từ {TEN_KHAN_GIA}! Cảm ơn tấm lòng của bạn."], ["duy", "Lời chúc lớn thế này thì sân khấu sáng bừng. Mong {TEN_NAM} và {TEN_NU} luôn gặp điều tốt lành."]],
+      [["duy", "{TEN_KHAN_GIA} vừa gửi cả một Hộp quà chúc phúc cho đôi bạn."], ["linh", "Cảm ơn bạn nhiều lắm. Chúc hai bạn thật may mắn, và chúc bạn cũng luôn vui vẻ."]]
+    ],
+    "other": [
+      [["duy", "Cảm ơn món quà {TEN_QUA} từ {TEN_KHAN_GIA}!"], ["linh", "Lời chúc đã lên sân khấu rồi nhé. Chúc hai bạn có một buổi làm quen thật đẹp."]],
+      [["linh", "{TEN_KHAN_GIA} gửi {TEN_QUA} chúc phúc cho hai bạn."], ["duy", "Cảm ơn bạn nhé. Một lời chúc đẹp làm cả sân khấu vui lây."]]
+    ],
+    "plain": [
+      [["duy", "Cảm ơn {TEN_KHAN_GIA} đã gửi lời chúc tới hai bạn."], ["linh", "Lời chúc đã lên sân khấu rồi nhé. Chúc hai bạn thật nhiều niềm vui."]],
+      [["linh", "{TEN_KHAN_GIA} vừa chúc phúc cho hai bạn đấy."], ["duy", "Cảm ơn bạn nhiều. Lời chúc tử tế lúc nào cũng làm sân khấu ấm hơn."]]
+    ],
+    "group": [
+      [["duy", "Cảm ơn {TEN_KHAN_GIA} và cả nhà đã gửi lời chúc lên sân khấu!"], ["linh", "Bao nhiêu lời chúc đẹp gửi tới hai bạn. Chúc đôi bạn mình thật nhiều niềm vui."]],
+      [["linh", "Khán đài hôm nay nhiều tấm lòng quá. Cảm ơn {TEN_KHAN_GIA} và mọi người nhé."], ["duy", "Mỗi món quà là một lời chúc. Mình gửi hết tới {TEN_NAM} và {TEN_NU}."]]
+    ]
+  },
+  "wishLate": [
+    ["duy", "Cảm ơn {TEN_KHAN_GIA} đã gửi lời chúc tốt đẹp tới hai bạn."]
+  ],
+  "cheerBurst": [
+    ["linh", "Khán đài đang gửi nhiều lời ‘đẹp đôi’ quá!"],
+    ["duy", "Mình nhận đủ từng lời chúc nhé. Hai bạn cứ thoải mái, không cần chọn theo số đông."]
+  ],
+  "milestone": [
+    ["duy", "Cặp mình vừa qua mốc {MOC_DIEM} điểm đẹp đôi!"],
+    ["linh", "Cảm ơn khán đài đã chung vui với hai bạn."]
+  ],
+  "alreadyQueued": [
+    ["duy", "Vị trí của bạn đã được ghi nhận rồi nhé."]
+  ],
+  "longQueue": [
+    ["linh", "Mình đi lần lượt, không ai cần gửi thêm để giữ chỗ."]
+  ],
+
+  "idle": {
+    "empty": [
+      [["duy", "Hai chiếc ghế này anh chuẩn bị ngay ngắn từ đầu giờ rồi."], ["linh", "Ghế sẵn sàng rồi, anh cũng sẵn sàng rồi. Mình cứ thong thả chờ người muốn làm quen nhé."]],
+      [["linh", "Anh Duy có bí quyết bắt chuyện nào không?"], ["duy", "Có chứ. Chào một câu thật tử tế, rồi nhớ nghe người ta trả lời."]],
+      [["duy", "Hôm nay ai chỉ muốn ngồi xem thì cứ ngồi xem nhé."], ["linh", "Đúng rồi. Làm khán giả dễ thương cũng là góp phần cho chương trình vui mà."]]
+    ],
+    "banter": [
+      [["linh", "Em vừa nghĩ ra một lời chào rất hay."], ["duy", "Em nói thử xem."], ["linh", "Chào bạn. Hôm nay bạn thế nào?"], ["duy", "Ừ, đôi khi một câu đơn giản lại dễ bắt đầu nhất."]],
+      [["duy", "Anh dẫn được một lúc mà quên mất mình đang đứng."], ["linh", "Ghế dưới khán đài còn đấy, nhưng anh ngồi xuống là em phải dẫn hai vai."], ["duy", "Thế anh đứng tiếp. Đồng nghiệp có duyên thì phải giữ."]],
+      [["linh", "Làm quen thì anh sợ nhất điều gì?"], ["duy", "Mình hỏi một câu, rồi mình nói luôn cả phần trả lời."], ["linh", "Vậy câu tiếp theo anh nhớ chừa phần cho người ta nhé."]],
+      [["duy", "Có duyên thì mình mở một lời chào."], ["linh", "Còn có bước tiếp hay không, mình để hai người tự chọn."]]
+    ],
+    "remindEmpty": [
+      [["linh", "Bạn nào muốn vào hàng Nam thì gửi quà Heo; vào hàng Nữ thì gửi Cỏ ba lá."], ["duy", "Còn ai thích ngồi xem thì cứ ngồi cùng bọn mình."]]
+    ],
+    "remindFemale": [
+      [["duy", "Hàng Nam đã có bạn đăng ký. Mình đang chờ thêm một bạn vào hàng Nữ."], ["linh", "Ai muốn tham gia thì gửi Cỏ ba lá nhé. Còn chưa sẵn sàng, cứ xem cùng bọn mình."]],
+      [["linh", "Một bên đã sẵn sàng rồi, bên còn lại mình cứ chờ đúng người muốn lên."], ["duy", "Chuẩn, đủ hai người tự nguyện thì sân khấu mới vui."]]
+    ],
+    "remindMale": [
+      [["linh", "Hàng Nữ đã có bạn đăng ký rồi. Bên Nam, ai muốn làm quen thì có thể gửi Heo nhé."], ["duy", "Đăng ký xong mình hiện vị trí ngay, cả nhà không phải đoán đang tới ai."]],
+      [["duy", "Mình còn chờ thêm một bạn ở hàng Nam."], ["linh", "Trong lúc chờ, khán đài cứ trò chuyện. Có đủ cặp là mình lên sân khấu ngay."]]
+    ]
+  }
+}

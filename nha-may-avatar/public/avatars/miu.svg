@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="320" viewBox="0 0 320 320">
+  <defs>
+    <linearGradient id="bg" x2="1" y2="1"><stop stop-color="#f7d392"/><stop offset="1" stop-color="#f5b3a0"/></linearGradient>
+    <linearGradient id="hair" x2=".8" y2="1"><stop stop-color="#413738"/><stop offset="1" stop-color="#6c4541"/></linearGradient>
+    <linearGradient id="shirt" x2="1" y2="1"><stop stop-color="#ec93a4"/><stop offset="1" stop-color="#b8517c"/></linearGradient>
+  </defs>
+  <path fill="url(#bg)" d="M0 0h320v320H0z"/>
+  <g fill="#fff3d7" opacity=".7"><circle cx="33" cy="49" r="18"/><circle cx="284" cy="209" r="33"/><circle cx="279" cy="49" r="9"/></g>
+  <path d="M76 299C36 196 56 40 163 34c108-6 117 169 91 267z" fill="url(#hair)"/>
+  <path d="M55 320c4-67 42-100 104-100s100 34 107 100" fill="url(#shirt)"/>
+  <path d="M139 205v29c7 20 35 19 43-1v-29" fill="#edb193"/>
+  <path d="M136 229l23 22 25-21 19 16-25 39-19-23-22 23-22-39z" fill="#ffddc9"/>
+  <ellipse cx="160" cy="141" rx="70" ry="88" fill="#f5c4a6"/>
+  <ellipse cx="88" cy="153" rx="11" ry="19" fill="#edb193"/><ellipse cx="231" cy="153" rx="11" ry="19" fill="#edb193"/>
+  <path d="M84 139c-5-62 24-98 79-98 61 0 80 54 75 107l-15-6c-3-33-22-45-37-61-20 29-56 39-93 44z" fill="url(#hair)"/>
+  <path d="M100 104c26-5 60-28 71-51" fill="none" stroke="#89635a" stroke-width="5" stroke-linecap="round"/>
+  <path d="M110 142q13-10 26-1m48 0q12-9 25 0" fill="none" stroke="#70453b" stroke-width="5" stroke-linecap="round"/>
+  <ellipse cx="125" cy="160" rx="8" ry="11" fill="#392b35"/><ellipse cx="197" cy="160" rx="8" ry="11" fill="#392b35"/>
+  <g fill="white"><circle cx="127" cy="156" r="3"/><circle cx="199" cy="156" r="3"/></g>
+  <ellipse cx="111" cy="182" rx="14" ry="8" fill="#e88f8c" opacity=".7"/><ellipse cx="210" cy="182" rx="14" ry="8" fill="#e88f8c" opacity=".7"/>
+  <path d="M158 166l-5 16h10" fill="none" stroke="#d69782" stroke-width="3" stroke-linecap="round"/>
+  <path d="M142 193q18 20 36 0" fill="#b45863"/><path d="M146 195h28q-14 9-28 0" fill="#fff6e8"/>
+  <path d="M216 94l-12-14 6-14 14 10 12-5 8 17-12 11z" fill="#ed8da4"/><circle cx="223" cy="84" r="5" fill="#ffe1bb"/>
+  <g fill="#f6c1cb"><circle cx="160" cy="290" r="5"/><circle cx="160" cy="311" r="5"/></g>
+  <path d="M84 282l-9 38m158-38 10 38" stroke="#a44c72" stroke-width="4"/>
+</svg>

@@ -6,6 +6,12 @@
   "seats": 20,
   "idleLeaveSeconds": 60,
 
+  "bots": {
+    "names": ["Bác Tư", "Chú Năm", "Cô Bảy"],
+    "tapEverySeconds": [1, 3],
+    "tapLikes": [2, 6]
+  },
+
   "likesPerPull": 50,
   "maxLikePullsQueued": 3,
   "freePullCooldownSeconds": 60,
@@ -20,61 +26,61 @@
 
   "tiers": {
     "like": {
-      "label": "Cá tạp", "minKg": 0.3, "maxKg": 3,
+      "label": "Cá đồng", "minKg": 0.3, "maxKg": 3,
       "fish": [
-        { "name": "Cá rô", "color": "#7a8b5a", "belly": "#d9d2a0" },
-        { "name": "Cá diếc", "color": "#b9b6a2", "belly": "#efeadb" },
-        { "name": "Cá rô phi", "color": "#5f6f78", "belly": "#cfd8dc" },
-        { "name": "Cá trê", "color": "#4a4038", "belly": "#a8957d" }
+        { "name": "Cá rô đồng", "color": "#6f7f4e", "belly": "#d9d2a0" },
+        { "name": "Cá sặc rằn", "color": "#7d8a5c", "belly": "#e3dcb4" },
+        { "name": "Cá lòng tong", "color": "#b9b6a2", "belly": "#efeadb" },
+        { "name": "Cá trê đồng", "color": "#4a4038", "belly": "#a8957d" }
       ]
     },
     "small": {
-      "label": "Cá nhỏ", "minKg": 1, "maxKg": 2,
+      "label": "Cá ruộng", "minKg": 1, "maxKg": 2,
       "fish": [
-        { "name": "Cá diêu hồng", "color": "#e8735a", "belly": "#ffd6c2" },
-        { "name": "Cá rô phi", "color": "#5f6f78", "belly": "#cfd8dc" },
-        { "name": "Cá chép nhỏ", "color": "#d9a441", "belly": "#f6e2ae" },
-        { "name": "Cá trê", "color": "#4a4038", "belly": "#a8957d" }
+        { "name": "Cá chốt vàng", "color": "#c9a13d", "belly": "#f3e3ac" },
+        { "name": "Cá diếc ruộng", "color": "#a9a892", "belly": "#efeadb" },
+        { "name": "Cá bống dừa", "color": "#8b7355", "belly": "#d9c9a8" },
+        { "name": "Cá trê vàng", "color": "#b8923a", "belly": "#ecd9a0" }
       ]
     },
     "medium": {
-      "label": "Cá vừa", "minKg": 2, "maxKg": 5,
+      "label": "Cá sông", "minKg": 2, "maxKg": 5,
       "fish": [
-        { "name": "Cá chép", "color": "#d98c2b", "belly": "#f8dd9c" },
+        { "name": "Cá lóc đồng", "color": "#3f4a3c", "belly": "#b8b49a" },
+        { "name": "Cá chép ruộng", "color": "#d98c2b", "belly": "#f8dd9c" },
         { "name": "Cá trắm cỏ", "color": "#6b7a4a", "belly": "#e3dcb4" },
-        { "name": "Cá lóc", "color": "#3f4a3c", "belly": "#b8b49a" },
-        { "name": "Cá mè", "color": "#9aa6ae", "belly": "#eef2f4" }
+        { "name": "Cá mè vinh", "color": "#9aa6ae", "belly": "#eef2f4" }
       ]
     },
     "large": {
-      "label": "Cá to", "minKg": 5, "maxKg": 10,
+      "label": "Cá đầu đàn", "minKg": 5, "maxKg": 10,
       "fish": [
-        { "name": "Cá trắm đen", "color": "#2e3338", "belly": "#8d9399" },
-        { "name": "Cá lăng", "color": "#7d6a5a", "belly": "#e8dccd" },
+        { "name": "Cá lóc bông", "color": "#2e3338", "belly": "#8d9399" },
+        { "name": "Cá lăng nha", "color": "#7d6a5a", "belly": "#e8dccd" },
         { "name": "Cá chép vàng", "color": "#f2b51c", "belly": "#fff1b8" },
-        { "name": "Cá hô", "color": "#8a9a7a", "belly": "#e6ecd8" }
+        { "name": "Cá bông lau", "color": "#8a9a7a", "belly": "#e6ecd8" }
       ]
     },
     "shark": {
-      "label": "Cá mập", "minKg": 100, "maxKg": 200,
+      "label": "Cá chúa", "minKg": 100, "maxKg": 200,
       "fish": [
-        { "name": "Cá mập trắng", "color": "#6f8796", "belly": "#f2f5f7" },
-        { "name": "Cá mập búa", "color": "#7f8a7c", "belly": "#eef0ea" },
-        { "name": "Cá mập hổ", "color": "#7a7f8f", "belly": "#e9ebef" }
+        { "name": "Cá hô chúa", "color": "#6f8796", "belly": "#f2f5f7", "giant": true },
+        { "name": "Cá tra dầu", "color": "#4f5a63", "belly": "#dfe3e6", "giant": true },
+        { "name": "Cá lăng khổng lồ", "color": "#7f6a55", "belly": "#e8dccd", "giant": true }
       ]
     },
     "rare": {
       "label": "Cá hiếm", "minKg": 50, "maxKg": 100,
       "fish": [
-        { "name": "Cá tầm", "color": "#55636d", "belly": "#e8e2d0" },
-        { "name": "Cá sủ vàng", "color": "#d9a21b", "belly": "#fff0b3" },
-        { "name": "Cá tra dầu", "color": "#4f5a63", "belly": "#dfe3e6" }
+        { "name": "Cá anh vũ", "color": "#8c6d3f", "belly": "#efe0bd" },
+        { "name": "Cá chiên", "color": "#55636d", "belly": "#e8e2d0" },
+        { "name": "Cá sủ vàng", "color": "#d9a21b", "belly": "#fff0b3" }
       ]
     },
     "boss": {
-      "label": "Cá mập con", "minKg": 50, "maxKg": 100,
+      "label": "Cá hô con", "minKg": 50, "maxKg": 100,
       "fish": [
-        { "name": "Cá mập con", "color": "#6f8796", "belly": "#f2f5f7" }
+        { "name": "Cá hô con", "color": "#6f8796", "belly": "#f2f5f7", "giant": true }
       ]
     }
   },
@@ -90,43 +96,43 @@
     "slots": [
       {
         "id": "bite", "label": "Cá cắn câu", "icon": "🎣", "color": "#2f9e44",
-        "text": "Cá cắn mạnh hơn", "voice": "Cá đang cắn câu mạnh hơn",
+        "text": "Cá cắn mạnh hơn", "voice": "Cá đang đói mồi, cắn câu mạnh lắm bà con ơi",
         "weight": 22,
         "effect": { "rate": 0.75 }
       },
       {
         "id": "hearts", "label": "Mưa tim", "icon": "❤️", "color": "#e8366f",
-        "text": "Chỉ cần 30 tim là giật cá", "voice": "Mưa tim! Chỉ cần ba mươi tim là giật cá",
+        "text": "Chỉ cần 30 tim là giật cá", "voice": "Mưa tim rồi bà con ơi! Chỉ ba mươi tim là giật cá",
         "weight": 20,
         "effect": { "likesPerPull": 30 }
       },
       {
         "id": "fat", "label": "Cá béo", "icon": "⚖️", "color": "#f08c00",
-        "text": "Cá nặng gấp đôi", "voice": "Cá béo! Cá nặng gấp đôi",
+        "text": "Cá nặng gấp đôi", "voice": "Vào mùa cá béo! Cá nặng gấp đôi nhé bà con",
         "weight": 18, "goldWeight": 40,
         "effect": { "kgMul": 2 }
       },
       {
         "id": "sprint", "label": "Thi câu nhanh", "icon": "⏱️", "color": "#1c7ed6",
-        "text": "Câu nhiều nhất thưởng 50 kg", "voice": "Thi câu nhanh! Ai câu nhiều nhất được thưởng năm mươi ký",
+        "text": "Câu nhiều nhất thưởng 50 kg", "voice": "Hội thi câu của làng! Ai câu nhiều nhất được thưởng năm mươi ký",
         "weight": 15,
         "effect": { "sprint": { "bonusKg": 50, "closeSeconds": 20 } }
       },
       {
         "id": "storm", "label": "Giông bão", "icon": "⛈️", "color": "#5f3dc4",
-        "text": "Cá nặng gấp 3 nhưng khó dính", "voice": "Giông bão! Cá nặng gấp ba nhưng khó dính hơn",
+        "text": "Cá nặng gấp 3 nhưng khó dính", "voice": "Giông về rồi! Cá nặng gấp ba mà khó dính lắm đấy",
         "weight": 12,
         "effect": { "rate": 0.4, "kgMul": 3, "weather": "storm" }
       },
       {
         "id": "rare", "label": "Tìm cá hiếm", "icon": "🌟", "color": "#c2255c",
-        "text": "Cá hiếm đến nhanh gấp 3", "voice": "Tìm cá hiếm! Cá hiếm đến nhanh gấp ba",
+        "text": "Cá hiếm đến nhanh gấp 3", "voice": "Nước lớn cá về! Cá hiếm đến nhanh gấp ba",
         "weight": 8, "goldWeight": 30,
         "effect": { "rareStep": 3 }
       },
       {
-        "id": "boss", "label": "Cá mập vào hồ", "icon": "🦈", "color": "#343a40",
-        "text": "Cả hồ cùng kéo cá mập lên!", "voice": "Cá mập vào hồ! Cả hồ cùng kéo nào",
+        "id": "boss", "label": "Cá hô chúa về", "icon": "🐉", "color": "#343a40",
+        "text": "Cả làng cùng kéo cá hô chúa lên!", "voice": "Cá hô chúa về sông rồi! Cả làng cùng kéo nào",
         "weight": 5, "goldWeight": 30,
         "effect": {
           "boss": {
@@ -235,24 +241,24 @@
     "hutChance": 0.4,
     "nameWaitMs": 2500,
     "text": {
-      "hello": "Chúc mừng",
-      "you": "bạn",
-      "sharkIntro": "Quá đỉnh!",
-      "rareIntro": "Cá hiếm!",
-      "fish": "câu được {fish}",
+      "hello": "Bà con ơi",
+      "you": "có bạn",
+      "sharkIntro": "Trời đất ơi, cá chúa!",
+      "rareIntro": "Ối giời, cá hiếm!",
+      "fish": "vừa giật được {fish}",
       "kg": "{kg} ký",
-      "many": "câu được {n} con cá",
-      "manyLots": "câu được cả một mẻ cá",
-      "joined": "đã tham gia",
-      "and": "và",
-      "others": "và nhiều bạn khác",
-      "wheelSoon": "Vòng quay Thần Hồ sắp bắt đầu",
-      "wheelGold": "Vòng quay vàng!",
+      "many": "vừa giật được {n} con cá",
+      "manyLots": "vừa giật được cả một mẻ cá đầy xô",
+      "joined": "đã ra bến thả câu",
+      "and": "với",
+      "others": "với nhiều bà con khác",
+      "wheelSoon": "Vòng quay Thần Sông sắp bắt đầu, bà con ơi",
+      "wheelGold": "Vòng quay vàng đấy bà con!",
       "wheelSpin": "đang quay",
-      "bossDown": "đã kéo được cá mập",
-      "bossFled": "Cá mập đã bơi đi mất",
-      "sprintWin": "thắng thi câu nhanh",
-      "hut": "Chòi số {n}"
+      "bossDown": "đã kéo được cá hô chúa",
+      "bossFled": "Cá hô chúa lặn mất rồi",
+      "sprintWin": "thắng hội thi câu của làng",
+      "hut": "Chỗ số {n}"
     }
   },
 
@@ -264,7 +270,7 @@
   },
 
   "display": {
-    "renderScale": 1,
+    "renderScale": 0.6,
     "shadows": true,
     "nameTags": true,
     "giftGuide": true,

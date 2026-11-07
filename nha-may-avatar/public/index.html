@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f4f0e7">
+  <title>Ball Factory</title>
+  <link rel="icon" href="/avatars/bao.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/style.css">
+  <script type="module" src="/app.js"></script>
+</head>
+<body>
+  <svg class="icon-library" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <symbol id="icon-heart" viewBox="0 0 24 24"><path d="M20.4 4.6a5.5 5.5 0 0 0-7.8 0L12 5.2l-.6-.6a5.5 5.5 0 0 0-7.8 7.8L12 21l8.4-8.6a5.5 5.5 0 0 0 0-7.8Z"/></symbol>
+      <symbol id="icon-expand" viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></symbol>
+      <symbol id="icon-image" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8" cy="8" r="1.5"/><path d="m3 17 6-6 5 5 3-3 4 4"/></symbol>
+      <symbol id="icon-spark" viewBox="0 0 24 24"><path d="m12 2 2.7 7.3L22 12l-7.3 2.7L12 22l-2.7-7.3L2 12l7.3-2.7Z"/></symbol>
+    </defs>
+  </svg>
+  <main class="studio">
+    <section class="preview-area" aria-label="Live view">
+      <div class="preview-toolbar">
+        <span><i class="small-dot"></i> LIVE <b>9:16</b></span>
+        <a href="/?overlay=1" target="_blank" rel="noopener" title="Open the OBS view">
+          Open view <svg class="icon"><use href="#icon-expand"/></svg>
+        </a>
+      </div>
+      <div class="stage-viewport">
+        <div class="stage" id="stage">
+          <div class="stage-brand" aria-hidden="true"><span class="brand-flower">✿</span></div>
+          <div id="live-badge" class="live-badge" data-phase="idle"><i></i></div>
+          <h1>Ball Factory</h1>
+          <p id="connection-strip" class="connection-strip" hidden></p>
+          <div class="order-card">
+            <div id="order-avatar" class="avatar order-avatar"><svg class="icon"><use href="#icon-heart"/></svg></div>
+            <div class="order-person">
+              <span id="order-eyebrow" class="eyebrow">READY</span>
+              <strong id="order-name">Your photo</strong>
+              <span id="order-reason" hidden></span>
+            </div>
+            <div class="quality-badge" id="quality-badge"><svg class="icon"><use href="#icon-spark"/></svg><span>♡</span></div>
+          </div>
+          <div class="machine" id="machine" role="group" aria-label="Photo machine">
+            <img class="factory-scene" src="/factory.svg" alt="" draggable="false">
+            <div class="machine-lights" aria-hidden="true"><i></i><i></i><i></i></div>
+            <canvas id="portrait" width="688" height="740" aria-label="Photo made of colored balls"></canvas>
+            <div id="avatar-notice" class="avatar-notice" role="status" hidden></div>
+            <div class="machine-progress"><div id="progress-fill"></div></div>
+            <div id="progress-text" class="progress-text"></div>
+            <div class="thank-you" id="thank-you" aria-live="polite" aria-hidden="true">
+              <span class="thank-spark">✦</span>
+              <strong id="thank-name">Thank you!</strong>
+              <span id="thank-detail"></span>
+            </div>
+            <div class="confetti" aria-hidden="true"><i>✦</i><i>✧</i><i>✦</i><i>♡</i><i>✧</i><i>♡</i></div>
+          </div>
+          <aside class="gift-rail" aria-label="Gifts">
+            <h2>GIFTS</h2>
+            <ol id="stage-gifts"></ol>
+          </aside>
+          <div class="queue-heading"><span><i class="small-dot"></i> NEXT</span><b id="pending-count" aria-label="0 waiting">0</b></div>
+          <div class="stage-queue" id="stage-queue"></div>
+          <div class="stage-footer"><svg class="icon"><use href="#icon-heart"/></svg><span>50 likes = 1 turn</span></div>
+        </div>
+      </div>
+      <div class="preview-note"><span class="small-dot" id="server-dot"></span><span id="server-status">Connecting...</span><span>540 × 960</span></div>
+    </section>
+
+    <aside class="controls" aria-label="Controls">
+      <header class="control-header">
+        <div class="control-logo">✿</div>
+        <h2>Controls</h2>
+      </header>
+      <section class="card connect-card">
+        <div class="card-heading"><h3><span class="section-number">01</span> TikTok LIVE</h3><span id="source-pill" class="source-pill">Test</span></div>
+        <form id="connect-form">
+          <label class="sr-only" for="username">TikTok name</label>
+          <div class="connect-fields"><div class="username-field"><span>@</span><input id="username" name="username" placeholder="your_name" maxlength="25" autocomplete="off" spellcheck="false" required></div><button id="connect-button" class="button primary" type="submit">Connect <span>↗</span></button></div>
+        </form>
+        <p id="connection-message" class="connection-message" role="status">Test mode</p>
+        <button id="disconnect-button" class="text-button" type="button" hidden>Disconnect</button>
+        <p class="fine-print">Connect clears test turns.</p>
+        <label class="sample-switch"><input type="checkbox" id="sample-toggle"> Draw samples while idle <small id="sample-count"></small></label>
+        <label class="sample-switch"><input type="checkbox" id="sound-toggle"> Sound on this page <small>LIVE window is always on</small></label>
+      </section>
+
+      <section class="card demo-card">
+        <div class="card-heading"><h3><span class="section-number">02</span> Test</h3><span class="tiny-label">FREE</span></div>
+        <div class="viewer-picker">
+          <div id="demo-avatar" class="avatar"></div>
+          <div class="viewer-select"><label for="demo-viewer">NAME</label><select id="demo-viewer"></select></div>
+          <label for="avatar-file" class="upload-button" title="Upload photo"><svg class="icon"><use href="#icon-image"/></svg><span class="sr-only">Upload photo</span></label>
+          <input id="avatar-file" type="file" accept="image/png,image/jpeg,image/webp" hidden>
+        </div>
+        <div id="custom-fields" class="custom-fields" hidden><label for="custom-name">Name</label><input id="custom-name" value="Guest" maxlength="40"></div>
+        <div class="like-buttons"><button class="button soft" id="like-ten" type="button"><svg class="icon"><use href="#icon-heart"/></svg> +10 likes</button><button class="button rose" id="like-fifty" type="button"><svg class="icon"><use href="#icon-heart"/></svg> +50 likes</button></div>
+        <p class="like-hint" id="like-hint">50 likes = 1 turn.</p>
+        <div class="gift-heading"><div><h4>Gifts</h4><p>1 gift = 1 turn</p></div><label class="repeat-label">Count<select id="gift-repeat" aria-label="Gift count"><option value="1">×1</option><option value="10">×10</option></select></label></div>
+        <div id="gift-buttons" class="gift-buttons"></div>
+        <p id="demo-locked" class="demo-locked" hidden>Test off during LIVE.</p>
+      </section>
+
+      <section class="card workshop-card">
+        <div class="workshop-toolbar"><h3><span class="section-number">03</span> Stats</h3><button id="pause-button" type="button" class="pause-button" aria-pressed="false">Ⅱ Pause</button></div>
+        <div class="stats"><div><strong id="stat-portraits">0</strong><span>Done</span></div><div><strong id="stat-likes">0</strong><span>Likes</span></div><div><strong id="stat-gifts">0</strong><span>Gifts</span></div></div>
+        <div id="recent-gallery" class="recent-gallery" aria-label="Recent photos"></div>
+        <details class="activity-details"><summary>Log <span id="activity-count">0</span></summary><ol id="activity-list"></ol></details>
+        <button id="reset-demo" class="text-button reset-button" type="button">Reset test</button>
+      </section>
+      <footer class="control-footer">Unofficial TikTok / Euler Stream</footer>
+    </aside>
+  </main>
+  <div id="toast" class="toast" role="alert" hidden></div>
+  <noscript>Enable JavaScript to play.</noscript>
+</body>
+</html>

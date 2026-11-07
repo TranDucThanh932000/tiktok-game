@@ -1,0 +1,37 @@
+{
+  "tiktokUsername": "c.hoi.thanh021",
+  "port": 3012,
+  "title": "SƠN TINH · THỦY TINH",
+  "subtitle": "Đoán chữ rước Mị Nương",
+
+  "hp": 100,
+  "wordDamage": 5,
+  "winsToMarry": 5,
+  "minPlayersPerSide": 1,
+
+  "timing": {
+    "lobbySeconds": 30,
+    "roundSeconds": 180,
+    "wordSeconds": 45,
+    "hintEverySeconds": 12,
+    "solvedSeconds": 3,
+    "roundEndSeconds": 8,
+    "matchEndSeconds": 15
+  },
+
+  "hints": { "start": 0.3, "max": 0.7 },
+
+  "sides": {
+    "son": { "name": "Sơn Tinh", "keywords": ["sơn tinh", "st", "1"] },
+    "thuy": { "name": "Thủy Tinh", "keywords": ["thủy tinh", "tt", "2"] }
+  },
+
+  "gifts": [
+    { "side": "son", "bonus": 1, "label": "Hoa hồng", "coins": 1, "ids": ["5655"], "names": ["Rose", "Hoa hồng"], "icon": "/gifts/rose.webp" },
+    { "side": "son", "bonus": 5, "label": "Bắn tim", "coins": 5, "ids": ["5487"], "names": ["Finger Heart", "Bắn tim"], "icon": "/gifts/finger-heart.webp" },
+    { "side": "son", "bonus": 10, "label": "Heo may mắn", "coins": 10, "ids": ["8825"], "names": ["Lucky Pig", "Chú heo may mắn", "Heo may mắn"], "icon": "/gifts/lucky-pig.webp" },
+    { "side": "thuy", "bonus": 1, "label": "TikTok", "coins": 1, "ids": ["5269"], "names": ["TikTok"], "icon": "/gifts/tiktok.webp" },
+    { "side": "thuy", "bonus": 5, "label": "Bing Chilling", "coins": 5, "ids": ["7412"], "names": ["Ice cream", "Bing Chilling"], "icon": "/gifts/bing-chilling.webp" },
+    { "side": "thuy", "bonus": 10, "label": "Cỏ ba lá", "coins": 10, "ids": ["9875"], "names": ["Shamrock", "Cỏ bốn lá", "Cỏ ba lá"], "icon": "/gifts/co-ba-la.webp" }
+  ]
+}

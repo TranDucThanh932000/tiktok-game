@@ -1,4 +1,4 @@
-// Hiệu ứng riêng khi giật cá hiếm và cá mập. Lúc cá đang giằng co chưa được lộ kết quả, nên phần hồi hộp
+// Hiệu ứng riêng khi giật cá hiếm và cá chúa. Lúc cá đang giằng co chưa được lộ kết quả, nên phần hồi hộp
 // giống nhau dù cá có dính hay không; tới lúc lộ kết quả mới chuyển sang ăn mừng hoặc tiếc nuối.
 // 3D: xoáy nước, cột sáng, quầng sáng quanh cá. DOM (#epic): viền màn hình, dải đen, tia sáng, chớp sáng, chữ lớn.
 import * as THREE from 'three';
@@ -6,7 +6,7 @@ import * as THREE from 'three';
 const $ = (id) => document.getElementById(id);
 
 const STYLE = {
-  shark: { spiral: '#bfe9ff', glow: '#ff5d7a', won: '🦈 QUÁ ĐỈNH! 🦈' },
+  shark: { spiral: '#bfe9ff', glow: '#ff5d7a', won: '🐉 QUÁ ĐỈNH! 🐉' },
   rare: { spiral: '#ffd43b', glow: '#ffe066', won: '🌟 CÁ HIẾM! 🌟' },
 };
 

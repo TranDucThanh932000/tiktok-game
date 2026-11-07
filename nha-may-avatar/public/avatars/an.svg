@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="320" viewBox="0 0 320 320">
+  <defs>
+    <linearGradient id="bg" x2="1" y2="1"><stop stop-color="#bcd8d0"/><stop offset="1" stop-color="#86b5ba"/></linearGradient>
+    <linearGradient id="shirt" x2="1" y2="1"><stop stop-color="#7a95c9"/><stop offset="1" stop-color="#414f83"/></linearGradient>
+  </defs>
+  <path fill="url(#bg)" d="M0 0h320v320H0z"/>
+  <g fill="#e8efc6" opacity=".7"><circle cx="47" cy="59" r="25"/><circle cx="286" cy="133" r="44"/><circle cx="35" cy="225" r="14"/></g>
+  <path d="M45 320c9-71 44-104 113-104s107 35 117 104" fill="url(#shirt)"/>
+  <path d="M116 236q40 46 85 0l11 25-54 31-53-32z" fill="#c7d8e1"/>
+  <path d="M137 204v31q24 24 48 0v-32" fill="#e5a47c"/>
+  <ellipse cx="160" cy="143" rx="74" ry="91" fill="#efbc8e"/>
+  <ellipse cx="85" cy="154" rx="12" ry="18" fill="#e6a47e"/><ellipse cx="235" cy="154" rx="12" ry="18" fill="#e6a47e"/>
+  <path d="M84 139C64 62 120 41 161 37c41-6 88 15 79 96l-17 9-6-51c-42 28-82 18-112 10l-6 40z" fill="#47382e"/>
+  <path d="M104 77c30-23 70-22 99-11M108 87c32-13 61-12 80-9" fill="none" stroke="#74533e" stroke-width="5" stroke-linecap="round"/>
+  <path d="M107 134q13-9 29-1m47 0q13-9 28 0" fill="none" stroke="#624635" stroke-width="5" stroke-linecap="round"/>
+  <g stroke="#414c5b" stroke-width="6" fill="#e1ddc3" fill-opacity=".25">
+    <rect x="95" y="143" width="55" height="42" rx="15"/><rect x="172" y="143" width="55" height="42" rx="15"/>
+    <path d="M150 152q11-8 22 0m-77 2-10-5m142 5 9-5" fill="none"/>
+  </g>
+  <g fill="#342d2f"><ellipse cx="125" cy="161" rx="6" ry="9"/><ellipse cx="197" cy="161" rx="6" ry="9"/></g>
+  <g fill="white"><circle cx="127" cy="158" r="2.5"/><circle cx="199" cy="158" r="2.5"/></g>
+  <path d="M157 169l-4 15h11m-21 14q17 17 36-1" fill="none" stroke="#ac6a56" stroke-width="4" stroke-linecap="round"/>
+  <g fill="#df8e7c" opacity=".6"><ellipse cx="110" cy="193" rx="12" ry="6"/><ellipse cx="212" cy="193" rx="12" ry="6"/></g>
+  <path d="M112 265l-6 45m99-45 7 45" stroke="#eff2e3" stroke-width="4" stroke-linecap="round"/>
+  <rect x="139" y="289" width="43" height="26" rx="7" fill="#f0c675"/><path d="M150 302h20" stroke="#c58650" stroke-width="4" stroke-linecap="round"/>
+</svg>

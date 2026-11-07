@@ -1,4 +1,4 @@
-// Âm thanh tổng hợp bằng WebAudio (không có file): tiếng quạt nước, dế kêu ban đêm, mưa, gió, sấm, bõm nước, guồng quay, nhạc thắng/thua, nhạc bolero qua loa.
+// Âm thanh tổng hợp bằng WebAudio (không có file): tiếng nước sông, dế kêu ban đêm, mưa, gió, sấm, bõm nước, guồng quay, nhạc thắng/thua, nhạc bolero qua loa.
 // Giọng Vbee (/tts/:id) phát lần lượt, các tiếng khác nhỏ lại khi đang đọc.
 const muted = new URLSearchParams(location.search).has('mute');
 const VOLUME = muted ? 0 : 0.6;
@@ -50,7 +50,7 @@ function hiss(start, duration, peak, frequency, Q = 0.8, type = 'bandpass') {
   return filter;
 }
 
-// nền: máy quạt nước chạy đều + nước sục; mưa, gió và dế to nhỏ theo thời tiết, giờ trong ngày
+// nền: nước sông chảy; mưa, gió và dế to nhỏ theo thời tiết, giờ trong ngày
 let ambient = false;
 const weather = { rain: 0, wind: 0, night: 0 };
 let rainHigh, rainLow, windGain, windFilter;
@@ -67,13 +67,6 @@ function startAmbient() {
   ambient = true;
   noiseLoop('bandpass', 620, 0.7, 0.03);
   noiseLoop('bandpass', 1900, 0.8, 0.012);
-  // tiếng máy quạt ù đều
-  for (const [f, g] of [[98, 0.012], [196, 0.006]]) {
-    const hum = new OscillatorNode(ctx, { type: 'sawtooth', frequency: f });
-    const low = new BiquadFilterNode(ctx, { type: 'lowpass', frequency: 420 });
-    hum.connect(low).connect(new GainNode(ctx, { gain: g })).connect(master);
-    hum.start();
-  }
   rainHigh = noiseLoop('highpass', 1400, 0.4, 0).g;
   rainLow = noiseLoop('bandpass', 420, 0.7, 0).g;
   ({ g: windGain, f: windFilter } = noiseLoop('bandpass', 300, 1.4, 0));
@@ -205,14 +198,14 @@ export const sfx = {
     const notes = golden ? [523, 659, 784, 1047, 1319] : [523, 659, 784];
     notes.forEach((f, i) => tone(f, t + i * 0.12, 0.28, 0.14, 'triangle'));
   },
-  // Cá mập nhô lên.
+  // Cá hô chúa nhô lên.
   roar() {
     if (!running()) return;
     const t = ctx.currentTime;
     tone(95, t, 1.3, 0.34, 'sawtooth', 42);
     hiss(t, 1.1, 0.16, 420, 0.7);
   },
-  // Một phát đánh trúng cá mập.
+  // Một nhịp kéo trúng cá hô chúa.
   thud() {
     if (!running()) return;
     const t = ctx.currentTime;

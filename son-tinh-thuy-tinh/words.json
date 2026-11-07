@@ -1,0 +1,170 @@
+{
+  "Con vật": [
+    "con mèo", "con chó", "gà trống", "gà mái", "con vịt", "con heo", "con bò", "con trâu", "con dê", "con ngựa",
+    "con cừu", "con thỏ", "con chuột", "con khỉ", "con voi", "con hổ", "sư tử", "con gấu", "con cáo", "chó sói",
+    "con hươu", "con nai", "lạc đà", "ngựa vằn", "hà mã", "tê giác", "hươu cao cổ", "chuột túi", "gấu trúc", "con nhím",
+    "con sóc", "con dơi", "con rắn", "con rùa", "cá sấu", "con ếch", "con cóc", "thằn lằn", "tắc kè", "con kiến",
+    "con ong", "con bướm", "chuồn chuồn", "châu chấu", "đom đóm", "con nhện", "con muỗi", "ốc sên",
+    "con cua", "con tôm", "con mực", "bạch tuộc", "con sứa", "sao biển", "cá voi", "cá heo", "cá mập", "cá chép",
+    "cá vàng", "chim sẻ", "chim én", "chim cánh cụt", "đại bàng", "cú mèo", "con quạ", "con công", "bồ câu",
+    "con vẹt", "con cò", "hải âu", "chim gõ kiến", "thiên nga", "con lừa", "con báo", "tinh tinh", "đà điểu"
+  ],
+  "Món ăn": [
+    "phở bò", "phở gà", "bún chả", "bún bò huế", "bún riêu", "bún đậu mắm tôm", "bún thịt nướng", "bánh mì", "bánh cuốn", "bánh xèo",
+    "bánh chưng", "bánh tét", "bánh giò", "bánh bèo", "bánh khọt", "bánh canh", "bánh đa cua", "cơm tấm", "cơm rang",
+    "cơm gà", "cơm lam", "xôi xéo", "xôi gấc", "cháo lòng", "cháo gà", "chả giò", "nem rán", "nem chua", "gỏi cuốn",
+    "bò bía", "bò kho", "bò lá lốt", "thịt kho tàu", "cá kho tộ", "canh chua", "lẩu thái", "hủ tiếu", "mì quảng",
+    "cao lầu", "bánh hỏi", "bánh ướt", "bánh bột lọc", "bánh đúc", "chả cá", "chả lụa", "giò thủ", "thịt đông",
+    "dưa hành", "rau muống xào", "đậu phụ", "trứng chiên", "trứng vịt lộn", "ốc luộc", "gà nướng", "vịt quay", "heo quay", "sườn xào",
+    "cá nướng", "tôm rang", "mực chiên", "cua rang me", "ốc xào", "bánh bao", "há cảo", "sủi cảo", "mì xào", "miến gà"
+  ],
+  "Bánh kẹo, ăn vặt": [
+    "kẹo dừa", "kẹo lạc", "kẹo mút", "kẹo bông", "kẹo dẻo", "kẹo cao su", "sô cô la", "bánh quy", "bánh gạo", "bánh trung thu",
+    "bánh dẻo", "bánh nướng", "bánh kem", "bánh flan", "bánh bông lan", "bánh su kem", "bánh tráng trộn", "bánh cốm", "chè đậu đen",
+    "chè bưởi", "chè ba màu", "chè trôi nước", "sữa chua", "kem que", "kem ốc quế", "bỏng ngô", "khoai tây chiên", "mứt dừa",
+    "ô mai", "tào phớ", "bánh tai heo", "bánh đậu xanh", "bim bim"
+  ],
+  "Đồ uống": [
+    "trà sữa", "trà đá", "trà chanh", "trà gừng", "trà xanh", "cà phê sữa", "cà phê đen", "bạc xỉu", "nước mía", "nước dừa",
+    "nước cam", "nước chanh", "sữa đậu nành", "sinh tố bơ", "sinh tố xoài", "nước ép táo", "sữa tươi", "ca cao", "nước khoáng",
+    "nước ngọt", "trà đào", "nước rau má", "sương sáo", "nước sâm", "sữa ngô", "trà sen", "trà atisô", "nước bí đao"
+  ],
+  "Trái cây": [
+    "quả táo", "quả lê", "quả cam", "quả quýt", "quả bưởi", "quả chanh", "quả chuối", "quả xoài", "quả ổi", "quả mít",
+    "sầu riêng", "măng cụt", "chôm chôm", "vải thiều", "nhãn lồng", "thanh long", "dưa hấu", "dưa lưới", "đu đủ",
+    "quả na", "quả mận", "quả đào", "chùm nho", "dâu tây", "quả kiwi", "quả lựu", "quả dừa", "quả bơ", "hồng xiêm",
+    "quả hồng", "vú sữa", "quả khế", "quả me", "quả cóc", "chanh leo", "việt quất", "quả sung", "quả thị",
+    "mãng cầu", "quả mơ", "quả sấu", "chà là"
+  ],
+  "Rau củ": [
+    "rau muống", "rau cải", "cải bắp", "súp lơ", "cà rốt", "khoai tây", "khoai lang", "khoai môn", "củ cải", "củ hành",
+    "củ tỏi", "củ gừng", "củ nghệ", "củ sắn", "củ đậu", "cà chua", "cà tím", "dưa chuột", "bí đỏ", "bí xanh",
+    "mướp đắng", "quả mướp", "đậu bắp", "đậu cô ve", "đậu đũa", "giá đỗ", "rau ngót", "rau dền", "rau mồng tơi", "xà lách",
+    "rau thơm", "rau răm", "húng quế", "tía tô", "lá lốt", "ớt chuông", "bắp ngô", "nấm rơm"
+  ],
+  "Cây và hoa": [
+    "hoa hồng", "hoa sen", "hoa mai", "hoa đào", "hoa cúc", "hoa lan", "hoa huệ", "hoa ly", "hoa súng", "hoa giấy",
+    "hoa sữa", "hoa phượng", "hoa gạo", "hoa bằng lăng", "hoa hướng dương", "hoa tulip", "hoa mười giờ", "hoa nhài", "hoa thược dược",
+    "hoa cẩm chướng", "hoa mẫu đơn", "cây tre", "cây trúc", "cây thông", "cây đa", "cây bàng", "cây xương rồng", "cây lúa", "cây cau",
+    "cây bạch đàn", "cây cao su", "cây cà phê", "cây chè", "cây sen đá", "cây lưỡi hổ", "cây trầu không", "rong biển", "cỏ ba lá",
+    "lá phong", "cây liễu", "cây sồi", "hoa bồ công anh"
+  ],
+  "Đồ dùng trong nhà": [
+    "bàn ăn", "ghế đẩu", "ghế xoay", "tủ lạnh", "tủ quần áo", "tủ sách", "giường ngủ", "gối ôm", "chăn bông", "rèm cửa",
+    "đèn ngủ", "đèn pin", "quạt trần", "quạt điện", "điều hòa", "máy giặt", "máy sấy tóc", "bàn là", "nồi cơm điện", "bếp ga",
+    "lò vi sóng", "nồi áp suất", "chảo chống dính", "ấm siêu tốc", "phích nước", "bát đĩa", "đôi đũa", "cái thìa", "cái nĩa", "cái thớt",
+    "cái chổi", "cây lau nhà", "thùng rác", "cái xô", "chậu rửa", "vòi sen", "bồn tắm", "khăn tắm",
+    "bàn chải", "kem đánh răng", "xà phòng", "gương soi", "cái lược", "đồng hồ báo thức", "ti vi", "cái ô",
+    "ổ khóa", "chìa khóa", "ổ cắm", "bóng đèn", "công tắc", "bình hoa", "khung ảnh", "tấm thảm", "cái kéo", "kim chỉ",
+    "cái chiếu", "cái võng", "hộp cơm", "bình nước", "cái cân", "máy hút bụi", "máy lọc nước", "ấm trà"
+  ],
+  "Đồ dùng học tập": [
+    "bút chì", "bút bi", "bút mực", "bút máy", "bút sáp màu", "thước kẻ", "cục tẩy", "gọt bút chì", "hộp bút", "cặp sách",
+    "ba lô", "sách giáo khoa", "quyển vở", "vở ô li", "giấy nháp", "bảng đen", "phấn trắng", "khăn lau bảng", "com pa",
+    "máy tính bỏ túi", "băng dính", "hồ dán", "quả địa cầu", "từ điển", "bản đồ", "sổ tay", "thẻ học sinh",
+    "bàn học"
+  ],
+  "Quần áo, phụ kiện": [
+    "áo dài", "áo sơ mi", "áo phông", "áo khoác", "áo len", "áo mưa", "áo bà ba", "áo tứ thân", "áo yếm", "quần bò",
+    "quần đùi", "chân váy", "váy cưới", "nón lá", "mũ bảo hiểm", "mũ len", "khăn quàng cổ", "găng tay",
+    "tất chân", "giày thể thao", "giày cao gót", "dép tổ ong", "dép lê", "đôi ủng", "thắt lưng", "cà vạt", "kẹp tóc", "vòng tay",
+    "dây chuyền", "bông tai", "nhẫn cưới", "kính râm", "đồng hồ đeo tay", "ví tiền", "túi xách", "khẩu trang", "áo choàng",
+    "mũ lưỡi trai"
+  ],
+  "Nghề nghiệp": [
+    "bác sĩ", "giáo viên", "kỹ sư", "công an", "bộ đội", "lính cứu hỏa", "nông dân", "ngư dân", "công nhân", "thợ xây",
+    "thợ mộc", "thợ điện", "thợ may", "thợ cắt tóc", "thợ sửa xe", "đầu bếp", "phục vụ", "ca sĩ", "diễn viên", "nhạc sĩ",
+    "họa sĩ", "nhà thơ", "nhà văn", "nhà báo", "phóng viên", "phi công", "tiếp viên", "tài xế", "thủy thủ",
+    "thuyền trưởng", "phi hành gia", "luật sư", "kế toán", "dược sĩ", "nha sĩ", "bác sĩ thú y",
+    "lập trình viên", "nhà khoa học", "kiến trúc sư", "nhiếp ảnh gia", "người mẫu", "vận động viên", "huấn luyện viên", "trọng tài", "bảo vệ", "lao công",
+    "người giao hàng", "hướng dẫn viên", "thợ lặn", "thợ rèn", "ảo thuật gia", "giám đốc", "thư ký"
+  ],
+  "Phương tiện": [
+    "xe đạp", "xe máy", "xe buýt", "xe tải", "xe ô tô", "xe cứu thương", "xe cứu hỏa", "xe lửa", "tàu hỏa", "tàu điện ngầm",
+    "máy bay", "trực thăng", "tàu thủy", "tàu ngầm", "thuyền buồm", "ca nô", "xích lô", "xe ba gác", "xe cút kít", "xe lăn",
+    "xe đạp điện", "xe trượt tuyết", "khinh khí cầu", "tàu vũ trụ", "tên lửa", "xe cẩu", "máy cày", "thuyền thúng", "xe điện",
+    "xe khách", "xe ôm", "xe taxi", "tàu cao tốc"
+  ],
+  "Nơi chốn": [
+    "bệnh viện", "trường học", "thư viện", "bưu điện", "ngân hàng", "siêu thị", "chợ nổi", "chợ đêm", "công viên", "sở thú",
+    "rạp chiếu phim", "nhà hát", "bảo tàng", "sân bay", "bến xe", "nhà ga", "bến cảng", "khách sạn", "nhà hàng", "quán cà phê",
+    "tiệm bánh", "hiệu thuốc", "tiệm vàng", "sân vận động", "bể bơi", "phòng tập", "cánh đồng", "nông trại", "nhà máy",
+    "văn phòng", "phòng khách", "phòng ngủ", "nhà bếp", "nhà tắm", "ban công", "sân thượng", "cầu thang", "thang máy",
+    "vườn rau", "ao cá", "bãi biển", "khu vui chơi", "cửa hàng", "tiệm tạp hóa", "bến phà", "lớp học", "sân trường",
+    "ký túc xá"
+  ],
+  "Địa danh Việt Nam": [
+    "hà nội", "hải phòng", "đà nẵng", "cần thơ", "sài gòn", "cố đô huế", "hạ long", "sa pa", "đà lạt", "nha trang",
+    "phú quốc", "côn đảo", "vũng tàu", "mũi né", "hội an", "phong nha", "tam đảo", "mộc châu", "hà giang", "cao bằng",
+    "lạng sơn", "điện biên", "lào cai", "ninh bình", "tràng an", "tam cốc", "thanh hóa", "nghệ an", "quảng bình", "quảng nam",
+    "bình định", "khánh hòa", "lâm đồng", "buôn ma thuột", "gia lai", "kon tum",
+    "bình dương", "đồng nai", "long an", "tiền giang", "bến tre", "vĩnh long", "an giang", "cà mau",
+    "bạc liêu", "đồng tháp", "hồ gươm", "hồ tây", "văn miếu", "chợ bến thành", "cầu rồng", "núi bà đen",
+    "phan xi păng", "sông hồng", "sông cửu long", "đèo hải vân", "thái bình", "nam định", "bắc ninh", "hưng yên"
+  ],
+  "Thiên nhiên, thời tiết": [
+    "mặt trời", "mặt trăng", "ngôi sao", "sao băng", "cầu vồng", "đám mây", "sấm sét", "tia chớp", "mưa rào", "mưa phùn",
+    "mưa đá", "bão tuyết", "sương mù", "gió mùa", "lốc xoáy", "động đất", "núi lửa", "sóng thần", "lũ lụt",
+    "hạn hán", "thác nước", "dòng sông", "con suối", "hồ nước", "biển cả", "đại dương", "hòn đảo", "hang động",
+    "sa mạc", "rừng rậm", "đồi núi", "đồng bằng", "cao nguyên", "thung lũng", "ruộng bậc thang", "bình minh", "hoàng hôn", "trăng tròn",
+    "nhật thực", "nguyệt thực", "dải ngân hà", "sao chổi", "bông tuyết", "tảng băng", "vũ trụ", "trái đất", "sao hỏa", "sao mộc",
+    "nắng nóng"
+  ],
+  "Cơ thể người": [
+    "mái tóc", "lông mày", "lông mi", "đôi mắt", "sống mũi", "đôi môi", "hàm răng", "cái lưỡi", "cái cằm", "lỗ tai",
+    "cổ họng", "bờ vai", "cánh tay", "bàn tay", "ngón tay", "móng tay", "bàn chân", "ngón chân", "đầu gối",
+    "gót chân", "cái bụng", "tấm lưng", "trái tim", "lá phổi", "dạ dày", "bộ não", "má lúm đồng tiền", "nốt ruồi",
+    "ria mép", "râu quai nón"
+  ],
+  "Thể thao": [
+    "bóng đá", "bóng chuyền", "bóng rổ", "bóng bàn", "cầu lông", "quần vợt", "bơi lội", "điền kinh", "nhảy xa", "nhảy cao",
+    "chạy bộ", "đua xe đạp", "cờ vua", "cờ tướng", "cờ vây", "võ thuật", "vovinam", "quyền anh", "taekwondo", "thể dục dụng cụ",
+    "bắn cung", "đấu kiếm", "trượt băng", "trượt ván", "leo núi", "lướt sóng", "chèo thuyền", "đẩy tạ", "cử tạ", "bóng chày",
+    "bi da", "đua thuyền", "bóng bầu dục"
+  ],
+  "Âm nhạc": [
+    "đàn bầu", "đàn tranh", "đàn nguyệt", "đàn tỳ bà", "đàn đá", "đàn ghi ta", "dương cầm", "vĩ cầm", "sáo trúc", "kèn đồng",
+    "trống đồng", "trống cơm", "cái mõ", "cồng chiêng", "đàn nhị", "đàn ukulele", "cái micro", "bản nhạc",
+    "nốt nhạc", "ca khúc", "hợp xướng", "quan họ", "ca trù", "cải lương", "hát chèo"
+  ],
+  "Lễ hội, phong tục": [
+    "tết nguyên đán", "tết trung thu", "tết đoan ngọ", "rằm tháng giêng", "lì xì", "câu đối", "pháo hoa", "múa lân", "múa rối nước", "đèn lồng",
+    "đèn ông sao", "mâm ngũ quả", "cây nêu", "cành đào", "chợ hoa", "hái lộc", "chúc tết", "giỗ tổ hùng vương", "đám cưới",
+    "sính lễ", "trầu cau", "cô dâu", "chú rể", "đám hỏi", "hội làng", "đèn hoa đăng", "phá cỗ", "rước đèn",
+    "ông táo", "bánh trôi", "ngày nhà giáo", "quốc khánh", "giáng sinh", "sinh nhật", "tân gia"
+  ],
+  "Truyện cổ tích": [
+    "mị nương", "vua hùng", "lạc long quân", "âu cơ", "thánh gióng", "ngựa sắt", "an dương vương", "nỏ thần", "mỵ châu", "trọng thủy",
+    "rùa vàng", "thạch sanh", "lý thông", "chằn tinh", "cây đàn thần", "niêu cơm thần", "tấm cám", "cá bống", "ông bụt", "cây khế",
+    "ăn khế trả vàng", "sọ dừa", "lang liêu", "chú cuội", "chị hằng", "cung trăng", "mai an tiêm", "chử đồng tử", "thần đèn",
+    "bạch tuyết", "lọ lem", "cây tre trăm đốt", "thỏ và rùa", "nàng tiên cá"
+  ],
+  "Trò chơi, đồ chơi": [
+    "ô ăn quan", "nhảy dây", "kéo co", "bịt mắt bắt dê", "rồng rắn lên mây", "mèo đuổi chuột", "trốn tìm", "nhảy lò cò", "đá cầu",
+    "thả diều", "bắn bi", "con quay", "chong chóng", "búp bê", "gấu bông", "xếp hình", "ô tô đồ chơi", "tò he", "đèn kéo quân",
+    "bóng bay", "cầu trượt", "xích đu", "bập bênh", "đố chữ", "đuổi hình bắt chữ", "khối rubik", "cờ cá ngựa", "oẳn tù tì",
+    "nu na nu nống"
+  ],
+  "Công nghệ": [
+    "điện thoại", "máy tính", "máy tính bảng", "bàn phím", "chuột máy tính", "màn hình", "tai nghe", "loa kéo", "sạc dự phòng", "dây sạc",
+    "máy in", "máy ảnh", "máy chiếu", "thẻ nhớ", "mạng xã hội", "trí tuệ nhân tạo", "người máy", "rô bốt", "vệ tinh",
+    "định vị", "mã vạch", "mật khẩu", "tin nhắn", "cuộc gọi", "trò chơi điện tử", "phát trực tiếp", "thả tim", "bình luận", "camera",
+    "điều khiển", "pin mặt trời", "đèn led", "ứng dụng"
+  ],
+  "Gia đình": [
+    "ông nội", "bà nội", "ông ngoại", "bà ngoại", "bố mẹ", "anh trai", "chị gái", "em trai", "em gái", "cháu nội",
+    "dì ghẻ", "con dâu", "con rể", "anh em họ", "vợ chồng", "sinh đôi", "họ hàng", "ông bà", "gia đình",
+    "hàng xóm", "bạn thân", "người yêu", "thông gia"
+  ],
+  "Tính cách, cảm xúc": [
+    "vui vẻ", "hạnh phúc", "buồn bã", "tức giận", "lo lắng", "sợ hãi", "ngạc nhiên", "xấu hổ", "tự tin", "dũng cảm",
+    "chăm chỉ", "lười biếng", "thông minh", "hài hước", "tốt bụng", "hiền lành", "nóng tính", "kiên nhẫn", "thật thà", "nhút nhát",
+    "hào phóng", "đáng yêu", "ghen tị", "tò mò", "nhớ nhà", "biết ơn", "thất vọng", "bình tĩnh", "say nắng",
+    "lãng mạn", "cô đơn"
+  ],
+  "Hoạt động": [
+    "rửa mặt", "tắm biển", "nấu cơm", "quét nhà", "lau nhà", "đi chợ", "tưới cây", "đọc sách",
+    "viết thư", "vẽ tranh", "ca hát", "nhảy múa", "chơi đàn", "câu cá", "leo cây", "cắm trại", "du lịch", "chụp ảnh",
+    "xem phim", "ngủ trưa", "thức khuya", "dậy sớm", "tập thể dục", "gói bánh", "ăn sáng", "làm vườn", "đi dạo", "trồng cây"
+  ]
+}

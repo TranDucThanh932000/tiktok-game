@@ -1,0 +1,58 @@
+{
+  "tiktokUsername": "linh.phng2903",
+  "port": 3130,
+  "title": "Sân Khấu Có Duyên",
+
+  "voices": {
+    "duy": "n_hanoi_male_bountintuc_news_vc",
+    "linh": "n_hanoi_female_quangcao02_advertise_vc"
+  },
+
+  "timing": {
+    "inviteSeconds": 9,
+    "introSeconds": 22,
+    "cheerSeconds": 13,
+    "guideMinSeconds": 10,
+    "resultSeconds": 15,
+    "stoppedSeconds": 6,
+    "transitionSeconds": 5,
+    "reconfirmSeconds": 30,
+    "sceneOverrunSeconds": 8
+  },
+
+  "demo": {
+    "enabled": true,
+    "idleSeconds": 20,
+    "inviteSeconds": 8,
+    "introSeconds": 10,
+    "yieldSeconds": 3,
+    "pairs": [
+      { "male": "Anh Bắp", "female": "Chị Mây" },
+      { "male": "Anh Gió", "female": "Chị Nắng" },
+      { "male": "Anh Kem", "female": "Chị Dâu" }
+    ],
+    "shares": ["một quán cà phê yên tĩnh", "đi dạo buổi chiều", "một câu chào thật dễ thương", "cùng nghe một bài hát"]
+  },
+
+  "milestones": [100, 500, 1000],
+  "bigGiftScore": 100,
+
+  "gifts": [
+    { "key": "pig", "label": "Heo", "registers": "male", "coins": null, "names": ["Lucky Pig", "Piggy", "Pig", "Heo", "Heo may mắn"] },
+    { "key": "clover", "label": "Cỏ ba lá", "registers": "female", "coins": null, "names": ["Treasure Clover", "Clover", "Lucky Clover", "Three Leaf Clover", "Cỏ ba lá"] },
+    { "key": "rose", "label": "Hoa hồng", "coins": 1, "names": ["Rose", "Hoa hồng"] },
+    { "key": "heart", "label": "Bắn tim", "coins": 5, "names": ["Finger Heart", "Bắn tim"] },
+    { "key": "box", "label": "Hộp quà", "coins": 100, "names": ["Gift Box", "Hộp quà"] }
+  ],
+
+  "giftWishes": {
+    "rose": ["chúc hai bạn vui vẻ", "chúc hợp chuyện"],
+    "heart": ["trái tim chúc phúc", "chúc hai bạn ấm áp"],
+    "box": ["chúc điều tốt lành", "lời chúc thật lớn"],
+    "pig": ["chúc hai bạn may mắn"],
+    "clover": ["chúc hai bạn gặp may"],
+    "other": ["lời chúc tới hai bạn", "chúc phúc đôi bạn"]
+  },
+
+  "bannedWords": ["địt", "đm", "dm", "đmm", "dmm", "đcm", "dcm", "vcl", "vkl", "clm", "cmm", "lồn", "buồi", "cặc", "đụ", "đĩ", "fuck", "shit"]
+}

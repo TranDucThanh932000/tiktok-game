@@ -1,4 +1,4 @@
-// Thư viện mẩu giọng đọc Vbee: mỗi mẩu (một cụm từ: "Chúc mừng", tên người chơi, "câu được cá chép", "nặng 4 ký"...)
+// Thư viện mẩu giọng đọc Vbee: mỗi mẩu (một cụm từ: "Chúc mừng", tên người chơi, "vừa giật được cá lóc đồng", "nặng 4 ký"...)
 // được tạo một lần, lưu ra đĩa (data/tts/<id>.mp3) để lần bật server sau dùng lại ngay, không tốn lượt Vbee.
 // Lúc cần đọc, trang game ghép các mẩu đã có sẵn nên câu được đọc tức thì, không phải chờ Vbee (~5 giây/câu).
 import path from 'node:path';

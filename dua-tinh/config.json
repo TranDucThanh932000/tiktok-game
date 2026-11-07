@@ -1,0 +1,27 @@
+{
+  "tiktokUsername": "thi.anh.tho732",
+  "port": 3009,
+  "title": "ĐUA TOP TỈNH THÀNH",
+  "subtitle": "Tỉnh nào đông nhất?",
+
+  "commentPoints": 1,
+  "pointsPerCoin": 1,
+  "gifts": [
+    { "label": "Hoa hồng", "names": ["Rose", "Hoa hồng"], "coins": 1, "points": 1, "icon": "/gifts/rose.webp" },
+    { "label": "Bắn tim", "names": ["Finger Heart", "Bắn tim"], "coins": 5, "points": 5, "icon": "/gifts/finger-heart.webp" },
+    { "label": "Heo may mắn", "names": ["Lucky Pig", "Piggy", "Pig", "Heo", "Heo may mắn"], "coins": 10, "points": 10, "icon": "/gifts/lucky-pig.webp" }
+  ],
+
+  "boardSize": 10,
+  "mapScores": true,
+
+  "voice": {
+    "enabled": true,
+    "bigGiftPoints": 50,
+    "thanksSettleMs": 2500,
+    "nameWaitMs": 15000,
+    "maxThanks": 4,
+    "talkEverySeconds": [40, 75],
+    "leadGapSeconds": 20
+  }
+}

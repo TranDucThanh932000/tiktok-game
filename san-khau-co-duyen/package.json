@@ -1,0 +1,19 @@
+{
+  "name": "san-khau-co-duyen",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Sân Khấu Có Duyên: game ghép đôi cho TikTok LIVE, hai MC dẫn, khán giả cổ vũ, hai người tự quyết định trong 10 giây",
+  "type": "module",
+  "scripts": {
+    "start": "node --env-file-if-exists=.env server.js",
+    "test": "node --test tests/*.test.js",
+    "window": "start \"\" msedge --app=http://127.0.0.1:3130/ --window-size=456,820 --window-position=0,0 --user-data-dir=D:\\tiktok-cache\\san-khau-co-duyen-window --disable-component-update --no-first-run --no-default-browser-check --autoplay-policy=no-user-gesture-required --disable-backgrounding-occluded-windows --disable-renderer-backgrounding --disable-background-timer-throttling --disable-features=CalculateNativeWinOcclusion"
+  },
+  "engines": {
+    "node": ">=22.9"
+  },
+  "dependencies": {
+    "express": "^5.3.0",
+    "tiktok-live-connector": "^2.5.0"
+  }
+}

@@ -1,13 +1,14 @@
 import * as THREE from 'three';
 import { buildWorld } from './world.js';
 import { Fisher, setLineResolution, hookMesh, setBobberGlow } from './fisher.js';
-import { makeFish, addSwimmers } from './fish.js';
+import { makeFish, addSwimmers, removeFish } from './fish.js';
 import { createFx } from './fx.js';
 import { createWeather, weatherIcon } from './weather.js';
 import { sfx, speak, say, wake, onAudioState, setWeatherSound, startMusic } from './audio.js';
 import { createWheelUi } from './wheel.js';
 import { createBossShark } from './boss.js';
 import { createEpic } from './epic.js';
+import { createWaiters } from './waiter.js';
 
 const W = 1080;
 const H = 1920;
@@ -52,6 +53,7 @@ let weather = null;
 let guide = null;
 let bossShark = null;
 let epic = null;
+let waiters = null;
 // Sự kiện vòng quay đang chạy, đổi số tim mỗi lần giật và bước đếm cá hiếm.
 let wheelEvent = null;
 const likesPer = () => wheelEvent?.likesPerPull ?? guide?.likesPerPull ?? 50;
@@ -65,12 +67,13 @@ let spot = null;
 function init(g) {
   guide = g;
   if (world) return;
-  world = buildWorld(scene, OVERVIEW);
+  world = buildWorld(scene, OVERVIEW, g.seats);
   swimmers = addSwimmers(scene);
   fx = createFx(scene);
   bossShark = createBossShark(scene, fx, g.tiers.shark.fish[0]);
   epic = createEpic({ scene, fx, sfx, toScreen });
   weather = createWeather(scene, world, OVERVIEW);
+  waiters = createWaiters(scene, world, { fishers, onServe: (f, item) => spot || floater(item.emoji, f.headPos, 'treat', 1.8, 0.8) });
   weather.onThunder = (power, delay) => setTimeout(() => sfx.thunder(power), delay * 1000);
   weather.onNews = (text) => toast(text, 'sky');
   const d = g.display ?? {};
@@ -81,8 +84,8 @@ function init(g) {
 }
 
 // ---------------------------------------------------------------- Camera
-// Nhìn chếch từ trên xuống để thấy trọn mặt bằng theo bản vẽ; khu hồ nằm ở nửa dưới khung hình, nửa trên là đồng ruộng và bầu trời phía sau các bảng.
-const OVERVIEW = { pos: new THREE.Vector3(0.45, 43.5, 26), look: new THREE.Vector3(0.45, 0, -11.5), fov: 60 };
+// Nhìn chếch từ trên xuống để thấy trọn mặt bằng theo bản vẽ; khúc sông nằm ở nửa dưới khung hình, nửa trên là đồng ruộng và bầu trời phía sau các bảng.
+const OVERVIEW = { pos: new THREE.Vector3(0, 41, 15), look: new THREE.Vector3(0, 0, -13), fov: 60 };
 // ?cam=x,y,z,lookX,lookY,lookZ,fov để căn lại góc máy khi cần.
 {
   const c = new URLSearchParams(location.search).get('cam')?.split(',').map(Number);
@@ -98,8 +101,8 @@ const camTarget = { pos: new THREE.Vector3(), look: new THREE.Vector3(), fov: 52
 function aimCamera(t, dt) {
   if (spot && spot.f && !spot.f.removed) {
     const s = spot.seat;
-    // máy đặt chéo phía trên mặt hồ, nhìn vào mặt người câu; cá ở nửa dưới khung hình
-    // cá hiếm, cá mập: máy áp sát dần lúc giằng co, lộ kết quả thì bật lùi lại
+    // máy đặt chéo phía trên mặt sông, nhìn vào mặt người câu; cá ở nửa dưới khung hình
+    // cá hiếm, cá chúa: máy áp sát dần lúc giằng co, lộ kết quả thì bật lùi lại
     // ghế càng cao, phao càng xa thì máy càng lùi để vẫn thấy cả người lẫn cá dưới nước
     const push = spot.big && spot.phase === 'struggle' ? Math.min(1, (performance.now() / 1000 - spot.t0) / (spot.msg.revealMs / 1000)) : 0;
     const lift = s.pos.y * 0.55;
@@ -123,6 +126,10 @@ function aimCamera(t, dt) {
     camTarget.look.copy(OVERVIEW.look);
     camTarget.fov = OVERVIEW.fov;
     camTarget.rate = 2.6;
+  }
+  // sông hẹp nên máy quay cận có thể ở ngay trên đầu người khác: ẩn người đó kẻo che hết khung hình
+  for (const f of fishers.values()) {
+    f.root.visible = !(spot && f !== spot.f && Math.hypot(f.seat.pos.x - camTarget.pos.x, f.seat.pos.z - camTarget.pos.z) < 3);
   }
   const k = damp(camTarget.rate, dt);
   cam.pos.lerp(camTarget.pos, k);
@@ -164,6 +171,7 @@ function addFisher(player, drop) {
     }
   }
   const f = new Fisher(player, seat, scene, gearLook(player.gear));
+  f.onPeck = (strength) => fx.ripple(seat.bobber.x, seat.bobber.z, 0.3 + strength * 0.35, 0.8, 0.55);
   fishers.set(player.key, f);
   if (!drop) {
     f.root.position.y = seat.pos.y;
@@ -279,7 +287,7 @@ function toScreen(v) {
   proj.copy(v).project(camera);
   return { x: ((proj.x + 1) / 2) * W, y: ((1 - proj.y) / 2) * H, behind: proj.z > 1 };
 }
-// Các chòi đứng sát nhau: hơn 10 người thì chỉ hiện tên người vừa hoạt động, tránh tên chồng lên nhau.
+// Các chỗ câu ngồi sát nhau: hơn 10 người thì chỉ hiện tên người vừa hoạt động, tránh tên chồng lên nhau.
 const activeAt = new Map();
 const touch = (key) => activeAt.set(key, performance.now());
 function placeTags() {
@@ -302,7 +310,7 @@ function placeTags() {
     const half = (tag.w ??= tag.el.offsetWidth) / 2;
     const x = Math.min(W - half - 6, Math.max(half + 6, s.x));
     // thẻ của người đang quay cận luôn nằm trong màn hình, dưới dải đen của hiệu ứng cá lớn
-    // chòi số chẵn đẩy thẻ lên một nấc để hai chòi cạnh nhau không đè tên
+    // chỗ số chẵn đẩy thẻ lên một nấc để hai người cạnh nhau không đè tên
     const y = focused ? Math.max(180, s.y - 40) : s.y - 6 - (f.seat.index % 2) * 34;
     tag.el.style.transform = `translate(${x}px, ${y}px) translate(-50%, -100%)`;
     if (focused !== tag.wasFocused) {
@@ -379,7 +387,7 @@ function startPull(msg, elapsed = 0) {
     kg: Math.round(okList.reduce((s, r) => s + r.kg, 0) * 10) / 10,
     shark,
     rare,
-    // cá to (cá mập, cá hiếm): máy lùi xa hơn, cá quẫy mạnh hơn
+    // cá to (cá chúa, cá hiếm): máy lùi xa hơn, cá quẫy mạnh hơn
     big: shark || rare,
     t0: performance.now() / 1000 - elapsed / 1000,
     phase: 'struggle',
@@ -387,7 +395,7 @@ function startPull(msg, elapsed = 0) {
     nextSweat: 0,
   };
   if (spot.big) {
-    const text = rare ? '🌟 CÁ HIẾM CẮN CÂU!' : msg.tier === 'boss' ? '🦈 KÉO CÁ MẬP LÊN!' : '🦈 CÁ MẬP CẮN CÂU!';
+    const text = rare ? '🌟 CÁ HIẾM CẮN CÂU!' : msg.tier === 'boss' ? '🐉 KÉO CÁ HÔ CHÚA LÊN!' : '🐉 CÁ CHÚA CẮN CÂU!';
     epic.start({ kind: rare ? 'rare' : 'shark', at: start, text, left: (msg.revealMs - elapsed) / 1000 });
   }
   stage.classList.add('focus');
@@ -396,7 +404,7 @@ function startPull(msg, elapsed = 0) {
   const pulling = $('pulling');
   if (rare) setRare({ n: rareState.every, every: rareState.every }, true);
   pulling.classList.toggle('rare', rare);
-  pulling.textContent = rare ? `🌟 ${msg.name} dính CÁ HIẾM!` : msg.count > 1 ? `💪 ${msg.name} giật ${msg.count} lần...` : shark ? `🦈 ${msg.name} đang kéo cá mập...` : `💪 ${msg.name} đang giật cá...`;
+  pulling.textContent = rare ? `🌟 ${msg.name} dính CÁ HIẾM!` : msg.count > 1 ? `💪 ${msg.name} giật ${msg.count} lần...` : shark ? `🐉 ${msg.name} đang kéo cá chúa...` : `💪 ${msg.name} đang giật cá...`;
   pulling.classList.add('on');
   sfx.reel(msg.revealMs / 1000);
   sfx.splash(spot.big ? 2.5 : 1);
@@ -433,7 +441,7 @@ function updateSpot(dt) {
   if (spot.phase === 'struggle') reveal();
   const k = e - R;
   if (spot.ok) {
-    // cá bay lên theo đường vòng cung rồi treo lủng lẳng dưới đầu cần (cá hiếm, cá mập bay cao và lâu hơn)
+    // cá bay lên theo đường vòng cung rồi treo lủng lẳng dưới đầu cần (cá hiếm, cá chúa bay cao và lâu hơn)
     const hang = hangPoint(spot.seat, fish);
     const flight = spot.big ? 0.85 : 0.45;
     if (k < flight) {
@@ -512,12 +520,12 @@ function endSpot() {
   $('pulling').classList.remove('on');
   if (s.phase === 'struggle') {
     // bị cắt ngang (trang tải lại, người rời hồ): dọn luôn
-    scene.remove(s.fish);
+    removeFish(scene, s.fish);
     if (s.f.state === 'struggle') s.f.setState('idle');
     return;
   }
   if (!s.ok) {
-    scene.remove(s.fish);
+    removeFish(scene, s.fish);
     return;
   }
   // cá treo thêm một lúc rồi nhảy vào xô
@@ -545,7 +553,7 @@ function endSpot() {
       s.fish.position.y += Math.sin(u * Math.PI) * 0.6;
       s.fish.scale.setScalar(s.into.scale * (1 - u * 0.85));
       if (u >= 1) {
-        scene.remove(s.fish);
+        removeFish(scene, s.fish);
         fx.splash(bucket, 0.3);
         return false;
       }
@@ -577,7 +585,7 @@ function flyToBucket(f, result, delay) {
       fish.rotation.set(0, 0, u * Math.PI * 3);
       fish.userData.tail.rotation.y = Math.sin(age * 30) * 0.6;
       if (u >= 1 || f.removed) {
-        scene.remove(fish);
+        removeFish(scene, fish);
         return false;
       }
       return true;
@@ -607,8 +615,8 @@ function showBanner(msg, s) {
   const [who, what, sub] = el.children;
   who.textContent = s.ok ? `🎉 ${msg.name} giật được${s.rare ? ' CÁ HIẾM' : ''}` : `${msg.name}`;
   if (s.ok) {
-    what.textContent = `${s.shark ? '🦈 ' : s.rare ? '🌟 ' : '🐟 '}${s.best.fish} ${kgText(s.best.kg)} kg`;
-    sub.textContent = msg.count > 1 ? `📢 Chòi số ${msg.seat + 1} lên ${s.wins}/${msg.count} con, tổng ${kyText(s.kg)}` : `📢 Chòi số ${msg.seat + 1} lên cá ${kyText(s.kg)}`;
+    what.textContent = `${s.shark ? '🐉 ' : s.rare ? '🌟 ' : '🐟 '}${s.best.fish} ${kgText(s.best.kg)} kg`;
+    sub.textContent = msg.count > 1 ? `📢 Chỗ số ${msg.seat + 1} lên ${s.wins}/${msg.count} con, tổng ${kyText(s.kg)}` : `📢 Chỗ số ${msg.seat + 1} lên cá ${kyText(s.kg)}`;
   } else {
     what.textContent = s.rare ? 'Cá hiếm xổng mất! 😭' : 'Xổng mất rồi! 😭';
     sub.textContent = msg.count > 1 ? `Trượt cả ${msg.count} lần giật` : `${s.best.fish} ~${kgText(s.best.kg)} kg đã bơi mất`;
@@ -688,11 +696,11 @@ function renderGuide(g) {
   // display.giftGuide: true hiện bảng ảnh quà; false thì chỉ giới thiệu các loại cá.
   if (g.display?.giftGuide) {
     for (const gift of g.gifts) {
-      const label = gift.tier === 'shark' ? `🦈 ${t[gift.tier].label}` : t[gift.tier].label;
+      const label = gift.tier === 'shark' ? `🐉 ${t[gift.tier].label}` : t[gift.tier].label;
       rows.push(`<div class="row"><img class="icon" src="${esc(gift.icon)}" alt=""><div class="what">${label} <em>${range(gift.tier)}</em></div></div>`);
     }
   } else {
-    for (const [tier, icon] of [['small', '🐟'], ['medium', '🐠'], ['large', '🐡'], ['shark', '🦈']]) {
+    for (const [tier, icon] of [['small', '🐟'], ['medium', '🐠'], ['large', '🐡'], ['shark', '🐉']]) {
       rows.push(`<div class="row"><div class="icon">${icon}</div><div class="what">${t[tier].label} <em>${range(tier)}</em></div></div>`);
     }
   }
@@ -762,7 +770,7 @@ function setWheelEvent(event, live) {
   if (live && event) toast(`${event.icon} ${event.label}: ${event.text}`, 'gift');
 }
 
-// Thi câu nhanh và cá mập: khung diễn biến, kèm cá mập 3D khi có sự kiện cá mập.
+// Thi câu nhanh và cá hô chúa: khung diễn biến, kèm con cá 3D khi có sự kiện cá hô chúa.
 function setLive(msg) {
   wheelUi.setLive(msg);
   if (!bossShark) return;
@@ -814,6 +822,7 @@ function frame(now) {
   for (let i = leftovers.length - 1; i >= 0; i--) if (!leftovers[i].update(dt)) leftovers.splice(i, 1);
   fx.update(dt);
   aimCamera(t, dt);
+  waiters.update(dt, camTarget.pos, spot);
   weather.update(t, dt, camera);
   if ((skyTick += dt) > 0.25) {
     skyTick = 0;
@@ -871,10 +880,10 @@ events.onmessage = (event) => {
       if (msg.down) {
         bossShark?.defeat();
         sfx.win(true);
-        wheelUi.liveResult(msg.name ? `🏆 ${msg.name} kéo được cá mập!` : '🏆 Cả hồ đã kéo được cá mập!');
+        wheelUi.liveResult(msg.name ? `🏆 ${msg.name} kéo được cá hô chúa!` : '🏆 Cả làng đã kéo được cá hô chúa!');
       } else {
         bossShark?.flee();
-        wheelUi.liveResult('💨 Cá mập đã bơi đi mất!');
+        wheelUi.liveResult('💨 Cá hô chúa lặn mất rồi!');
       }
       break;
     case 'sprint-end':
@@ -887,7 +896,7 @@ events.onmessage = (event) => {
       break;
     case 'join':
       addFisher(msg.player, true);
-      toast(`🎣 ${msg.player.name} vào chòi số ${msg.player.seat + 1}!`);
+      toast(`🎣 ${msg.player.name} vào chỗ số ${msg.player.seat + 1}!`);
       break;
     case 'leave':
       removeFisher(msg.key);
@@ -949,7 +958,7 @@ events.onmessage = (event) => {
       toast(msg.kind === 'share' ? `↗️ ${msg.name} vừa chia sẻ live, cảm ơn bạn!` : `➕ ${msg.name} vừa theo dõi, cảm ơn bạn!`, 'gift');
       break;
     case 'full':
-      toast(`🛏️ Hết chòi rồi, ${msg.name} ra quán võng chờ chút nhé!`);
+      toast(`🛏️ Hết chỗ rồi, ${msg.name} ra quán nước chờ chút nhé!`);
       break;
     case 'speak':
       speak(msg.id, msg.first);
@@ -961,4 +970,4 @@ events.onmessage = (event) => {
 };
 
 // Cho bảng điều khiển / kiểm thử: window.__pond
-window.__pond = { fishers, camera, renderer, scene, startPull, get spot() { return spot; }, get weather() { return weather; } };
+window.__pond = { fishers, camera, renderer, scene, startPull, get spot() { return spot; }, get weather() { return weather; }, get waiters() { return waiters; } };

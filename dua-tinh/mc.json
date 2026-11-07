@@ -1,0 +1,72 @@
+{
+  "fixes": {
+    "TP.": "Thành phố"
+  },
+
+  "thanks": [
+    "Cảm ơn {name} đã tiếp sức cho {province}!",
+    "{name} vừa tiếp sức cho {province}, cảm ơn bạn nhiều nhé!",
+    "Cảm ơn {name}, {province} lại có thêm điểm rồi!",
+    "Tuyệt vời {name}! {province} cảm ơn bạn nhé!"
+  ],
+  "thanksBig": [
+    "Ôi trời ơi! {name} vừa tiếp sức cực mạnh cho {province}!",
+    "Quá đỉnh luôn! {name} đưa {province} bay cao!",
+    "Bà con {province} ơi, {name} vừa tiếp sức cực lớn!"
+  ],
+  "thanksAnon": [
+    "Cảm ơn bạn đã tiếp sức cho {province}!",
+    "{province} vừa được tiếp sức, cảm ơn bạn nhiều nhé!"
+  ],
+  "thanksPending": [
+    "Cảm ơn {name}! Bạn bình luận tên tỉnh mình để cộng điểm cho quê nhà nhé!",
+    "Cảm ơn {name} nhé! Bình luận tên tỉnh của bạn để điểm được cộng vào tỉnh nha!"
+  ],
+  "thanksPendingAnon": [
+    "Cảm ơn bạn nhé! Bình luận tên tỉnh của bạn để được cộng điểm nha!"
+  ],
+
+  "leadFirst": [
+    "{province} mở màn cuộc đua, đang tạm dẫn đầu!",
+    "Những điểm đầu tiên đã về với {province}!"
+  ],
+  "lead": [
+    "Ngôi đầu đổi chủ! {province} vừa vượt qua {province2}!",
+    "{province} đã vượt lên dẫn đầu, {province2} phải cố lên thôi!",
+    "Bất ngờ chưa! {province} vươn lên đứng đầu, vượt qua {province2}!"
+  ],
+  "leading": [
+    "Hiện tại {province} đang dẫn đầu cuộc đua.",
+    "{province} vẫn đang giữ vững ngôi đầu bảng!",
+    "Đứng đầu lúc này vẫn là {province}!"
+  ],
+  "close": [
+    "Quá gay cấn! {province2} đang bám sát {province}!",
+    "{province} và {province2} đang so kè từng điểm một!",
+    "Chỉ cách nhau vài điểm thôi, {province2} có vượt được {province} không đây?"
+  ],
+  "farAhead": [
+    "{province} đang bỏ xa các tỉnh còn lại, tỉnh nào sẽ đuổi kịp đây?",
+    "{province} đang áp đảo, bà con các tỉnh khác đâu rồi?"
+  ],
+  "chase": [
+    "{province2} đang đứng thứ hai, quyết tâm đuổi theo {province}!",
+    "Đằng sau {province}, {province2} đang tăng tốc mạnh mẽ!"
+  ],
+  "rising": [
+    "{province} đang tăng tốc, đã lọt vào top ba!",
+    "Chú ý! {province} vừa chen chân vào top ba!"
+  ],
+  "invite": [
+    "Bà con tỉnh nào chưa điểm danh thì bình luận tên tỉnh mình ngay nhé!",
+    "Bình luận tên tỉnh của bạn để góp một điểm cho quê hương nào!",
+    "Tỉnh của bạn đang đứng thứ mấy? Bình luận tên tỉnh để cùng đua nhé!"
+  ],
+  "empty": [
+    "Cuộc đua sắp bắt đầu! Bình luận tên tỉnh của bạn để điểm danh nào!",
+    "Bản đồ còn trống trơn, tỉnh nào sẽ lên đầu tiên đây?"
+  ],
+  "reset": [
+    "Vòng đua mới bắt đầu! Bình luận tên tỉnh của bạn để điểm danh nào!"
+  ]
+}

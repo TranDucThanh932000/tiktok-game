@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bảng điều khiển · Đua Tỉnh</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏁</text></svg>">
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: "Segoe UI", Arial, sans-serif; background: #0f1d2e; color: #eef3fa; }
+    main { max-width: 680px; padding: 16px; }
+    h1 { margin: 0 0 10px; font-size: 24px; }
+    h2 { margin: 18px 0 8px; font-size: 15px; color: #ffd54a; text-transform: uppercase; letter-spacing: 1px; }
+    #status { margin: 0; padding: 8px 12px; border-radius: 8px; background: #3a1d24; }
+    #status.on { background: #1d3a26; }
+    .info { margin: 8px 0 0; padding: 8px 12px; border-radius: 8px; background: #1b2c42; font-size: 15px; }
+    #safe-box { display: flex; align-items: center; gap: 10px; margin-top: 8px; padding: 8px 12px; border: 1px solid #3c5675; border-radius: 8px; font-size: 14px; }
+    #safe-box.on { border-color: #ffd54a; background: #4a3a10; }
+    #safe-box span { flex: 1; }
+    #alerts p { margin: 8px 0 0; padding: 8px 12px; border: 1px solid #c0392b; border-radius: 8px; background: #4a1717; font-size: 14px; }
+    .hint { margin: 0 0 8px; font-size: 14px; color: #a9bdd6; }
+    label { display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px; font-size: 14px; }
+    input, select { width: 100%; max-width: 300px; padding: 8px 10px; border: 1px solid #3c5675; border-radius: 8px; background: #16263a; color: inherit; font: inherit; }
+    .row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .row label { margin: 0; }
+    button { padding: 9px 14px; border: 1px solid #4f6f95; border-radius: 8px; background: #22395a; color: inherit; font: inherit; cursor: pointer; }
+    button:hover { background: #2c4a72; }
+    .gift-icon { width: 28px; height: 28px; margin: -6px 6px -6px -4px; object-fit: contain; vertical-align: middle; }
+    .danger { border-color: #a0403a; background: #3a1d1d; }
+    #log { min-height: 1.4em; font-size: 14px; color: #a9bdd6; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th { padding: 4px 8px; text-align: left; color: #a9bdd6; font-weight: 600; border-bottom: 1px solid #3c5675; }
+    td { padding: 3px 8px; border-bottom: 1px solid #22395a; }
+    td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>🏁 Bảng điều khiển · Đua Tỉnh</h1>
+    <p id="status">Đang kết nối máy chủ game...</p>
+    <p class="info" id="race-info"></p>
+    <p class="info" id="session"></p>
+    <p class="info" id="tts"></p>
+    <div id="alerts"></div>
+    <div id="safe-box"><span id="safe"></span><button type="button" id="safe-toggle"></button></div>
+
+    <h2>Người xem giả lập</h2>
+    <label>Tên <input id="name" value="Bạn thử" maxlength="20"></label>
+    <div class="row">
+      <select id="province"></select>
+      <button type="button" id="join">💬 Comment tên tỉnh</button>
+    </div>
+    <div class="row">
+      <input id="free" maxlength="100" value="Nam Định đây cả nhà ơi">
+      <button type="button" id="free-send">💬 Gửi comment bất kỳ</button>
+    </div>
+    <div class="row" id="gifts"></div>
+    <div class="row">
+      <label>Quà khác (số xu) <input id="coins" type="number" min="1" max="100000" value="99"></label>
+      <button type="button" id="gift-coins">🎁 Gửi quà theo xu</button>
+      <button type="button" id="like">❤️ Thả tim</button>
+    </div>
+
+    <h2>Thử đông người</h2>
+    <p class="hint">Người thử cũng được lưu vào cuộc đua, nên bấm "Vòng mới" trước khi live.</p>
+    <div class="row">
+      <button type="button" id="crowd">👥 30 người comment tên tỉnh</button>
+      <button type="button" id="rain">🎁 Mưa quà từ người đã điểm danh</button>
+      <button type="button" id="likes">❤️ Mọi người thả tim</button>
+    </div>
+
+    <h2>Điều khiển</h2>
+    <div class="row">
+      <button type="button" id="mc">🎙️ MC bình luận ngay</button>
+      <button type="button" id="reset" class="danger">🏁 Vòng mới (xóa hết điểm)</button>
+      <button type="button" id="telegram-test">📨 Gửi thử Telegram</button>
+    </div>
+    <p id="log"></p>
+
+    <h2>Bảng điểm</h2>
+    <table>
+      <thead><tr><th class="n">#</th><th class="n">Biển</th><th>Tỉnh</th><th class="n">Người</th><th class="n">Điểm quà</th><th class="n">Tổng</th></tr></thead>
+      <tbody id="ranks"></tbody>
+    </table>
+  </main>
+
+  <script type="module">
+    const $ = (id) => document.getElementById(id);
+    const post = (url, body = {}) => fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    const chat = (name, text) => post('/api/simulate', { kind: 'chat', name, text });
+    const fmt = (n) => Number(n).toLocaleString('vi-VN');
+    const pick = (list) => list[Math.floor(Math.random() * list.length)];
+
+    let guide = null;
+    let provinces = [];
+    const meta = new Map();
+    const tally = new Map();
+    let members = 0;
+    const joined = new Set(); // tên người thử đã điểm danh
+
+    // 12 tên ghép 7 họ cho 84 người khác nhau trước khi phải thêm số.
+    let botNo = 0;
+    const FAMILY = ['Nguyễn', 'Trần', 'Lê', 'Phạm', 'Hoàng', 'Vũ', 'Đặng'];
+    const GIVEN = ['Lan Anh', 'Minh Tú', 'Quốc Bảo', 'Ngọc Mai', 'Đức Huy', 'Bích Ngọc', 'Tuấn Kiệt', 'Hải Yến', 'Gia Hân', 'Thành Đạt', 'Thu Hà', 'Hoàng Nam'];
+    const botName = () => {
+      const i = botNo++;
+      return `${GIVEN[i % GIVEN.length]} ${FAMILY[i % FAMILY.length]}${i >= 84 ? i : ''}`;
+    };
+    // Người xem gõ đủ kiểu: có dấu, không dấu, viết liền, kèm chữ.
+    const strip = (text) => text.normalize('NFD').replace(/\p{M}/gu, '').replace(/đ/g, 'd').replace(/Đ/g, 'D');
+    const styles = [(n) => n, (n) => strip(n).toLowerCase(), (n) => `${n} đây`, (n) => `${n} cố lên`, (n) => strip(n).replace(/\s+/g, '').toLowerCase(), (n) => n.toUpperCase()];
+    const comment = (name, province) => {
+      joined.add(name);
+      return chat(name, pick(styles)(province.name.replace(/^TP\. /, '')));
+    };
+
+    $('join').onclick = () => comment($('name').value, meta.get($('province').value));
+    $('free-send').onclick = () => {
+      joined.add($('name').value);
+      chat($('name').value, $('free').value);
+    };
+    $('gift-coins').onclick = () => post('/api/simulate', { kind: 'gift', name: $('name').value, coins: Number($('coins').value) || 1, count: 1 });
+    $('like').onclick = () => post('/api/simulate', { kind: 'like', name: $('name').value, count: 5 });
+
+    $('crowd').onclick = () => {
+      // Vài tỉnh được nhiều người hơn để cuộc đua có tỉnh dẫn, tỉnh bám đuổi.
+      const hot = Array.from({ length: 6 }, () => pick(provinces));
+      for (let i = 0; i < 30; i++) {
+        const province = Math.random() < 0.6 ? pick(hot) : pick(provinces);
+        setTimeout(() => comment(botName(), province), Math.random() * 6000);
+      }
+    };
+    $('rain').onclick = () => {
+      const names = [...joined];
+      if (!names.length) return ($('log').textContent = 'Chưa có người thử nào điểm danh, bấm "30 người comment tên tỉnh" trước.');
+      for (let i = 0; i < 10; i++) {
+        const gift = pick(guide.gifts);
+        setTimeout(() => post('/api/simulate', { kind: 'gift', name: pick(names), gift: gift.name, coins: gift.points, count: 1 + Math.floor(Math.random() * 3) }), Math.random() * 8000);
+      }
+    };
+    $('likes').onclick = () => {
+      for (const name of [...joined].slice(-15)) setTimeout(() => post('/api/simulate', { kind: 'like', name, count: 3 }), Math.random() * 3000);
+    };
+
+    let safeMode = false;
+    function showSafeMode(on) {
+      safeMode = on;
+      $('safe-box').classList.toggle('on', on);
+      $('safe').textContent = on ? '🛡️ Chế độ an toàn: BẬT. MC đang im, cuộc đua vẫn chạy.' : '🛡️ Chế độ an toàn: tắt. Tự bật khi có cảnh báo TikTok.';
+      $('safe-toggle').textContent = on ? 'Tắt chế độ an toàn' : 'Bật ngay';
+    }
+    $('safe-toggle').onclick = () => post('/api/safe-mode', { on: !safeMode });
+    $('mc').onclick = async () => {
+      const { message } = await (await post('/api/mc')).json();
+      $('log').textContent = message;
+    };
+    $('reset').onclick = () => {
+      if (confirm('Xóa toàn bộ điểm của các tỉnh và danh sách người đã điểm danh để bắt đầu vòng mới?')) post('/api/reset');
+    };
+    $('telegram-test').onclick = async () => {
+      $('log').textContent = 'Đang gửi tin thử Telegram...';
+      const { message } = await (await post('/api/telegram-test')).json();
+      $('log').textContent = message;
+    };
+
+    function renderGifts() {
+      $('gifts').replaceChildren(
+        ...guide.gifts.map((gift) => {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.append(Object.assign(new Image(), { className: 'gift-icon', alt: '', src: gift.icon }), `${gift.label} +${gift.points}`);
+          button.onclick = () => post('/api/simulate', { kind: 'gift', name: $('name').value, gift: gift.name, coins: gift.points, count: 1 });
+          return button;
+        }),
+      );
+    }
+
+    function renderProvinces() {
+      const sorted = [...provinces].sort((a, b) => a.name.localeCompare(b.name, 'vi'));
+      $('province').replaceChildren(...sorted.map((p) => Object.assign(document.createElement('option'), { value: p.id, textContent: `${p.name} (${p.plate})`, selected: p.id === 'nam-dinh' })));
+    }
+
+    function renderRanks() {
+      const list = [...tally].filter(([, t]) => t.score > 0).sort(([a, x], [b, y]) => y.score - x.score || x.at - y.at || meta.get(a).plate - meta.get(b).plate);
+      $('ranks').replaceChildren(
+        ...list.map(([id, t], i) => {
+          const tr = document.createElement('tr');
+          for (const [text, cls] of [[i + 1, 'n'], [meta.get(id).plate, 'n'], [meta.get(id).name, ''], [fmt(t.people), 'n'], [fmt(t.gift), 'n'], [fmt(t.score), 'n']]) {
+            tr.append(Object.assign(document.createElement('td'), { textContent: text, className: cls }));
+          }
+          return tr;
+        }),
+      );
+      $('race-info').textContent = `🗺️ ${fmt(members)} người đã điểm danh, ${list.length}/63 tỉnh có điểm.${list[0] ? ` Dẫn đầu: ${meta.get(list[0][0]).name} ${fmt(list[0][1].score)} điểm.` : ''}`;
+    }
+
+    let renderTimer = 0;
+    const scheduleRanks = () => {
+      if (!renderTimer) renderTimer = setTimeout(() => {
+        renderTimer = 0;
+        renderRanks();
+      }, 300);
+    };
+
+    function loadRace(race) {
+      tally.clear();
+      for (const row of race.tally) tally.set(row.id, row);
+      members = race.members;
+      renderRanks();
+    }
+
+    function showStatus({ connected, text }) {
+      $('status').textContent = text;
+      $('status').classList.toggle('on', connected);
+    }
+    const showAlert = ({ at, text }) => $('alerts').prepend(Object.assign(document.createElement('p'), { textContent: `⚠️ ${new Date(at).toLocaleTimeString('vi-VN')} TikTok cảnh báo: ${text}` }));
+    const showSession = ({ roomId, diamonds, gifts, since }) => {
+      $('session').textContent = roomId
+        ? `💎 Phiên live này (từ ${new Date(since).toLocaleTimeString('vi-VN')}): ${diamonds.toLocaleString('vi-VN')} kim cương từ ${gifts.toLocaleString('vi-VN')} lượt.`
+        : '💎 Chưa có phiên live nào từ lúc bật server.';
+    };
+
+    const events = new EventSource('/events');
+    events.onmessage = (event) => {
+      const msg = JSON.parse(event.data);
+      switch (msg.type) {
+        case 'snapshot':
+          guide = msg.guide;
+          provinces = msg.provinces;
+          for (const p of provinces) meta.set(p.id, p);
+          if (!$('province').options.length) renderProvinces();
+          renderGifts();
+          showStatus(msg.status);
+          $('alerts').replaceChildren();
+          msg.alerts.forEach(showAlert);
+          showSession(msg.session);
+          $('tts').textContent = msg.tts.enabled ? `🔊 MC đọc bằng giọng ${msg.tts.voice}` : '🔇 MC chưa có tiếng: cần VBEE_TOKEN và VBEE_APP_ID trong .env rồi chạy lại server';
+          showSafeMode(msg.safeMode);
+          loadRace(msg.race);
+          break;
+        case 'reset':
+          joined.clear();
+          loadRace(msg.race);
+          $('log').textContent = 'Đã bắt đầu vòng mới.';
+          break;
+        case 'join':
+          members = msg.members;
+        // falls through
+        case 'gift':
+          tally.set(msg.province, { people: msg.people, gift: msg.gift, score: msg.score, at: msg.at });
+          scheduleRanks();
+          break;
+        case 'pending':
+          $('log').textContent = `${msg.name} chưa comment tên tỉnh, đang giữ ${fmt(msg.held)} điểm quà.`;
+          break;
+        case 'say':
+          if (msg.text) $('log').textContent = `🎙️ MC: ${msg.text}`;
+          break;
+        case 'safe-mode':
+          showSafeMode(msg.on);
+          break;
+        case 'speak-error':
+          $('log').textContent = `Vbee lỗi: ${msg.message}`;
+          break;
+        case 'status':
+          showStatus(msg);
+          break;
+        case 'moderation':
+          showAlert(msg);
+          break;
+        case 'session':
+          showSession(msg);
+          break;
+      }
+    };
+    events.onerror = () => showStatus({ connected: false, text: 'Mất kết nối tới máy chủ game, kiểm tra cửa sổ đang chạy npm start.' });
+  </script>
+</body>
+</html>

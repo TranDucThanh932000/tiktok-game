@@ -1,5 +1,5 @@
-// Hồ câu dịch vụ kiểu Việt (theo bản vẽ vietnam_service_fishing_pond_layout.png): ao chữ nhật bờ xi măng, 20 chòi đánh số,
-// 2 quạt nước sục khí, hàng dừa, quán võng, bàn cân + loa, bãi xe máy, đường bê tông và cổng vào.
+// Khúc sông quê miền Tây (theo bản vẽ vietnam_riverbank_fishing_layout.png): cây đa, đình làng, quán nước đầu làng, đường làng,
+// cầu ao gỗ, cầu tre qua sông, chà cá, đò ngang, vó, ghe neo, bờ đê dừa nước, ruộng lúa và chòi canh, lục bình trôi theo dòng.
 // Mọi thứ dựng bằng hình khối low-poly + texture vẽ bằng canvas, không có file ngoài.
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
@@ -158,33 +158,7 @@ const thatchTexture = () =>
     { repeat: [2, 1] },
   );
 
-// Mái tôn sóng màu xanh, có vệt gỉ.
-const zincTexture = () =>
-  canvasTexture(
-    256,
-    256,
-    (g, w, h) => {
-      g.fillStyle = '#4f83a6';
-      g.fillRect(0, 0, w, h);
-      const n = 16;
-      for (let i = 0; i < n; i++) {
-        const x = (i / n) * w;
-        const grad = g.createLinearGradient(x, 0, x + w / n, 0);
-        grad.addColorStop(0, 'rgba(255,255,255,0.28)');
-        grad.addColorStop(0.5, 'rgba(0,0,0,0.05)');
-        grad.addColorStop(1, 'rgba(0,20,40,0.32)');
-        g.fillStyle = grad;
-        g.fillRect(x, 0, w / n, h);
-      }
-      for (let i = 0; i < 26; i++) {
-        g.fillStyle = `rgba(${range(130, 170)},${range(70, 95)},${range(30, 50)},${range(0.12, 0.32)})`;
-        g.fillRect(range(0, w), range(0, h * 0.5), range(3, 9), range(40, 170));
-      }
-    },
-    { repeat: [2, 1] },
-  );
-
-// Tấm biển gỗ sơn số chòi: 20 biển chung một ảnh. Chòi số đẹp (8, 9) sơn đỏ chữ vàng.
+// Tấm biển gỗ sơn số chỗ câu: 20 biển chung một ảnh. Số đẹp (8, 9) sơn đỏ chữ vàng.
 const SIGN_COLS = 5;
 const SIGN_ROWS = 4;
 const signAtlas = () =>
@@ -237,36 +211,121 @@ const paintedBoard = (w, h, bg, draw) =>
   });
 
 // ---------------------------------------------------------------- Bản vẽ → toạ độ cảnh
-// Toạ độ pixel lấy từ vietnam_service_fishing_pond_layout.png (giữa ao là px 705.5, 632.5; 1 px = 0,0192 đơn vị).
-// Ảnh nhìn từ trên xuống: phía trên ảnh là phía xa máy quay (z âm), bên phải ảnh là đường vào (x dương).
+// Toạ độ pixel lấy từ vietnam_riverbank_fishing_layout.png (giữa bản đồ là px 765, 677; 1 px = 0,0192 đơn vị).
+// Ảnh nhìn từ trên xuống: phía trên ảnh là phía xa máy quay (z âm), sông chảy từ trái sang phải (x dương).
 const K = 0.0192;
-const P = (px, py) => [(px - 705.5) * K, (py - 632.5) * K];
+const X = (px) => (px - 765) * K;
+const Z = (py) => (py - 677) * K;
+const P = (px, py) => [X(px), Z(py)];
 
-const POND_HX = 9.6; // nửa chiều ngang ao
-const POND_HZ = 7.05; // nửa chiều dọc ao
-const RIM = 0.4; // bờ xi măng
 const BANK_Y = 0.36; // mặt đất cao hơn mặt nước
-const DECK_Y = 0.46;
-const HUT_SPACING = 117.6 * K;
+const DECK_Y = 0.46; // mặt cầu ao và bến đò
+const HOT = { x: X(705), z: Z(677), r: 70 * K }; // chà cá
 
-const FANS = [P(500, 632), P(912, 632)].map(([x, z]) => ({ x, z }));
-// swim: đường lượn của cá mập trong sự kiện.
-export const POND = { hx: POND_HX, hz: POND_HZ, fans: FANS, swim: { x: 0, z: 0, rx: 6.8, rz: 4.3 } };
+// Đường cong trơn đi qua các điểm [x, y] có x tăng dần, ngoài hai đầu thì giữ nguyên.
+function smoothCurve(points) {
+  const n = points.length;
+  const slope = points.map((p, i) => {
+    const a = points[Math.max(0, i - 1)];
+    const b = points[Math.min(n - 1, i + 1)];
+    return (b[1] - a[1]) / (b[0] - a[0]);
+  });
+  return (x) => {
+    if (x <= points[0][0]) return points[0][1];
+    if (x >= points[n - 1][0]) return points[n - 1][1];
+    let i = 0;
+    while (points[i + 1][0] < x) i++;
+    const h = points[i + 1][0] - points[i][0];
+    const u = (x - points[i][0]) / h;
+    const u2 = u * u;
+    const u3 = u2 * u;
+    return (2 * u3 - 3 * u2 + 1) * points[i][1] + (u3 - 2 * u2 + u) * h * slope[i] + (-2 * u3 + 3 * u2) * points[i + 1][1] + (u3 - u2) * h * slope[i + 1];
+  };
+}
+// Hai bờ sông theo bản vẽ (px từ 59 đến 1470), hai đầu kéo dài ra ngoài khung hình cho máy quay cận vẫn thấy sông chảy tiếp.
+const bankN = smoothCurve([[-6000, 495], [-4000, 470], [-2500, 510], [-1200, 470], [-400, 515], [59, 500], [200, 484], [300, 483], [500, 495], [700, 508], [880, 510], [1000, 500], [1150, 478], [1270, 469], [1380, 475], [1470, 500], [2200, 470], [3000, 515], [4500, 480], [7500, 500]].map(([px, py]) => P(px, py)));
+const bankS = smoothCurve([[-6000, 850], [-4000, 835], [-2500, 860], [-1200, 830], [-400, 865], [59, 852], [200, 838], [300, 836], [500, 855], [700, 875], [900, 885], [1120, 882], [1200, 860], [1300, 835], [1390, 828], [1470, 838], [2200, 820], [3000, 870], [4500, 835], [7500, 850]].map(([px, py]) => P(px, py)));
 
-const ROW_X = [285, 403, 520, 638, 756, 873, 991, 1108].map((px) => P(px, 0)[0]);
-const SEAT_OFF = RIM + 0.6; // ghế cách mép nước
-// Thứ tự đúng số chòi trên bản vẽ: 1–8 bờ trên (trái → phải), 9–16 bờ dưới (phải → trái), 17–20 bờ trái (dưới → trên).
-// gap: khoảng từ ghế tới mái, bờ dưới lớn hơn vì mái nằm giữa người câu và máy quay.
-const HUTS = [
-  ...ROW_X.map((x) => ({ x, z: -(POND_HZ + SEAT_OFF), inward: [0, 1], gap: 0.72 })),
-  ...[...ROW_X].reverse().map((x) => ({ x, z: POND_HZ + SEAT_OFF, inward: [0, -1], gap: 1.05 })),
-  ...[825, 677, 530, 383].map((py) => ({ x: -(POND_HX + SEAT_OFF), z: P(0, py)[1], inward: [1, 0], gap: 0.8 })),
+const RIVER_X = [];
+for (let x = -130; x < -30; x += 5) RIVER_X.push(x);
+for (let x = -30; x < 30; x += 0.6) RIVER_X.push(x);
+for (let x = 30; x <= 130; x += 5) RIVER_X.push(x);
+
+// roam: đàn cá lượn dọc sông. hot: cá tụ quanh chà. swim: đường lượn của cá hô chúa trong sự kiện, nằm giữa cầu tre và đò ngang.
+export const POND = {
+  hot: HOT,
+  roam: { x: 0, z: 0.1, rx: 13, rz: 2.5 },
+  swim: { x: 0.1, z: -0.1, rx: 5, rz: 1.25 },
+};
+
+// Cầu tre: mặt cầu cong lên ở giữa.
+const BRIDGE = { x: X(360), z0: Z(441), z1: Z(876), rise: 0.85 };
+const bridgeY = (z) => {
+  const mid = (BRIDGE.z0 + BRIDGE.z1) / 2;
+  const u = (z - mid) / ((BRIDGE.z1 - BRIDGE.z0) / 2);
+  return BANK_Y + 0.06 + BRIDGE.rise * (1 - u * u);
+};
+
+// Các chỗ ngồi câu. 14 chỗ đầu đúng các chấm trên bản vẽ, 6 chỗ sau thêm vào hai bờ để hồ vẫn đủ 20 người.
+// Đặt seats: 14 trong config.json thì chỉ dựng đúng 14 chỗ của bản vẽ.
+const SPOTS = [
+  ['bank', 176, 456],
+  ['bank', 270, 450],
+  ['bank', 588, 471],
+  ['bank', 770, 477],
+  ['pier', 894, 528, { skew: -0.2 }],
+  ['bank', 1029, 447],
+  ['bridge', 356, 603],
+  ['bridge', 356, 750],
+  ['boat', 911, 800, { skew: 0.3 }],
+  ['bank', 235, 871],
+  ['bank', 441, 882],
+  ['bank', 676, 912],
+  ['bank', 823, 923],
+  ['bank', 1029, 918],
+  ['bank', 480, 466],
+  ['bank', 1110, 455],
+  ['bank', 1270, 440],
+  ['bank', 505, 885],
+  ['bank', 1120, 916],
+  ['bank', 1262, 875],
 ];
-export const HUT_COUNT = HUTS.length;
+export const SPOT_COUNT = SPOTS.length;
 
-const PROP = { x0: -13.8, x1: 15, z0: -13, z1: 13.1 }; // ranh khu hồ (đường nét đứt trên bản vẽ)
-const ROAD = { x0: POND_HX + RIM, x1: POND_HX + RIM + 1.28 };
-const RIGHT = { x0: P(1294, 0)[0] + 0.12, x1: P(1447, 0)[0] + 0.4 }; // dải bên phải: quán võng, bàn cân, bãi xe
+// Bố trí đồ quanh ghế theo từng loại chỗ ngồi: [ngang, dọc] tính từ ghế, dọc dương là phía người câu nhìn tới.
+const GEAR_AT = {
+  bank: { bucket: [-0.68, 0.3], holder: [0.5, 0.42], stake: [0.92, -0.4], mat: true, cooler: true },
+  pier: { bucket: [-0.6, 0.1], holder: [0.52, 0.25], stake: [0.66, -0.5] },
+  bridge: { bucket: [-0.66, 0.02], holder: [0.48, 0.22], stake: [0, -0.62] },
+  boat: { bucket: [-0.72, 0.05], holder: [0.55, 0.25], stake: [0.75, -0.3] },
+};
+
+const RIGHT = { x0: X(1215), x1: X(1385) }; // khu bàn cân, cạnh quán nước
+
+// Đường người phục vụ đi từ đường làng tới cạnh chỗ ngồi, gồm các điểm [x, y, z]. Sang bờ nam thì đi qua cầu tre,
+// men theo phía tay vịn để không va vào người đang ngồi câu trên cầu.
+const ROAD_N = Z(323);
+const ROAD_S = Z(958);
+const ROAD_Y = BANK_Y + 0.06;
+const WALK_X = BRIDGE.x + 0.36;
+function serveRoute(kind, pos, side, north) {
+  const onBridge = (toZ) => {
+    const pts = [];
+    for (let z = BRIDGE.z0; z < toZ; z += 0.5) pts.push([WALK_X, bridgeY(z) + 0.025, z]);
+    pts.push([WALK_X, bridgeY(toZ) + 0.025, toZ]);
+    return pts;
+  };
+  const toBridge = [[WALK_X, ROAD_Y, ROAD_N]];
+  if (kind === 'bridge') return [...toBridge, ...onBridge(pos.z - 0.85)];
+  if (kind === 'pier') {
+    const x = pos.x - 0.45;
+    return [[x, ROAD_Y, ROAD_N], [x, BANK_Y, Z(404)], [x, DECK_Y, Z(416)], [x, DECK_Y, pos.z - 0.75]];
+  }
+  if (kind === 'boat') return [[pos.x + 0.9, 0, pos.z - 1.15]]; // xuồng cập ngay trước ghe
+  const x = pos.x + side.x * 1.05;
+  if (north) return [[x, ROAD_Y, ROAD_N], [x, BANK_Y, pos.z]];
+  return [...toBridge, ...onBridge(BRIDGE.z1), [WALK_X, BANK_Y, Z(940)], [WALK_X, ROAD_Y, ROAD_S], [x, ROAD_Y, ROAD_S], [x, BANK_Y, pos.z]];
+}
 
 // ---------------------------------------------------------------- Shader nước
 
@@ -293,17 +352,20 @@ const rainRings = /* glsl */ `
 const glsl2 = (n) => (Number.isInteger(n) ? `${n}.0` : `${n}`);
 const vec2Of = (a, b) => `vec2(${glsl2(a)}, ${glsl2(b)})`;
 
-const pondVertex = /* glsl */ `
+const riverVertex = /* glsl */ `
+  attribute float aEdge;
   varying vec3 vP;
+  varying float vEdge;
   void main() {
     vec4 world = modelMatrix * vec4(position, 1.0);
     vP = world.xyz;
+    vEdge = aEdge;
     gl_Position = projectionMatrix * viewMatrix * world;
   }
 `;
 
-// Nước ao xanh rêu, ánh màu trời. Quạt nước khuấy bọt trắng và đẩy sóng tròn về phía nam. Tối: vệt đèn tuýp hắt dọc bờ.
-const pondFragment = /* glsl */ `
+// Nước sông phù sa, chảy từ trái sang phải, ánh màu trời. Chà cá sủi bọt, đò ngang rẽ sóng, nước vỗ mép bờ.
+const riverFragment = /* glsl */ `
   uniform float uTime;
   uniform vec3 uTint;
   uniform float uRain;
@@ -314,7 +376,9 @@ const pondFragment = /* glsl */ `
   uniform vec3 uHor;
   uniform vec3 uGlint;
   uniform vec3 uSunDir;
+  uniform vec3 uFerry; // x, z, độ mạnh của sóng đò
   varying vec3 vP;
+  varying float vEdge;
   ${rainRings}
   float noise2(vec2 p) {
     vec2 i = floor(p);
@@ -335,20 +399,6 @@ const pondFragment = /* glsl */ `
     g += vec2(0.93, 0.37) * cos(dot(p, vec2(0.93, 0.37)) * 11.0 + t * 3.1) * 0.016;
     return g * amp;
   }
-  // Bọt của một quạt: hai vùng sục dưới bánh guồng, một dải bọt loe dần về phía nam (z dương) và các vòng sóng trên bản vẽ.
-  void fan(vec2 p, float t, inout vec2 grad, inout float foam) {
-    float r = max(length(p), 0.001);
-    grad += (p / r) * cos(r * 7.0 - t * 6.0) * 0.07 * exp(-r * 0.5);
-    float south = smoothstep(-0.2, 0.5, p.y);
-    float widen = 0.9 + max(p.y, 0.0) * 0.32;
-    float trail = smoothstep(4.2, 0.2, p.y) * south * smoothstep(1.5, 0.3, abs(p.x) / widen);
-    float wheel = smoothstep(1.05, 0.25, length(vec2(abs(p.x) - 1.05, p.y * 1.15)));
-    float body = max(trail * 0.8, wheel);
-    float n = noise2(p * 5.5 + vec2(0.0, -t * 1.9)) * 0.6 + noise2(p * 13.0 + vec2(t * 0.7, -t * 2.6)) * 0.4;
-    float bubble = smoothstep(1.02 - body * 0.72, 1.2 - body * 0.72, n + 0.32) * smoothstep(0.02, 0.3, body);
-    float arc = smoothstep(0.1, 0.0, abs(fract(r * 0.72 - t * 0.42) - 0.5)) * south * smoothstep(5.2, 1.3, r) * smoothstep(0.75, 0.1, abs(p.x) / max(r, 0.5));
-    foam = max(foam, max(bubble, arc * 0.55));
-  }
   float twinkle(vec2 p, float time) {
     vec2 cell = floor(p);
     float h = rainHash(cell);
@@ -361,45 +411,51 @@ const pondFragment = /* glsl */ `
   void main() {
     vec2 xz = vP.xz;
     float t = uTime;
-    vec2 g = waves(xz, t);
+    vec2 flow = xz - vec2(t * 0.32, 0.0);
+    vec2 g = waves(flow, t);
     float foam = 0.0;
-    fan(xz - ${vec2Of(FANS[0].x, FANS[0].z)}, t, g, foam);
-    fan(xz - ${vec2Of(FANS[1].x, FANS[1].z)}, t + 2.3, g, foam);
+    // chà cá: nước sủi và gợn tròn trong vòng phao
+    vec2 hot = xz - ${vec2Of(HOT.x, HOT.z)};
+    float hotR = length(hot);
+    float inHot = smoothstep(${glsl2(HOT.r)}, ${glsl2(HOT.r * 0.5)}, hotR);
+    g += (hot / max(hotR, 0.001)) * cos(hotR * 9.0 - t * 3.5) * 0.05 * inHot;
+    float bubble = noise2(xz * 6.0 + vec2(t * 0.8, -t * 1.4)) * 0.6 + noise2(xz * 14.0 - vec2(t * 1.1, 0.0)) * 0.4;
+    foam = max(foam, smoothstep(0.6, 0.8, bubble) * inHot * 0.7);
+    // đò ngang rẽ nước hai bên mạn
+    vec2 ferry = (xz - uFerry.xy) * vec2(1.7, 0.7);
+    float wake = exp(-dot(ferry, ferry)) * uFerry.z;
+    foam = max(foam, smoothstep(0.42, 0.72, noise2(xz * 9.0 + vec2(t * 0.9, t * 1.3))) * wake * 0.8);
+    // nước vỗ mép bờ
+    float lap = smoothstep(0.1, 0.0, abs(vEdge - 0.46 - sin(xz.x * 1.3 + t * 1.2) * 0.05));
+    foam = max(foam, lap * (0.25 + 0.3 * noise2(flow * 3.0)));
+
     vec3 N = normalize(vec3(-g.x, 1.0, -g.y));
     vec3 V = normalize(cameraPosition - vP);
     vec3 R = reflect(-V, N);
-    // ven bờ nước đục sáng hơn giữa ao
-    float rim = min(${glsl2(POND_HX)} - abs(xz.x), ${glsl2(POND_HZ)} - abs(xz.y));
-    float mud = noise2(xz * 0.35 + 3.0);
-    vec3 deep = mix(vec3(0.05, 0.19, 0.125), vec3(0.075, 0.22, 0.13), mud);
-    vec3 shallow = vec3(0.16, 0.31, 0.19);
-    vec3 col = mix(shallow, deep, smoothstep(0.0, 2.4, rim));
+    // phù sa: ven bờ đục sáng hơn, giữa dòng sậm hơn, vệt nước loang kéo dài theo dòng chảy
+    float silt = noise2(vec2(flow.x * 0.28, xz.y * 1.5) + 3.0) * 0.65 + noise2(vec2(flow.x * 0.8, xz.y * 4.0)) * 0.35;
+    vec3 deep = mix(vec3(0.27, 0.16, 0.06), vec3(0.4, 0.25, 0.1), silt);
+    vec3 shallow = vec3(0.46, 0.31, 0.14);
+    vec3 col = mix(shallow, deep, smoothstep(0.4, 2.4, vEdge));
     // ánh trời trên mặt nước: nhìn càng xiên càng rõ
-    float fres = 0.2 + 0.8 * pow(1.0 - max(dot(N, V), 0.0), 3.0);
+    float fres = 0.16 + 0.84 * pow(1.0 - max(dot(N, V), 0.0), 3.0);
     vec3 sky = mix(uHor, uTop, smoothstep(0.1, 0.8, R.y));
-    col = mix(col, sky, fres * 0.62);
+    col = mix(col, sky, fres * 0.24);
     // nắng lấp lánh theo màu nắng lúc đó
     float sun = pow(max(dot(R, uSunDir), 0.0), 240.0) * 1.8 + pow(max(dot(R, uSunDir), 0.0), 24.0) * 0.1;
     col += uGlint * sun;
-    vec2 wob = xz + g * 2.5;
-    col += uGlint * twinkle(wob * vec2(1.1, 2.6) + vec2(t * 0.06, 0.0), t) * 0.26 * (1.0 - uNight);
+    vec2 wob = flow + g * 2.5;
+    col += uGlint * twinkle(wob * vec2(1.1, 2.6), t) * 0.26 * (1.0 - uNight);
     col += uGlint * twinkle(wob * vec2(2.1, 4.6) + 7.0, t * 1.4) * 0.14 * (1.0 - uNight);
     col *= uTint;
-    // đèn tuýp hắt xuống nước: mỗi chòi một vệt, kéo dài ra giữa ao và rung rinh theo sóng
-    vec3 lampCol = vec3(0.85, 1.0, 0.92);
-    float wx = (xz.x - ${glsl2(HUTS[0].x)}) / ${glsl2(HUT_SPACING)} + g.x * 1.5;
-    float streakX = pow(0.5 + 0.5 * cos(6.2832 * wx), 12.0);
-    float rowLight = streakX * exp(-(${glsl2(POND_HZ)} - abs(xz.y)) * 0.85) * step(abs(xz.x), ${glsl2(POND_HX)} - 0.7);
-    float wz = (xz.y - ${glsl2(HUTS[16].z)}) / ${glsl2((677 - 825) * K)} + g.y * 1.5;
-    float streakZ = pow(0.5 + 0.5 * cos(6.2832 * wz), 12.0) * smoothstep(5.2, 3.4, abs(xz.y + 0.6));
-    float sideLight = streakZ * exp(-(xz.x + ${glsl2(POND_HX)}) * 0.85);
-    col += lampCol * uLamp * (rowLight + sideLight) * 0.42;
-    // bọt trắng của quạt nước, trời tối vẫn thấy nhờ ánh đèn
-    vec3 foamCol = mix(vec3(0.95, 0.98, 0.96), vec3(0.32, 0.4, 0.46), uNight * (1.0 - uLamp * 0.5));
-    col = mix(col, foamCol * max(uTint, vec3(0.4)), foam * 0.9);
-    // mưa làm mặt ao gợn tròn
+    // bọt trắng, trời tối vẫn thấy nhờ ánh đèn
+    vec3 foamCol = mix(vec3(0.93, 0.9, 0.82), vec3(0.32, 0.38, 0.42), uNight * (1.0 - uLamp * 0.5));
+    col = mix(col, foamCol * max(uTint, vec3(0.4)), foam * 0.85);
+    // mưa làm mặt sông gợn tròn
     col += vec3(0.8, 0.9, 0.95) * rainRings(xz * 1.35, t, uRain * 0.95) * 0.42;
-    float alpha = mix(0.82, 0.94, smoothstep(0.0, 2.0, rim));
+    // khúc sông xa tan vào chân trời
+    col = mix(col, uHor, smoothstep(58.0, 125.0, length(cameraPosition - vP)));
+    float alpha = mix(0.7, 0.95, smoothstep(0.35, 1.3, vEdge));
     gl_FragColor = vec4(col, max(alpha, foam));
     #include <colorspace_fragment>
   }
@@ -407,20 +463,73 @@ const pondFragment = /* glsl */ `
 
 // ---------------------------------------------------------------- Dựng cảnh
 
-// overview: { pos, look } của góc máy toàn cảnh.
-export function buildWorld(scene, overview) {
+// Tấm lưới bám theo một hàm: fn(x, j) trả về { y, z, ...thuộc tính khác }. zUp: z tăng theo j (để mặt lưới ngửa lên trên).
+function sheet(xs, rows, fn, zUp, attrs = {}) {
+  const pos = [];
+  const extra = Object.fromEntries(Object.keys(attrs).map((k) => [k, []]));
+  const index = [];
+  xs.forEach((x, i) => {
+    for (let j = 0; j <= rows; j++) {
+      const v = fn(x, j);
+      pos.push(x, v.y, v.z);
+      for (const k in extra) extra[k].push(...[v[k]].flat());
+      if (i < xs.length - 1 && j < rows) {
+        const a = i * (rows + 1) + j;
+        const b = a + rows + 1;
+        if (zUp) index.push(a, a + 1, b, b, a + 1, b + 1);
+        else index.push(a, b, a + 1, a + 1, b, b + 1);
+      }
+    }
+  });
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  for (const k in extra) g.setAttribute(k, new THREE.Float32BufferAttribute(extra[k], attrs[k]));
+  g.setIndex(index);
+  g.computeVertexNormals();
+  return g;
+}
+
+// Cây tre, cột chống: một thanh tròn nối hai điểm.
+const UP = new THREE.Vector3(0, 1, 0);
+function pole(a, b, r, material, opts = {}) {
+  const from = new THREE.Vector3(...a);
+  const dir = new THREE.Vector3(...b).sub(from);
+  const m = cyl(r, r, dir.length(), material, [...from.clone().addScaledVector(dir, 0.5).toArray()], { seg: 6, ...opts });
+  m.quaternion.setFromUnitVectors(UP, dir.normalize());
+  return m;
+}
+
+// Mái ngói bốn mái của đình: gốc toạ độ ở giữa đường viền mái.
+function hipRoof(w, d, ridge, h) {
+  const A = [-w / 2, 0, d / 2];
+  const B = [w / 2, 0, d / 2];
+  const C = [w / 2, 0, -d / 2];
+  const D = [-w / 2, 0, -d / 2];
+  const E = [-ridge / 2, h, 0];
+  const F = [ridge / 2, h, 0];
+  const tris = [A, B, F, A, F, E, C, D, E, C, E, F, D, A, E, B, C, F];
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(tris.flat(), 3));
+  g.setAttribute('uv', new THREE.Float32BufferAttribute(tris.flatMap((p) => [p[0] * 1.5, p[1] * 2.4 + Math.abs(p[2]) * 0.4]), 2));
+  g.computeVertexNormals();
+  return g;
+}
+
+// overview: { pos, look } của góc máy toàn cảnh. seatCount: số chỗ câu đang mở (seats trong config.json).
+export function buildWorld(scene, overview, seatCount = SPOT_COUNT) {
   const updaters = [];
   const uniforms = {
     uTime: { value: 0 },
     uTint: { value: new THREE.Color(1, 1, 1) },
     uRain: { value: 0 },
     uNight: { value: 0 },
-    uLamp: { value: 0 }, // 0: đèn tắt; 1: đèn tuýp sáng
+    uLamp: { value: 0 }, // 0: đèn tắt; 1: đèn câu sáng
     uWind: { value: 0 },
     uTop: { value: new THREE.Color('#3f7fc4') },
     uHor: { value: new THREE.Color('#ffd29a') },
     uGlint: { value: new THREE.Color('#fff3dc') },
     uSunDir: { value: new THREE.Vector3(0.4, 0.7, 0.5).normalize() },
+    uFerry: { value: new THREE.Vector3(0, 0, 0) },
   };
   // Gió do weather.js đặt: dấu là hướng, độ lớn 0..~1.5
   const env = { wind: 0 };
@@ -439,204 +548,110 @@ export function buildWorld(scene, overview) {
     texBatches.get(material).geos.push(geo.applyMatrix4(matrix));
   }
   const thatchMat = new THREE.MeshStandardMaterial({ map: thatchTexture(), roughness: 1, side: THREE.DoubleSide });
-  const zincMat = new THREE.MeshStandardMaterial({ map: zincTexture(), roughness: 0.55, metalness: 0.25, side: THREE.DoubleSide });
   const signMat = new THREE.MeshStandardMaterial({ map: signAtlas(), roughness: 0.8 });
-  // đèn tuýp: sáng lên khi trời tối (weather.js chỉnh độ sáng)
+  // đèn câu: sáng lên khi trời tối (weather.js chỉnh độ sáng)
   const tubeMat = new THREE.MeshStandardMaterial({ color: '#eef8f2', emissive: '#d8fff0', emissiveIntensity: 0.1, roughness: 0.3 });
   const bulbMat = new THREE.MeshStandardMaterial({ color: '#ffe8b0', emissive: '#ffb648', emissiveIntensity: 0.1, roughness: 0.4 });
   const lampPool = new THREE.MeshBasicMaterial({ map: haloTexture(), color: '#dffff0', transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, fog: false });
 
-  // ---------------------------------------------------------------- Đất: bãi cỏ trong khu hồ, ruộng lúa bên ngoài
+  const bamboo = mat('#c8ae62', { rough: 0.7 });
+  const bambooDark = mat('#8f7a3f', { rough: 0.75 });
+  const plank = ['#a37546', '#96683b', '#ad7f4f', '#8d6135'].map((c) => mat(c, { rough: 0.95 }));
+  const pile = mat('#5e4a30');
+  const weave = mat('#c0a56c', { rough: 1 });
+
+  // Mái lá hai dốc, nóc chạy dọc trục x.
+  function thatchRoof(x, y, z, w, d, rise) {
+    const run = d / 2;
+    const a = Math.atan2(rise, run);
+    const slope = Math.hypot(rise, run) + 0.1;
+    for (const s of [1, -1]) {
+      const m = new THREE.Matrix4().compose(new THREE.Vector3(x, y + rise / 2, z + (s * run) / 2), new THREE.Quaternion().setFromEuler(new THREE.Euler(s * a, 0, 0)), new THREE.Vector3(1, 1, 1));
+      addTextured(thatchMat, new THREE.BoxGeometry(w, 0.09, slope), m);
+    }
+    props.add(cyl(0.05, 0.05, w + 0.02, bambooDark, [x, y + rise + 0.03, z], { rot: [0, 0, Math.PI / 2], seg: 6 }));
+  }
+
+  // ---------------------------------------------------------------- Đất: bãi cỏ hai bờ, đường làng, bờ đê, ruộng lúa
   {
-    const W = PROP.x1 - PROP.x0;
-    const D = PROP.z1 - PROP.z0;
-    const toX = (x, cw) => ((x - PROP.x0) / W) * cw;
-    const toY = (z, ch) => ((z - PROP.z0) / D) * ch;
-    const lawn = canvasTexture(
-      2048,
-      1860,
+    const grass = canvasTexture(
+      1024,
+      1024,
       (g, w, h) => {
         g.fillStyle = '#b6d488';
         g.fillRect(0, 0, w, h);
-        // mảng cỏ đậm nhạt
-        for (let i = 0; i < 520; i++) {
+        // mảng cỏ đậm nhạt, vẽ lặp qua mép ảnh để ghép liền
+        for (let i = 0; i < 220; i++) {
           const r = range(24, 90);
           const x = range(0, w);
           const y = range(0, h);
           const dark = rnd() < 0.55;
-          const grad = g.createRadialGradient(x, y, 0, x, y, r);
-          grad.addColorStop(0, dark ? `rgba(120,160,70,${range(0.14, 0.3)})` : `rgba(214,226,140,${range(0.12, 0.26)})`);
-          grad.addColorStop(1, 'rgba(0,0,0,0)');
-          g.fillStyle = grad;
-          g.fillRect(x - r, y - r, r * 2, r * 2);
+          const color = dark ? `rgba(120,160,70,${range(0.14, 0.3)})` : `rgba(214,226,140,${range(0.12, 0.26)})`;
+          for (const ox of [-w, 0, w]) {
+            for (const oy of [-h, 0, h]) {
+              if (x + ox < -r || x + ox > w + r || y + oy < -r || y + oy > h + r) continue;
+              const grad = g.createRadialGradient(x + ox, y + oy, 0, x + ox, y + oy, r);
+              grad.addColorStop(0, color);
+              grad.addColorStop(1, 'rgba(0,0,0,0)');
+              g.fillStyle = grad;
+              g.fillRect(x + ox - r, y + oy - r, r * 2, r * 2);
+            }
+          }
         }
         // ngọn cỏ
-        for (let i = 0; i < 26000; i++) {
+        for (let i = 0; i < 13000; i++) {
           const x = range(0, w);
           const y = range(0, h);
-          const shade = rnd();
-          g.strokeStyle = shade < 0.5 ? `rgba(92,136,56,${range(0.18, 0.42)})` : `rgba(220,232,150,${range(0.14, 0.34)})`;
+          g.strokeStyle = rnd() < 0.5 ? `rgba(92,136,56,${range(0.18, 0.42)})` : `rgba(220,232,150,${range(0.14, 0.34)})`;
           g.lineWidth = 1.4;
           g.beginPath();
           g.moveTo(x, y);
           g.lineTo(x + range(-2.5, 2.5), y - range(4, 10));
           g.stroke();
         }
-        // lối đất giẫm mòn: sau lưng các chòi, nối ra đường bê tông
-        const dirt = (x0, z0, x1, z1) => {
-          const px0 = toX(x0, w);
-          const py0 = toY(z0, h);
-          const px1 = toX(x1, w);
-          const py1 = toY(z1, h);
-          for (let i = 0; i < 140; i++) {
-            const u = rnd();
-            const x = px0 + (px1 - px0) * u + range(-20, 20);
-            const y = py0 + (py1 - py0) * u + range(-20, 20);
-            const r = range(14, 36);
-            const grad = g.createRadialGradient(x, y, 0, x, y, r);
-            grad.addColorStop(0, `rgba(178,140,92,${range(0.25, 0.55)})`);
-            grad.addColorStop(1, 'rgba(178,140,92,0)');
-            g.fillStyle = grad;
-            g.fillRect(x - r, y - r, r * 2, r * 2);
-          }
-        };
-        dirt(-13, -11.2, ROAD.x0, -11.2);
-        dirt(-13.2, -11.2, -13.2, 10.8);
-        dirt(-13.2, 10.8, ROAD.x0, 10.8);
-        // bãi xe và nền quán láng xi măng
-        const slab = (x0, z0, x1, z1, fill) => {
-          g.fillStyle = fill;
-          g.fillRect(toX(x0, w), toY(z0, h), toX(x1, w) - toX(x0, w), toY(z1, h) - toY(z0, h));
-        };
-        const lot = P(0, 810)[1];
-        const lotEnd = P(0, 1103)[1];
-        slab(RIGHT.x0, lot, RIGHT.x1, lotEnd, '#d3cfc6');
-        g.strokeStyle = 'rgba(90,86,78,0.35)';
-        g.lineWidth = 4;
-        for (let i = 1; i < 4; i++) {
-          const x = toX(RIGHT.x0 + ((RIGHT.x1 - RIGHT.x0) * i) / 4, w);
-          g.beginPath();
-          g.moveTo(x, toY(lot, h));
-          g.lineTo(x, toY(lotEnd, h));
-          g.stroke();
-        }
-        for (let i = 0; i < 90; i++) {
-          g.fillStyle = `rgba(90,86,78,${range(0.05, 0.16)})`;
-          g.beginPath();
-          g.arc(range(toX(RIGHT.x0, w), toX(RIGHT.x1, w)), range(toY(lot, h), toY(lotEnd, h)), range(2, 16), 0, 7);
-          g.fill();
-        }
       },
-      { anisotropy: 8 },
+      { repeat: [1, 1], anisotropy: 8 },
     );
-    // mặt đất có lỗ đúng bằng cái ao
-    const ex = POND_HX + 0.02;
-    const ez = POND_HZ + 0.02;
-    const shape = new THREE.Shape();
-    shape.moveTo(PROP.x0, -PROP.z1);
-    shape.lineTo(PROP.x1, -PROP.z1);
-    shape.lineTo(PROP.x1, -PROP.z0);
-    shape.lineTo(PROP.x0, -PROP.z0);
-    shape.closePath();
-    const hole = new THREE.Path();
-    hole.moveTo(-ex, -ez);
-    hole.lineTo(-ex, ez);
-    hole.lineTo(ex, ez);
-    hole.lineTo(ex, -ez);
-    hole.closePath();
-    shape.holes.push(hole);
-    const geo = new THREE.ShapeGeometry(shape);
-    geo.rotateX(-Math.PI / 2);
-    const p = geo.getAttribute('position');
-    const uv = geo.getAttribute('uv');
-    for (let i = 0; i < p.count; i++) uv.setXY(i, (p.getX(i) - PROP.x0) / W, 1 - (p.getZ(i) - PROP.z0) / D);
-    const ground = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ map: lawn, roughness: 1 }));
-    ground.position.y = BANK_Y;
-    ground.receiveShadow = true;
-    ground.userData.keep = true;
-    scene.add(ground);
+    const grassMat = new THREE.MeshStandardMaterial({ map: grass, roughness: 1 });
+    // Bãi cỏ: đa giác giữa bờ sông và một đường z cố định, uv theo toạ độ thật.
+    const lawn = (bank, zEnd) => {
+      const shape = new THREE.Shape();
+      RIVER_X.forEach((x, i) => (i ? shape.lineTo(x, -bank(x)) : shape.moveTo(x, -bank(x))));
+      shape.lineTo(130, -zEnd);
+      shape.lineTo(-130, -zEnd);
+      shape.closePath();
+      const geo = new THREE.ShapeGeometry(shape);
+      geo.rotateX(-Math.PI / 2);
+      const p = geo.getAttribute('position');
+      const uv = geo.getAttribute('uv');
+      for (let i = 0; i < p.count; i++) uv.setXY(i, p.getX(i) / 16, p.getZ(i) / 16);
+      const m = mesh(geo, grassMat, { pos: [0, BANK_Y, 0], cast: false });
+      m.userData.keep = true;
+      scene.add(m);
+    };
+    lawn(bankN, Z(59));
+    lawn(bankS, Z(972));
 
-    // ruộng lúa: thửa xanh thửa vàng, bờ ruộng sáng màu
-    const rice = canvasTexture(
-      1024,
-      1024,
-      (g, w, h) => {
-        const n = 5;
-        const cell = w / n;
-        for (let y = 0; y < n; y++) {
-          for (let x = 0; x < n; x++) {
-            const ripe = rnd() < 0.4;
-            g.fillStyle = ripe ? pick(['#c9b656', '#d6bf58', '#bfae4e']) : pick(['#7fa94c', '#6d9c45', '#8bb353']);
-            g.fillRect(x * cell, y * cell, cell, cell);
-            g.strokeStyle = ripe ? 'rgba(130,110,40,0.18)' : 'rgba(50,90,40,0.2)';
-            g.lineWidth = 2;
-            for (let k = 6; k < cell; k += 12) {
-              g.beginPath();
-              g.moveTo(x * cell + k, y * cell);
-              g.lineTo(x * cell + k + range(-2, 2), (y + 1) * cell);
-              g.stroke();
-            }
-            g.strokeStyle = '#a78f5c';
-            g.lineWidth = 7;
-            g.strokeRect(x * cell, y * cell, cell, cell);
-          }
-        }
-      },
-      { repeat: [4.5, 4.5], anisotropy: 8 },
-    );
-    // ruộng bao quanh, chừa đúng phần khu hồ (không thì đè lên mặt ao)
-    const land = new THREE.Shape();
-    land.moveTo(-56, 36);
-    land.lineTo(56, 36);
-    land.lineTo(56, -48);
-    land.lineTo(-56, -48);
-    land.closePath();
-    const yard = new THREE.Path();
-    yard.moveTo(PROP.x0, -PROP.z1);
-    yard.lineTo(PROP.x0, -PROP.z0);
-    yard.lineTo(PROP.x1, -PROP.z0);
-    yard.lineTo(PROP.x1, -PROP.z1);
-    yard.closePath();
-    land.holes.push(yard);
-    const landGeo = new THREE.ShapeGeometry(land);
-    landGeo.rotateX(-Math.PI / 2);
-    const lp = landGeo.getAttribute('position');
-    const luv = landGeo.getAttribute('uv');
-    for (let i = 0; i < lp.count; i++) luv.setXY(i, lp.getX(i) / 112, lp.getZ(i) / 112);
-    const fields = mesh(landGeo, new THREE.MeshStandardMaterial({ map: rice, roughness: 1 }), { pos: [0, BANK_Y - 0.02, 0], cast: false });
-    fields.userData.keep = true;
-    scene.add(fields);
-  }
-
-  // ---------------------------------------------------------------- Ao: thành xi măng, đáy bùn, mặt nước
-  {
-    const concrete = mat('#b4ae9f', { rough: 0.95 });
-    const concreteDark = mat('#8f8a7c', { rough: 0.95 });
-    const outerZ = POND_HZ + RIM;
-    for (const s of [-1, 1]) {
-      props.add(box(RIM, 2.2, outerZ * 2, concrete, [s * (POND_HX + RIM / 2), BANK_Y + 0.05 - 1.1, 0]));
-      props.add(box(POND_HX * 2, 2.2, RIM, concrete, [0, BANK_Y + 0.05 - 1.1, s * (POND_HZ + RIM / 2)]));
-      // vệt rêu ẩm sát mặt nước
-      props.add(box(0.03, 0.16, POND_HZ * 2, concreteDark, [s * (POND_HX - 0.015), 0.07, 0], { cast: false }));
-      props.add(box(POND_HX * 2, 0.16, 0.03, concreteDark, [0, 0.07, s * (POND_HZ - 0.015)], { cast: false }));
+    // Bờ sông: đất bùn dốc xuống nước, phía trên loang dần vào bãi cỏ.
+    const mudLand = [0.54, 0.42, 0.26];
+    const mudWet = [0.3, 0.22, 0.13];
+    for (const [bank, dir] of [[bankN, 1], [bankS, -1]]) {
+      const slope = [[-0.03, BANK_Y + 0.01, mudLand], [0.22, 0.14, mudLand], [0.55, -0.1, mudWet], [1.1, -0.8, mudWet]];
+      const slopeGeo = sheet(RIVER_X, 3, (x, j) => ({ z: bank(x) + dir * slope[j][0], y: slope[j][1], color: slope[j][2] }), dir > 0, { color: 3 });
+      const s = mesh(slopeGeo, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 1 }), { cast: false });
+      s.userData.keep = true;
+      scene.add(s);
+      const fade = [[-0.7, 0], [-0.22, 0.75], [0, 1]];
+      const fadeGeo = sheet(RIVER_X, 2, (x, j) => ({ z: bank(x) + dir * fade[j][0], y: BANK_Y + 0.012, color: [...mudLand, fade[j][1]] }), dir > 0, { color: 4 });
+      const f = mesh(fadeGeo, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 1, transparent: true, depthWrite: false }), { cast: false });
+      f.userData.keep = true;
+      scene.add(f);
     }
-    const floor = box(POND_HX * 2, 0.1, POND_HZ * 2, mat('#1d2b1e', { rough: 1 }), [0, -1.9, 0], { cast: false });
-    props.add(floor);
 
-    const water = new THREE.Mesh(
-      new THREE.PlaneGeometry(POND_HX * 2, POND_HZ * 2).rotateX(-Math.PI / 2),
-      new THREE.ShaderMaterial({ uniforms, transparent: true, depthWrite: false, vertexShader: pondVertex, fragmentShader: pondFragment }),
-    );
-    water.renderOrder = 2;
-    water.userData.keep = true;
-    scene.add(water);
-  }
-
-  // ---------------------------------------------------------------- Đường bê tông và cổng vào
-  {
+    // đường làng và đường trên bờ đê
     const concrete = canvasTexture(
-      256,
       512,
+      256,
       (g, w, h) => {
         g.fillStyle = '#d3cfc6';
         g.fillRect(0, 0, w, h);
@@ -647,206 +662,534 @@ export function buildWorld(scene, overview) {
           g.fill();
         }
         g.fillStyle = 'rgba(85,80,70,0.55)';
-        g.fillRect(0, h - 5, w, 5);
-        g.strokeStyle = 'rgba(85,80,70,0.3)';
-        g.lineWidth = 2;
-        g.beginPath();
-        g.moveTo(range(30, 200), 0);
-        g.lineTo(range(30, 200), h * 0.5);
-        g.lineTo(range(30, 200), h * 0.9);
-        g.stroke();
+        g.fillRect(w - 5, 0, 5, h);
       },
-      { repeat: [1, 7] },
+      { repeat: [52, 1] },
     );
-    const len = PROP.z1 - PROP.z0 + 12;
-    const road = mesh(new THREE.BoxGeometry(ROAD.x1 - ROAD.x0, 0.08, len), new THREE.MeshStandardMaterial({ map: concrete, roughness: 0.95 }), { pos: [(ROAD.x0 + ROAD.x1) / 2, BANK_Y + 0.02, (PROP.z0 + PROP.z1 + 12) / 2], cast: false });
-    road.userData.keep = true;
-    scene.add(road);
-
-    // cổng
-    const gateZ = PROP.z1;
-    const brick = mat('#c76d45', { rough: 0.95 });
-    const cap = mat('#e8dfc8');
-    const gate = new THREE.Group();
-    for (const x of [ROAD.x0 - 0.3, ROAD.x1 + 0.3]) {
-      gate.add(box(0.42, 2.9, 0.42, brick, [x, BANK_Y + 1.45, gateZ]));
-      gate.add(box(0.52, 0.12, 0.52, cap, [x, BANK_Y + 2.96, gateZ]));
+    const roadMat = new THREE.MeshStandardMaterial({ map: concrete, roughness: 0.95 });
+    for (const py of [323, 958]) {
+      const road = mesh(new THREE.BoxGeometry(260, 0.08, 0.72), roadMat, { pos: [0, BANK_Y + 0.02, Z(py)], cast: false });
+      road.userData.keep = true;
+      scene.add(road);
     }
-    const midX = (ROAD.x0 + ROAD.x1) / 2;
-    const spanW = ROAD.x1 - ROAD.x0 + 1.04;
-    gate.add(box(spanW, 0.16, 0.2, mat('#6b4426'), [midX, BANK_Y + 2.72, gateZ]));
-    flatten(gate, props);
-    const board = paintedBoard(512, 150, '#1b5e8f', (g, w, h) => {
-      g.strokeStyle = '#ffe066';
+    // lối đất từ đường xuống bến
+    const dirt = mat('#b89c6c', { rough: 1 });
+    for (const [px, py0, py1] of [[894, 335, 412], [1176, 335, 435], [1176, 923, 946], [360, 335, 441], [360, 876, 946], [553, 247, 311], [1117, 253, 311]]) {
+      props.add(box(0.62, 0.02, (py1 - py0) * K, dirt, [X(px), BANK_Y + 0.006, Z((py0 + py1) / 2)], { cast: false }));
+    }
+
+    // ruộng lúa: thửa dài đúng khổ trên bản vẽ (353 × 103 px), bờ ruộng sáng màu
+    const COLS = 4;
+    const ROWS = 6;
+    const rice = canvasTexture(
+      2048,
+      1024,
+      (g, w, h) => {
+        const cw = w / COLS;
+        const ch = h / ROWS;
+        for (let y = 0; y < ROWS; y++) {
+          for (let x = 0; x < COLS; x++) {
+            g.fillStyle = pick(['#8fbb4f', '#98c459', '#86b34a', '#9fc75c', '#8ab84c']);
+            g.fillRect(x * cw, y * ch, cw, ch);
+            g.strokeStyle = 'rgba(50,100,35,0.22)';
+            g.lineWidth = 2;
+            for (let k = 5; k < ch; k += 10) {
+              g.beginPath();
+              g.moveTo(x * cw, y * ch + k);
+              g.lineTo((x + 1) * cw, y * ch + k + range(-1.5, 1.5));
+              g.stroke();
+            }
+            g.strokeStyle = '#5f8f2c';
+            g.lineWidth = 6;
+            g.strokeRect(x * cw, y * ch, cw, ch);
+          }
+        }
+      },
+      { repeat: [1, 1], anisotropy: 8 },
+    );
+    const riceMat = new THREE.MeshStandardMaterial({ map: rice, roughness: 1 });
+    const tileW = 353 * COLS * K;
+    const tileD = 103 * ROWS * K;
+    for (const [z0, z1] of [[Z(970), 48], [-48, Z(59)]]) {
+      const geo = new THREE.PlaneGeometry(260, z1 - z0).rotateX(-Math.PI / 2).translate(0, BANK_Y - 0.02, (z0 + z1) / 2);
+      const p = geo.getAttribute('position');
+      const uv = geo.getAttribute('uv');
+      for (let i = 0; i < p.count; i++) uv.setXY(i, (p.getX(i) - X(59)) / tileW, (p.getZ(i) - Z(970)) / tileD);
+      const fields = mesh(geo, riceMat, { cast: false });
+      fields.userData.keep = true;
+      scene.add(fields);
+    }
+  }
+
+  // ---------------------------------------------------------------- Sông: đáy bùn và mặt nước
+  {
+    props.add(box(270, 0.1, 18, mat('#2c2112', { rough: 1 }), [0, -0.95, 0], { cast: false }));
+    const geo = sheet(
+      RIVER_X,
+      14,
+      (x, j) => {
+        const n = bankN(x) - 1.1;
+        const s = bankS(x) + 1.1;
+        const z = n + ((s - n) * j) / 14;
+        return { z, y: 0, aEdge: Math.min(z - bankN(x), bankS(x) - z) };
+      },
+      true,
+      { aEdge: 1 },
+    );
+    const water = new THREE.Mesh(geo, new THREE.ShaderMaterial({ uniforms, transparent: true, depthWrite: false, vertexShader: riverVertex, fragmentShader: riverFragment }));
+    water.renderOrder = 2;
+    water.userData.keep = true;
+    water.frustumCulled = false;
+    scene.add(water);
+  }
+
+  // ---------------------------------------------------------------- Cây đa và đình làng
+  {
+    const [x, z] = P(235, 200);
+    const y = BANK_Y;
+    const bark = mat('#5c4630', { rough: 1 });
+    props.add(cyl(0.42, 0.74, 2.7, bark, [x, y + 1.35, z], { seg: 10 }));
+    for (let k = 0; k < 7; k++) {
+      const a = (k / 7) * Math.PI * 2 + range(-0.2, 0.2);
+      props.add(pole([x + Math.cos(a) * 0.3, y + 0.8, z + Math.sin(a) * 0.3], [x + Math.cos(a) * 1, y, z + Math.sin(a) * 1], 0.13, bark));
+    }
+    // rễ phụ thả từ tán xuống đất
+    const rootMat = mat('#6d543a', { rough: 1 });
+    for (let k = 0; k < 16; k++) {
+      const a = rnd() * Math.PI * 2;
+      const r = range(0.75, 1.55);
+      props.add(cyl(0.022, 0.035, 3, rootMat, [x + Math.cos(a) * r, y + 1.5, z + Math.sin(a) * r], { seg: 4, cast: false }));
+    }
+    const leaves = ['#35690f', '#3f7a14', '#2f6010'].map((c) => mat(c, { flat: true, rough: 1 }));
+    for (let k = 0; k < 11; k++) {
+      const a = (k / 11) * Math.PI * 2;
+      const r = range(0.95, 1.35);
+      const s = range(0.75, 1.05);
+      props.add(mesh(new THREE.IcosahedronGeometry(s, 1), pick(leaves), { pos: [x + Math.cos(a) * r, y + range(3.1, 3.6), z + Math.sin(a) * r * 0.9], scale: [1, 0.72, 1] }));
+    }
+    props.add(mesh(new THREE.IcosahedronGeometry(1.05, 1), mat('#5f9a25', { flat: true, rough: 1 }), { pos: [x, y + 4.1, z], scale: [1.05, 0.72, 1.05] }));
+    for (let k = 0; k < 5; k++) {
+      const a = (k / 5) * Math.PI * 2;
+      props.add(mesh(new THREE.IcosahedronGeometry(0.55, 1), mat('#4f8a1c', { flat: true, rough: 1 }), { pos: [x + Math.cos(a) * 0.7, y + 3.95, z + Math.sin(a) * 0.7], scale: [1, 0.7, 1] }));
+    }
+
+    // Đình: nền đá, hàng cột son, mái ngói bốn mái đầu đao cong
+    const [dx, dz] = P(553, 200);
+    const stone = mat('#b9b2a3', { rough: 0.95 });
+    const lacquer = mat('#8f2418', { rough: 0.5 });
+    const gold = mat('#e0b54a', { rough: 0.35, metal: 0.5 });
+    props.add(box(3.5, 0.3, 2.2, stone, [dx, y + 0.15, dz]));
+    props.add(box(1.5, 0.14, 0.3, stone, [dx, y + 0.07, dz + 1.22]));
+    const floorY = y + 0.3;
+    const postH = 1.35;
+    for (let k = 0; k < 5; k++) {
+      for (const s of [-1, 1]) props.add(cyl(0.075, 0.09, postH, lacquer, [dx - 1.4 + k * 0.7, floorY + postH / 2, dz + s * 0.78], { seg: 8 }));
+    }
+    props.add(box(2.9, postH, 0.08, mat('#c9a36a', { rough: 0.9 }), [dx, floorY + postH / 2, dz - 0.74]));
+    for (const s of [-1, 1]) props.add(box(0.08, postH, 1.5, mat('#c9a36a', { rough: 0.9 }), [dx + s * 1.42, floorY + postH / 2, dz]));
+    // bàn thờ và hoành phi
+    props.add(box(1.1, 0.6, 0.35, lacquer, [dx, floorY + 0.3, dz - 0.5]));
+    props.add(box(0.5, 0.2, 0.2, gold, [dx, floorY + 0.7, dz - 0.5]));
+    props.add(box(1.2, 0.18, 0.04, gold, [dx, floorY + postH - 0.12, dz + 0.8], { cast: false }));
+    const tiles = canvasTexture(
+      256,
+      256,
+      (g, w, h) => {
+        g.fillStyle = '#9a3a1e';
+        g.fillRect(0, 0, w, h);
+        for (let r = 0; r < 8; r++) {
+          for (let c = 0; c < 8; c++) {
+            g.fillStyle = `rgba(${range(90, 190)},${range(40, 75)},${range(20, 40)},0.55)`;
+            g.beginPath();
+            g.arc(((c + (r % 2) * 0.5) * w) / 8, ((r + 0.8) * h) / 8, w / 16, 0, Math.PI);
+            g.fill();
+          }
+          g.fillStyle = 'rgba(55,20,8,0.45)';
+          g.fillRect(0, (r * h) / 8, w, 3);
+        }
+      },
+      { repeat: [1, 1] },
+    );
+    const tileMat = new THREE.MeshStandardMaterial({ map: tiles, roughness: 0.9, side: THREE.DoubleSide });
+    const roofAt = new THREE.Matrix4().makeTranslation(dx, floorY + postH - 0.02, dz);
+    addTextured(tileMat, hipRoof(3.95, 2.55, 2.5, 0.95), roofAt);
+    const ridgeY = floorY + postH + 0.93;
+    props.add(box(2.6, 0.09, 0.14, mat('#f0906a', { rough: 0.7 }), [dx, ridgeY + 0.04, dz]));
+    props.add(mesh(new THREE.IcosahedronGeometry(0.11, 1), gold, { pos: [dx, ridgeY + 0.2, dz] }));
+    for (const s of [-1, 1]) {
+      props.add(mesh(new THREE.ConeGeometry(0.07, 0.42, 6), mat('#f0906a', { rough: 0.7 }), { pos: [dx + s * 1.34, ridgeY + 0.16, dz], rot: [0, 0, -s * 0.75] }));
+      for (const c of [-1, 1]) {
+        props.add(mesh(new THREE.ConeGeometry(0.08, 0.5, 6), mat('#b5482a', { rough: 0.8 }), { pos: [dx + s * 2.02, floorY + postH + 0.1, dz + c * 1.32], rot: [c * 0.7, 0, -s * 0.8] }));
+      }
+    }
+  }
+
+  // ---------------------------------------------------------------- Quán nước đầu làng
+  {
+    const [x, z] = P(1117, 208);
+    const floorY = BANK_Y + 0.04;
+    const postH = 2.05;
+    const hw = 1.2;
+    const hd = 0.95;
+    const brown = ['#84500f', '#7a4a10', '#8e5915'].map((c) => mat(c, { rough: 0.95 }));
+    for (let k = -hd - 0.1; k < hd + 0.05; k += 0.3) props.add(box(hw * 2 + 0.2, 0.08, 0.29, pick(brown), [x, floorY - 0.03, k + z + 0.15], { cast: false }));
+    const wood = mat('#9a7a48', { rough: 0.8 });
+    for (const sx of [-1, 1]) for (const sz of [-1, 1]) props.add(cyl(0.06, 0.075, postH, wood, [x + sx * hw, floorY + postH / 2, z + sz * hd]));
+    thatchRoof(x, floorY + postH, z, hw * 2 + 0.5, hd * 2 + 0.55, 0.72);
+    // quầy nước: hũ trà đá, ly cà phê, thùng mì gói
+    const backZ = z - hd + 0.35;
+    props.add(box(2, 0.82, 0.46, mat('#6a4522', { rough: 0.9 }), [x, floorY + 0.41, backZ]));
+    props.add(box(2.08, 0.05, 0.54, mat('#efe6cf', { rough: 0.6 }), [x, floorY + 0.84, backZ]));
+    props.add(cyl(0.2, 0.2, 0.42, mat('#d7572a', { rough: 0.4 }), [x - 0.72, floorY + 1.08, backZ], { seg: 12 }));
+    props.add(cyl(0.21, 0.21, 0.05, mat('#f4f4ec'), [x - 0.72, floorY + 1.31, backZ], { seg: 12 }));
+    for (let k = 0; k < 4; k++) props.add(cyl(0.06, 0.045, 0.16, mat(k % 2 ? '#2c1810' : '#c98a3c', { rough: 0.25 }), [x - 0.22 + k * 0.19, floorY + 0.95, backZ + 0.06], { seg: 8, cast: false }));
+    props.add(box(0.46, 0.34, 0.34, mat('#e9c13f', { rough: 0.8 }), [x + 0.74, floorY + 1.04, backZ]));
+    props.add(box(0.48, 0.1, 0.36, mat('#d6332f', { rough: 0.8 }), [x + 0.74, floorY + 1.05, backZ]));
+    // biển quán
+    const menu = paintedBoard(640, 256, '#7a1f12', (g, w, h) => {
+      g.strokeStyle = '#ffd84d';
       g.lineWidth = 10;
       g.strokeRect(6, 6, w - 12, h - 12);
-      g.fillStyle = '#ffe066';
-      g.font = '900 86px "Segoe UI", Arial, sans-serif';
-      g.fillText('HỒ CÂU CÁ', w / 2, h / 2 + 4);
+      g.fillStyle = '#ffe16a';
+      g.font = '900 104px "Segoe UI", Arial, sans-serif';
+      g.fillText('QUÁN NƯỚC', w / 2, 88);
+      g.fillStyle = '#ffffff';
+      g.font = '800 50px "Segoe UI", Arial, sans-serif';
+      g.fillText('Trà đá · Cà phê · Mì gói', w / 2, 188);
     });
-    const sign = mesh(new THREE.PlaneGeometry(spanW + 0.25, (spanW + 0.25) * 0.3), new THREE.MeshStandardMaterial({ map: board, roughness: 0.7, side: THREE.DoubleSide }), { pos: [midX, BANK_Y + 3.12, gateZ + 0.12], rot: [-0.55, 0, 0] });
-    sign.userData.keep = true;
-    scene.add(sign);
+    const board = mesh(new THREE.PlaneGeometry(2.3, 0.92), new THREE.MeshStandardMaterial({ map: menu, roughness: 0.75, side: THREE.DoubleSide }), { pos: [x, floorY + postH + 0.5, z + hd + 0.42], rot: [-0.62, 0, 0] });
+    board.userData.keep = true;
+    scene.add(board);
+    // dây bóng đèn vàng dọc mái, sáng lúc trời tối
+    const bulbs = [];
+    for (let k = 0; k < 7; k++) bulbs.push(new THREE.IcosahedronGeometry(0.06, 0).translate(x - hw + (k * hw * 2) / 6, floorY + postH - 0.12 - Math.sin((k / 6) * Math.PI) * 0.12, z + hd));
+    const string = new THREE.Mesh(mergeGeometries(bulbs), bulbMat);
+    string.userData.keep = true;
+    scene.add(string);
+    // một cái võng có người nằm đong đưa
+    const pivot = new THREE.Group();
+    pivot.position.set(x, floorY + 1.72, z + 0.42);
+    pivot.add(hammock(hw * 2 - 0.15, 0.9, ['#d94b38', '#f1c232']));
+    pivot.add(restingPerson({ shirt: '#2d6da3', pants: '#3b3b3f', hat: true }));
+    bake(pivot);
+    pivot.userData.noBake = true;
+    scene.add(pivot);
+    updaters.push((t) => (pivot.rotation.x = Math.sin(t * 0.9) * (0.08 + Math.min(0.1, Math.abs(env.wind) * 0.08))));
+    // bàn nhựa thấp trước quán
+    for (const [dx, dz] of [[-1.85, 0.75], [1.75, 0.8]]) {
+      props.add(cyl(0.34, 0.26, 0.05, mat('#3a7fbd', { rough: 0.5 }), [x + dx, BANK_Y + 0.42, z + dz], { seg: 10 }));
+      props.add(cyl(0.05, 0.14, 0.4, mat('#2f6da0', { rough: 0.5 }), [x + dx, BANK_Y + 0.2, z + dz], { seg: 8 }));
+      props.add(cyl(0.055, 0.042, 0.16, mat('#2c1810', { rough: 0.25 }), [x + dx - 0.08, BANK_Y + 0.53, z + dz], { seg: 8, cast: false }));
+    }
+    // xe máy dựng cạnh quán
+    const paint = ['#c7302b', '#222a33', '#2a62b0'];
+    [[945, 262], [985, 268], [1025, 262]].forEach(([px, py], i) => {
+      const bike = motorbike(paint[i]);
+      bike.position.set(X(px), BANK_Y + 0.02, Z(py));
+      bike.rotation.y = range(-0.1, 0.1);
+      bike.scale.setScalar(0.8);
+      flatten(bike, props);
+    });
   }
 
-  // ---------------------------------------------------------------- Hàng rào quanh khu hồ
+  // ---------------------------------------------------------------- Cầu ao gỗ
   {
-    const postMat = mat('#8a6a3c', { rough: 0.95 });
-    const railMat = mat('#a08356', { rough: 0.95 });
-    const y = BANK_Y;
-    const side = (x0, z0, x1, z1) => {
-      const len = Math.hypot(x1 - x0, z1 - z0);
-      const n = Math.round(len / 1.9);
-      for (let i = 0; i <= n; i++) props.add(cyl(0.05, 0.06, 1, postMat, [x0 + ((x1 - x0) * i) / n, y + 0.5, z0 + ((z1 - z0) * i) / n], { seg: 5 }));
-      const a = Math.atan2(x1 - x0, z1 - z0);
-      for (const h of [0.42, 0.82]) props.add(box(0.035, 0.05, len, railMat, [(x0 + x1) / 2, y + h, (z0 + z1) / 2], { rot: [0, a, 0], cast: false }));
-    };
-    side(PROP.x0, PROP.z0, ROAD.x0 - 0.2, PROP.z0);
-    side(ROAD.x1 + 0.2, PROP.z0, PROP.x1, PROP.z0);
-    side(PROP.x0, PROP.z0, PROP.x0, PROP.z1);
-    side(PROP.x1, PROP.z0, PROP.x1, PROP.z1);
-    side(PROP.x0, PROP.z1, ROAD.x0 - 0.3, PROP.z1);
-    side(ROAD.x1 + 0.3, PROP.z1, PROP.x1, PROP.z1);
+    const x = X(894);
+    const z0 = Z(412);
+    const z1 = Z(548);
+    const w = 1.5;
+    for (let z = z0; z < z1; z += 0.27) props.add(box(w + range(-0.05, 0.05), 0.07, 0.25, pick(plank), [x + range(-0.015, 0.015), DECK_Y - 0.035, z + 0.13]));
+    for (const s of [-1, 1]) {
+      props.add(box(0.09, 0.1, z1 - z0, pile, [x + s * (w / 2 - 0.08), DECK_Y - 0.12, (z0 + z1) / 2], { cast: false }));
+      for (const z of [z1 - 0.1, z1 - 0.95]) props.add(cyl(0.05, 0.05, 1.4, pile, [x + s * (w / 2 - 0.08), DECK_Y - 0.72, z], { seg: 6, cast: false }));
+    }
   }
 
-  // ---------------------------------------------------------------- 20 chòi câu
+  // ---------------------------------------------------------------- Cầu tre qua sông
+  {
+    const { x, z0, z1 } = BRIDGE;
+    for (let z = z0; z < z1; z += 0.2) props.add(box(1.22 + range(-0.05, 0.05), 0.045, 0.18, rnd() < 0.5 ? bamboo : bambooDark, [x, bridgeY(z), z + 0.09], { rot: [-Math.atan2(bridgeY(z + 0.2) - bridgeY(z), 0.2), 0, 0] }));
+    const steps = 8;
+    const at = (i) => z0 + ((z1 - z0) * i) / steps;
+    for (let i = 0; i < steps; i++) {
+      for (const s of [-1, 1]) props.add(pole([x + s * 0.5, bridgeY(at(i)) - 0.05, at(i)], [x + s * 0.5, bridgeY(at(i + 1)) - 0.05, at(i + 1)], 0.05, bambooDark, { cast: false }));
+      // tay vịn một bên như bản vẽ
+      props.add(pole([x + 0.62, bridgeY(at(i)) + 0.92, at(i)], [x + 0.62, bridgeY(at(i + 1)) + 0.92, at(i + 1)], 0.035, bamboo));
+      props.add(pole([x + 0.62, bridgeY(at(i)) + 0.48, at(i)], [x + 0.62, bridgeY(at(i + 1)) + 0.48, at(i + 1)], 0.025, bamboo, { cast: false }));
+    }
+    for (let i = 0; i <= steps; i++) {
+      const z = at(i);
+      const y = bridgeY(z);
+      props.add(pole([x + 0.62, y - 0.02, z], [x + 0.62, y + 0.94, z], 0.04, bamboo));
+      if (i === 0 || i === steps) continue;
+      // chân cầu chữ X cắm xuống lòng sông
+      props.add(pole([x - 0.58, y - 0.03, z], [x + 0.72, -0.9, z], 0.055, bambooDark, { cast: false }));
+      props.add(pole([x + 0.58, y - 0.03, z], [x - 0.72, -0.9, z], 0.055, bambooDark, { cast: false }));
+      props.add(pole([x - 0.62, y - 0.06, z], [x + 0.62, y - 0.06, z], 0.045, bambooDark, { cast: false }));
+    }
+  }
+
+  // ---------------------------------------------------------------- Chà cá: cành cây chất dưới nước, vòng phao cam quanh điểm nóng
+  {
+    const { x, z, r } = HOT;
+    const stick = mat('#47443d', { rough: 1 });
+    for (let k = 0; k < 9; k++) {
+      const a = (k / 9) * Math.PI * 2 + range(-0.25, 0.25);
+      const len = range(0.55, 0.85);
+      props.add(pole([x, -0.5, z], [x + Math.cos(a) * len, range(0.18, 0.72), z + Math.sin(a) * len], range(0.022, 0.04), stick));
+    }
+    props.add(cyl(0.05, 0.07, 1.6, stick, [x + 0.05, 0.2, z - 0.03], { seg: 6 }));
+    const floats = new THREE.Group();
+    const orange = mat('#f39a1c', { rough: 0.5 });
+    for (let k = 0; k < 14; k++) {
+      const a = (k / 14) * Math.PI * 2;
+      floats.add(mesh(new THREE.SphereGeometry(0.085, 8, 6), orange, { pos: [x + Math.cos(a) * r, 0.03, z + Math.sin(a) * r], scale: [1.4, 0.75, 1], cast: false }));
+    }
+    bake(floats);
+    floats.userData.noBake = true;
+    scene.add(floats);
+    updaters.push((t) => (floats.position.y = Math.sin(t * 1.5) * 0.018));
+  }
+
+  // ---------------------------------------------------------------- Đò ngang: hai bến, dây căng qua sông, đò chạy qua lại
+  {
+    const x = X(1176);
+    const landing = (py0, py1) => {
+      const z0 = Z(py0);
+      const z1 = Z(py1);
+      for (let z = z0; z < z1; z += 0.26) props.add(box(1 + range(-0.04, 0.04), 0.07, 0.24, pick(plank), [x, DECK_Y - 0.035, z + 0.13]));
+      for (const s of [-1, 1]) {
+        props.add(box(0.08, 0.1, z1 - z0, pile, [x + s * 0.42, DECK_Y - 0.12, (z0 + z1) / 2], { cast: false }));
+        for (const z of [z0 + 0.12, z1 - 0.12]) props.add(cyl(0.05, 0.05, 1.5, pile, [x + s * 0.42, DECK_Y - 0.6, z], { seg: 6, cast: false }));
+      }
+    };
+    landing(435, 500);
+    landing(860, 923);
+    const zN = Z(500);
+    const zS = Z(860);
+    props.add(pole([x, 0.5, zN], [x, 0.5, zS], 0.012, mat('#efe9d6', { rough: 1 }), { cast: false }));
+    for (const z of [Z(490), Z(870)]) props.add(cyl(0.05, 0.05, 1.2, bambooDark, [x, 0.5, z], { seg: 6, cast: false }));
+
+    const ferry = new THREE.Group();
+    const hull = boat(2.5, 0.92, '#623a0e');
+    flatten(hull, ferry);
+    flatten(villager({ shirt: '#3f6f4f', pants: '#2f2a26', standing: true, pos: [-0.95, 0.12, 0], rot: Math.PI / 2 }), ferry);
+    ferry.add(pole([-1.2, 1.35, 0.1], [-0.95, -0.7, 0.32], 0.018, bambooDark, { cast: false }));
+    flatten(villager({ shirt: '#d9c7a0', pants: '#46423a', pos: [0.15, 0.12, 0], rot: Math.PI / 2 }), ferry);
+    flatten(villager({ shirt: '#a8473a', pants: '#2f2a26', pos: [0.72, 0.12, 0], rot: Math.PI / 2, hat: false }), ferry);
+    bake(ferry);
+    ferry.userData.noBake = true;
+    ferry.rotation.y = Math.PI / 2;
+    ferry.position.x = x;
+    scene.add(ferry);
+    // Mỗi chuyến 20 giây, chờ khách ở mỗi bến 6 giây.
+    const CROSS = 20;
+    const WAIT = 6;
+    const zA = zN + 1.15;
+    const zB = zS - 1.15;
+    updaters.push((t) => {
+      const c = t % ((CROSS + WAIT) * 2);
+      const leg = c % (CROSS + WAIT);
+      const u = leg < CROSS ? leg / CROSS : 1;
+      const eased = u * u * (3 - 2 * u);
+      const back = c >= CROSS + WAIT;
+      ferry.position.z = back ? zB + (zA - zB) * eased : zA + (zB - zA) * eased;
+      ferry.rotation.y = back ? -Math.PI / 2 : Math.PI / 2;
+      ferry.rotation.x = Math.sin(t * 1.3) * 0.012;
+      uniforms.uFerry.value.set(ferry.position.x, ferry.position.z, u < 1 ? Math.sin(u * Math.PI) ** 0.5 : 0);
+    });
+  }
+
+  // ---------------------------------------------------------------- Ghe neo
+  const anchored = new THREE.Group();
+  {
+    const [x, z] = P(911, 800);
+    flatten(boat(3, 1.12, '#623a0e'), anchored);
+    // mui ghe đan tre phía đuôi
+    const hood = mesh(new THREE.CylinderGeometry(0.55, 0.55, 0.95, 10, 1, true, 0, Math.PI).rotateZ(Math.PI / 2), mat('#a58a55', { rough: 1, side: THREE.DoubleSide }), { pos: [-0.85, 0.28, 0] });
+    anchored.add(hood);
+    anchored.add(pole([1.3, 0.4, 0], [2.4, -0.6, 0.3], 0.012, mat('#d8cfb5'), { cast: false }));
+    bake(anchored);
+    anchored.position.set(x, 0, z);
+    anchored.userData.noBake = true;
+    scene.add(anchored);
+    updaters.push((t) => (anchored.rotation.x = Math.sin(t * 1.1) * 0.012));
+  }
+
+  // ---------------------------------------------------------------- Vó (rớ): cần tre dài nâng tấm lưới lên xuống
+  {
+    const [bx, bz] = P(1383, 435);
+    const [nx, nz] = P(1353, 550);
+    const reach = Math.hypot(nx - bx, nz - bz);
+    const py = BANK_Y + 0.28;
+    // giá đỡ
+    props.add(box(1.1, 0.06, 0.9, pick(plank), [bx, BANK_Y + 0.05, bz]));
+    for (const s of [-1, 1]) props.add(pole([bx + s * 0.4, BANK_Y, bz - 0.2], [bx, py, bz], 0.04, pile));
+    flatten(villager({ shirt: '#e8e4d8', pants: '#3b3b3f', standing: true, pos: [bx + 0.5, BANK_Y + 0.07, bz - 0.25], rot: 0.3 + Math.PI * 1.9 }), props);
+    const arm = new THREE.Group();
+    arm.position.set(bx, py, bz);
+    arm.rotation.order = 'YXZ';
+    arm.rotation.y = Math.atan2(nx - bx, nz - bz);
+    arm.add(pole([0, 0, -0.75], [0, 0, reach], 0.04, bambooDark));
+    arm.add(mesh(new THREE.SphereGeometry(0.14, 8, 6), mat('#6b6a66', { flat: true }), { pos: [0, -0.02, -0.75] }));
+    const net = new THREE.Group();
+    net.position.z = reach;
+    const hw = 0.85;
+    const hd = 0.75;
+    const apex = [0, 0.05, 0];
+    for (const [sx, sz] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) net.add(pole(apex, [sx * hw, -0.72, sz * hd], 0.016, bamboo));
+    net.add(cyl(0.03, 0.03, 0.2, bambooDark, [0, 0.08, 0], { seg: 5, cast: false }));
+    const mesh2 = canvasTexture(256, 256, (g, w, h) => {
+      g.clearRect(0, 0, w, h);
+      g.strokeStyle = 'rgba(240,235,215,0.95)';
+      g.lineWidth = 2.5;
+      for (let k = 0; k <= 16; k++) {
+        g.beginPath();
+        g.moveTo((k * w) / 16, 0);
+        g.lineTo((k * w) / 16, h);
+        g.moveTo(0, (k * h) / 16);
+        g.lineTo(w, (k * h) / 16);
+        g.stroke();
+      }
+    });
+    const netGeo = new THREE.PlaneGeometry(hw * 2, hd * 2, 8, 8).rotateX(-Math.PI / 2);
+    const np = netGeo.getAttribute('position');
+    for (let i = 0; i < np.count; i++) {
+      const u = np.getX(i) / hw;
+      const v = np.getZ(i) / hd;
+      np.setY(i, -0.72 - 0.34 * (1 - u * u) * (1 - v * v));
+    }
+    netGeo.computeVertexNormals();
+    const netMesh = new THREE.Mesh(netGeo, new THREE.MeshStandardMaterial({ map: mesh2, transparent: true, alphaTest: 0.1, side: THREE.DoubleSide, roughness: 1, depthWrite: false }));
+    netMesh.renderOrder = 3;
+    net.add(netMesh);
+    arm.add(net);
+    bake(arm);
+    scene.add(arm);
+    // Hạ lưới ngâm 11 giây, kéo lên 3 giây, giữ 3 giây, hạ xuống 2,5 giây.
+    const down = Math.asin((0.42 - py) / reach);
+    const up = Math.asin((1.75 - py) / reach);
+    updaters.push((t) => {
+      const c = (t + 8) % 19.5;
+      const raw = c < 11 ? 0 : c < 14 ? (c - 11) / 3 : c < 17 ? 1 : 1 - (c - 17) / 2.5;
+      const u = raw * raw * (3 - 2 * raw);
+      const a = down + (up - down) * u;
+      arm.rotation.x = -a;
+      net.rotation.x = a;
+    });
+  }
+
+  // ---------------------------------------------------------------- Lục bình trôi theo dòng
+  {
+    const clump = new THREE.Group();
+    const greens = ['#3f7d17', '#4a8c1c', '#356d13'].map((c) => mat(c, { flat: true, rough: 0.9 }));
+    for (const [x, z, r] of [[-0.24, 0.06, 0.25], [0.2, 0.2, 0.28], [0.06, -0.22, 0.22]]) clump.add(mesh(new THREE.IcosahedronGeometry(r, 1), pick(greens), { pos: [x, 0.08, z], scale: [1, 0.55, 1], cast: false }));
+    clump.add(mesh(new THREE.IcosahedronGeometry(0.075, 1), mat('#a9a4ec', { rough: 0.7 }), { pos: [0, 0.27, 0.02], cast: false }));
+    clump.add(mesh(new THREE.IcosahedronGeometry(0.055, 1), mat('#c3bff5', { rough: 0.7 }), { pos: [0.08, 0.22, 0.1], cast: false }));
+    bake(clump);
+    const parts = clump.children.filter((c) => c.isMesh);
+    const merged = mergeGeometries(parts.map((p) => p.geometry));
+    const LANES = [[205, 623], [529, 713], [1041, 582], [-90, 760], [760, 610], [1300, 760]].map(([px, py]) => P(px, py));
+    const herd = new THREE.InstancedMesh(merged, parts[0].material, LANES.length);
+    herd.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    herd.frustumCulled = false;
+    herd.userData.keep = true;
+    scene.add(herd);
+    const SPAN = 42; // đi hết đoạn sông rồi quay lại từ ngoài khung hình
+    const SPEED = 0.16;
+    const d = new THREE.Object3D();
+    updaters.push((t) => {
+      LANES.forEach(([x0, z0], i) => {
+        const x = ((x0 + 21 + t * SPEED) % SPAN) - 21;
+        // né chà cá và ghe neo: lệch sang bên khi tới gần
+        const near = Math.exp(-(((x - HOT.x) / 1.6) ** 2));
+        const clear = Math.max(0, HOT.r + 0.55 - Math.abs(z0 - HOT.z));
+        d.position.set(x, 0.01 + Math.sin(t * 1.4 + i) * 0.012, z0 + Math.sin(t * 0.13 + i * 2) * 0.22 + Math.sign(z0 - HOT.z || 1) * clear * near);
+        d.rotation.y = t * 0.08 + i;
+        d.scale.setScalar(1.15 + (i % 3) * 0.15);
+        d.updateMatrix();
+        herd.setMatrixAt(i, d.matrix);
+      });
+      herd.instanceMatrix.needsUpdate = true;
+    });
+  }
+
+  // ---------------------------------------------------------------- Chỗ ngồi câu
   const seats = [];
   const CHAIRS = ['#d6332f', '#2268b8', '#2f9e55', '#e8912b', '#f2efe6'];
-  const bamboo = mat('#c8ae62', { rough: 0.7 });
-  const bambooDark = mat('#8f7a3f', { rough: 0.75 });
-  const plank = ['#a37546', '#96683b', '#ad7f4f', '#8d6135'].map((c) => mat(c, { rough: 0.95 }));
-  const pile = mat('#5e4a30');
-  const weave = mat('#c0a56c', { rough: 1 });
   const rodMat = mat('#2b2b33', { rough: 0.4 });
   const rodGold = mat('#e0b54a', { rough: 0.35, metal: 0.5 });
-  const netMat = new THREE.MeshStandardMaterial({ color: '#e9ebe2', transparent: true, opacity: 0.45, side: THREE.DoubleSide, roughness: 0.9 });
-  const netGeos = [];
-  // biển số song song với màn hình của máy toàn cảnh: chòi nào cũng thấy số thẳng, không bị nghiêng theo phối cảnh
+  // biển số song song với màn hình của máy toàn cảnh: chỗ nào cũng thấy số thẳng, không bị nghiêng theo phối cảnh
   const signTurn = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().lookAt(overview.pos, overview.look, new THREE.Vector3(0, 1, 0)));
   const signBack = new THREE.Vector3(0, 0, -1).applyQuaternion(signTurn);
 
-  HUTS.forEach((h, i) => {
+  SPOTS.slice(0, seatCount).forEach(([kind, px, py, opt = {}], i) => {
     const n = i + 1;
-    const inward = new THREE.Vector3(h.inward[0], 0, h.inward[1]);
+    const [x, z] = P(px, py);
+    const north = py < 677;
+    const inwardXZ = kind === 'bridge' ? [-1, 0] : kind === 'boat' || !north ? [0, -1] : [0, 1];
+    const inward = new THREE.Vector3(inwardXZ[0], 0, inwardXZ[1]);
     const rotY = Math.atan2(inward.x, inward.z);
-    const pos = new THREE.Vector3(h.x, DECK_Y, h.z);
+    const y = kind === 'bridge' ? bridgeY(z) + 0.025 : kind === 'pier' ? DECK_Y : kind === 'boat' ? 0.16 : BANK_Y;
+    const pos = new THREE.Vector3(x, y, z);
     const side = new THREE.Vector3(inward.z, 0, -inward.x);
-    // cần thả hơi chếch vào giữa ao như bản vẽ
-    const skew = (h.inward[1] !== 0 ? -Math.sign(h.x || 1) * h.inward[1] : -Math.sign(h.z || 1) * h.inward[0]) * 0.1 + range(-0.04, 0.04);
-    const aim = inward.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), skew);
+    const at = GEAR_AT[kind];
+    // cần thả ra giữa dòng, chếch nhẹ để các phao không dính vào nhau
+    const aim = inward.clone().applyAxisAngle(UP, (opt.skew ?? 0) + range(-0.08, 0.08));
+    // độ xa của phao: bờ nào cũng thả cách mép nước ít nhất 2,2 đơn vị
+    const reach = kind === 'bridge' ? range(2.7, 3.2) : kind === 'boat' ? range(2.4, 2.7) : Math.abs((north ? bankN(x) + 2.5 : bankS(x) - 2.5) - z) + range(-0.15, 0.25);
 
     const st = new THREE.Group();
     st.position.copy(pos);
     st.rotation.y = rotY;
-    const gap = h.gap;
-    const roofFront = -gap;
-    const roofBack = -gap - 1.65;
-    const postX = 0.84;
-
-    // sàn gỗ từ sau chòi chìa ra mép nước
-    const deckFront = SEAT_OFF - RIM + 0.72;
-    for (let z = roofBack - 0.1; z < deckFront; z += 0.4) st.add(box(1.98 + range(-0.05, 0.05), 0.08, 0.37, pick(plank), [range(-0.015, 0.015), -0.04, z + 0.18]));
-    for (const x of [-0.85, 0.85]) {
-      st.add(box(0.09, 0.1, deckFront - roofBack + 0.1, pile, [x, -0.12, (deckFront + roofBack) / 2 - 0.05], { cast: false }));
-      st.add(cyl(0.05, 0.05, 1, pile, [x, -0.62, deckFront - 0.12], { seg: 6, cast: false }));
-    }
-
-    // cột tre, xà và ván sau
-    for (const [x, z] of [[-postX, roofFront], [postX, roofFront], [-postX, roofBack], [postX, roofBack]]) {
-      const pole = cyl(0.058, 0.066, 2.46, bamboo, [x, 1.21, z]);
-      st.add(pole);
-      for (const y of [0.45, 1.05, 1.65, 2.2]) st.add(cyl(0.072, 0.072, 0.035, bambooDark, [x, y, z]));
-    }
-    for (const z of [roofFront, roofBack]) st.add(cyl(0.05, 0.05, postX * 2 + 0.3, bamboo, [0, 2.4, z], { rot: [0, 0, Math.PI / 2], seg: 6 }));
-    for (const x of [-postX, postX]) st.add(cyl(0.05, 0.05, 1.8, bamboo, [x, 2.4, (roofFront + roofBack) / 2], { rot: [Math.PI / 2, 0, 0], seg: 6 }));
-    st.add(box(postX * 2, 1.62, 0.05, weave, [0, 0.82, roofBack + 0.02]));
-    // nan phên tre
-    for (let k = 1; k < 8; k++) st.add(box(postX * 2, 0.025, 0.012, bambooDark, [0, 0.02 + k * 0.2, roofBack + 0.05], { cast: false }));
-    for (const x of [-postX, postX]) st.add(cyl(0.03, 0.03, 1.65, bamboo, [x, 0.75, (roofFront + roofBack) / 2], { rot: [Math.PI / 2, 0, 0], seg: 5, cast: false }));
+    // tấm ván lót ngoài bờ đất
+    if (at.mat) st.add(box(1.5, 0.04, 1.05, pick(plank), [-0.05, 0.02, 0.02], { cast: false }));
 
     // ghế: ghế nhựa có tựa hoặc ghế xếp; mặt ghế cao đúng 0,47 (fisher.js ngồi ở mức này)
     const chair = mat(CHAIRS[i % CHAIRS.length], { rough: 0.5 });
     if (i % 3 !== 1) {
       st.add(box(0.62, 0.05, 0.58, chair, [0, 0.445, -0.02]));
-      for (const [x, z] of [[-0.27, -0.26], [0.27, -0.26], [-0.27, 0.22], [0.27, 0.22]]) st.add(box(0.05, 0.43, 0.05, chair, [x, 0.21, z]));
+      for (const [lx, lz] of [[-0.27, -0.26], [0.27, -0.26], [-0.27, 0.22], [0.27, 0.22]]) st.add(box(0.05, 0.43, 0.05, chair, [lx, 0.21, lz]));
       st.add(box(0.6, 0.48, 0.04, chair, [0, 0.82, -0.31], { rot: [-0.14, 0, 0] }));
     } else {
       const frame = mat('#5a6168', { rough: 0.4, metal: 0.5 });
       const cloth = mat(['#2f6f4f', '#a03c30', '#34588c'][i % 3], { rough: 0.95, side: THREE.DoubleSide });
       st.add(box(0.6, 0.03, 0.56, cloth, [0, 0.45, -0.02]));
       st.add(box(0.6, 0.46, 0.03, cloth, [0, 0.8, -0.33], { rot: [-0.26, 0, 0] }));
-      for (const x of [-0.3, 0.3]) {
-        st.add(box(0.03, 0.62, 0.03, frame, [x, 0.22, -0.02], { rot: [0.72, 0, 0] }));
-        st.add(box(0.03, 0.62, 0.03, frame, [x, 0.22, -0.02], { rot: [-0.72, 0, 0] }));
+      for (const lx of [-0.3, 0.3]) {
+        st.add(box(0.03, 0.62, 0.03, frame, [lx, 0.22, -0.02], { rot: [0.72, 0, 0] }));
+        st.add(box(0.03, 0.62, 0.03, frame, [lx, 0.22, -0.02], { rot: [-0.72, 0, 0] }));
       }
     }
 
-    // thùng đá xốp nắp xanh và gói cám
-    st.add(box(0.5, 0.36, 0.36, mat('#f1f1ea', { rough: 1 }), [-0.74, 0.18, -0.5]));
-    st.add(box(0.53, 0.06, 0.39, mat(i % 2 ? '#2b7fc4' : '#d8473a', { rough: 0.6 }), [-0.74, 0.39, -0.5]));
-    st.add(mesh(new THREE.DodecahedronGeometry(0.2, 0), mat(i % 2 ? '#e9c13f' : '#cf4a2c', { flat: true, rough: 0.9 }), { pos: [0.72, 0.15, -0.42], scale: [1, 0.78, 0.7] }));
-    st.add(box(0.2, 0.02, 0.14, mat('#fff4d0'), [0.72, 0.3, -0.42], { rot: [0.3, 0.2, 0] }));
+    // thùng đá xốp nắp màu và gói cám (chỉ để ngoài bờ, trên cầu không đủ chỗ)
+    if (at.cooler) {
+      st.add(box(0.46, 0.32, 0.34, mat('#f1f1ea', { rough: 1 }), [-0.62, 0.17, -0.42]));
+      st.add(box(0.49, 0.05, 0.37, mat(i % 2 ? '#2b7fc4' : '#d8473a', { rough: 0.6 }), [-0.62, 0.35, -0.42]));
+      st.add(mesh(new THREE.DodecahedronGeometry(0.18, 0), mat(i % 2 ? '#e9c13f' : '#cf4a2c', { flat: true, rough: 0.9 }), { pos: [0.6, 0.14, -0.3], scale: [1, 0.78, 0.7] }));
+    }
 
-    // vợt dựng vào cột
-    const netAt = new THREE.Group();
-    netAt.position.set(postX + 0.08, 0, roofFront + 0.05);
-    netAt.rotation.set(0.1, 0, -0.16);
-    netAt.add(cyl(0.018, 0.022, 1.45, bambooDark, [0, 0.7, 0], { seg: 5, cast: false }));
-    netAt.add(mesh(new THREE.TorusGeometry(0.2, 0.014, 5, 16), bambooDark, { pos: [0, 1.6, 0], cast: false }));
-    st.add(netAt);
+    // cọc tre cắm biển số, treo đèn câu
+    const [sx, sz] = at.stake;
+    const stakeH = 1.95;
+    st.add(cyl(0.035, 0.05, stakeH, bamboo, [sx, stakeH / 2, sz], { seg: 6 }));
     st.updateMatrixWorld(true);
     {
-      const m = new THREE.Matrix4().compose(new THREE.Vector3(postX + 0.08, 1.6, roofFront + 0.05), new THREE.Quaternion().setFromEuler(netAt.rotation), new THREE.Vector3(1, 1, 1));
+      const m = new THREE.Matrix4().compose(new THREE.Vector3(sx, 1.4, sz + 0.06), new THREE.Quaternion(), new THREE.Vector3(1, 1, 1));
       m.premultiply(st.matrix);
-      const cone = new THREE.ConeGeometry(0.19, 0.42, 10, 1, true);
-      cone.rotateX(Math.PI / 2);
-      cone.translate(0, 0, 0.22);
-      cone.applyMatrix4(m);
-      netGeos.push(cone);
+      addTextured(tubeMat, new THREE.CylinderGeometry(0.03, 0.03, 0.72, 6).rotateZ(Math.PI / 2), m, { cast: false });
     }
-
-    // mái hai dốc: chòi nào cũng có sóng lá dừa, thỉnh thoảng một mái tôn
-    const roofMat = n % 3 === 0 ? zincMat : thatchMat;
-    const rise = 0.72;
-    const run = (roofBack - roofFront) / 2;
-    const slope = Math.hypot(rise, run) + 0.1;
-    const angle = Math.atan2(rise, -run);
-    const midZ = (roofFront + roofBack) / 2;
-    const eave = 2.34;
-    const bias = roofMat === zincMat ? 0.04 : 0.09;
-    for (const s of [1, -1]) {
-      const m = new THREE.Matrix4().compose(
-        new THREE.Vector3(0, eave + rise / 2, midZ + (s * -run) / 2 + s * 0.02),
-        new THREE.Quaternion().setFromEuler(new THREE.Euler(s * angle, 0, 0)),
-        new THREE.Vector3(1, 1, 1),
-      );
-      m.premultiply(st.matrix);
-      addTextured(roofMat, new THREE.BoxGeometry(2.14, bias, slope), m);
-    }
-    st.add(cyl(0.055, 0.055, 2.16, bambooDark, [0, eave + rise + 0.03, midZ], { rot: [0, 0, Math.PI / 2], seg: 6 }));
-
-    // đèn tuýp treo dưới xà trước, quầng sáng trên sàn và mặt nước (gộp thành một lần vẽ)
-    {
-      const m = new THREE.Matrix4().compose(new THREE.Vector3(0, 2.3, roofFront + 0.02), new THREE.Quaternion(), new THREE.Vector3(1, 1, 1));
-      m.premultiply(st.matrix);
-      addTextured(tubeMat, new THREE.CylinderGeometry(0.035, 0.035, 1.25, 6).rotateZ(Math.PI / 2), m, { cast: false });
-      st.add(box(1.32, 0.03, 0.08, mat('#dedad0'), [0, 2.345, roofFront + 0.02], { cast: false }));
-    }
-
-    // biển số trên nóc, sơn hai mặt
-    // bờ dưới: mái nằm giữa người câu và máy quay, nên biển treo sau lưng chòi để không che người
-    const signPos = h.inward[1] < 0 ? pos.clone().addScaledVector(inward, roofBack - 0.16).setY(DECK_Y + 1.5) : pos.clone().addScaledVector(inward, midZ).setY(DECK_Y + eave + rise + 0.68);
-    const signW = 1.5;
+    const signPos = new THREE.Vector3(sx, stakeH + 0.28, sz).applyMatrix4(st.matrix);
+    const signW = 1;
     const signH = signW * 0.625;
     addTextured(signMat, signUv(new THREE.PlaneGeometry(signW, signH), n), new THREE.Matrix4().compose(signPos, signTurn, new THREE.Vector3(1, 1, 1)));
     addTextured(signMat, signUv(new THREE.PlaneGeometry(signW, signH), n).rotateY(Math.PI), new THREE.Matrix4().compose(signPos.clone().addScaledVector(signBack, 0.02), signTurn, new THREE.Vector3(1, 1, 1)));
-    // chòi bờ trái thêm một biển trước xà để lúc quay cận (máy nhìn từ giữa ao) vẫn đọc được
-    if (h.inward[0] !== 0) {
-      const m = new THREE.Matrix4().compose(new THREE.Vector3(0, 2.72, roofFront + 0.03), new THREE.Quaternion(), new THREE.Vector3(1, 1, 1));
+    // biển nhỏ quay về phía người câu để lúc quay cận (máy nhìn từ giữa sông) vẫn đọc được
+    {
+      const m = new THREE.Matrix4().compose(new THREE.Vector3(sx, 1.72, sz + 0.05), new THREE.Quaternion(), new THREE.Vector3(1, 1, 1));
       m.premultiply(st.matrix);
-      addTextured(signMat, signUv(new THREE.PlaneGeometry(0.72, 0.45), n), m);
+      addTextured(signMat, signUv(new THREE.PlaneGeometry(0.58, 0.36), n), m);
     }
-    if (h.inward[1] >= 0) st.add(cyl(0.035, 0.035, 0.55, bambooDark, [0, eave + rise + 0.25, midZ], { seg: 5 }));
     flatten(st, props);
 
     // phần động: cần dự phòng, ống cắm cần và xô cá (fisher.js và main.js dùng tới)
@@ -854,7 +1197,7 @@ export function buildWorld(scene, overview) {
     g.position.copy(pos);
     g.rotation.y = rotY;
     const holder = new THREE.Group();
-    holder.position.set(0.5, 0, 0.42);
+    holder.position.set(at.holder[0], 0, at.holder[1]);
     holder.add(mesh(new THREE.CylinderGeometry(0.055, 0.07, 0.5, 8), bambooDark, { pos: [0, 0.25, 0] }));
     const spare = new THREE.Group();
     spare.position.set(0, 0.45, 0);
@@ -865,7 +1208,7 @@ export function buildWorld(scene, overview) {
     holder.add(spare);
     g.add(holder);
     const bucket = new THREE.Group();
-    bucket.position.set(-0.68, 0, 0.3);
+    bucket.position.set(at.bucket[0], 0, at.bucket[1]);
     bucket.scale.setScalar(0.82);
     const bucketColor = ['#3a8fd9', '#d9463a', '#35a35c'][i % 3];
     bucket.add(mesh(new THREE.CylinderGeometry(0.28, 0.21, 0.46, 12, 1, true), mat(bucketColor, { rough: 0.55, side: THREE.DoubleSide }), { pos: [0, 0.23, 0] }));
@@ -876,19 +1219,18 @@ export function buildWorld(scene, overview) {
     for (const part of [holder, spare, bucket]) bake(part);
     scene.add(g);
 
-    const reach = range(3.05, 3.5);
     const bobber = pos.clone().addScaledVector(aim, reach);
     bobber.y = 0;
-    seats.push({ index: i, number: n, group: g, pos, inward, side, rotY, bobber, reach, spare, bucket, seatY: pos.y + 0.47 });
+    seats.push({ index: i, number: n, group: g, pos, inward, side, rotY, bobber, reach, spare, bucket, seatY: pos.y + 0.47, kind, route: serveRoute(kind, pos, side, north) });
   });
 
-  // quầng đèn tuýp trên sàn chòi và sát mép nước
+  // quầng đèn câu: trên chỗ ngồi và vệt hắt xuống mặt nước
   {
     const pools = [];
     for (const s of seats) {
-      const onDeck = new THREE.PlaneGeometry(4.2, 4.2).rotateX(-Math.PI / 2);
-      onDeck.translate(s.pos.x + s.inward.x * 0.1, DECK_Y + 0.03, s.pos.z + s.inward.z * 0.1);
-      pools.push(onDeck);
+      pools.push(new THREE.PlaneGeometry(2.6, 2.6).rotateX(-Math.PI / 2).translate(s.pos.x, s.pos.y + 0.05, s.pos.z));
+      const streak = new THREE.PlaneGeometry(1.5, 5.2).rotateX(-Math.PI / 2).rotateY(s.rotY);
+      pools.push(streak.translate(s.pos.x + s.inward.x * 2.6, 0.04, s.pos.z + s.inward.z * 2.6));
     }
     const m = new THREE.Mesh(mergeGeometries(pools), lampPool);
     pools.forEach((g) => g.dispose());
@@ -897,82 +1239,39 @@ export function buildWorld(scene, overview) {
     scene.add(m);
   }
 
-  // lưới vợt trong suốt của cả 20 chòi: một lần vẽ
+  // ---------------------------------------------------------------- Bụi cây bờ bắc, dừa nước bờ đê, lau sậy ven sông
   {
-    const nets = new THREE.Mesh(mergeGeometries(netGeos), netMat);
-    netGeos.forEach((g) => g.dispose());
-    nets.userData.keep = true;
-    scene.add(nets);
-  }
-
-  // ---------------------------------------------------------------- Quạt nước
-  {
-    const white = mat('#f1eee6', { rough: 0.5 });
-    const dark = mat('#3a3f42', { rough: 0.5, metal: 0.3 });
-    const blade = mat('#2f6d9c', { rough: 0.5 });
-    const floatMat = mat('#e8e6dc', { rough: 0.6 });
-    const spray = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(1, 0), new THREE.MeshBasicMaterial({ color: '#f4fbff', transparent: true, opacity: 0.85, fog: false }), 96);
-    spray.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-    spray.frustumCulled = false;
-    spray.renderOrder = 3;
-    spray.userData.keep = true;
-    scene.add(spray);
-    const drops = Array.from({ length: 96 }, (_, i) => ({ fan: i % 2, side: i % 4 < 2 ? -1 : 1, phase: rnd(), speed: range(0.9, 1.4), dx: range(-0.28, 0.28), kick: range(0.5, 1.5), up: range(0.8, 1.6), size: range(0.025, 0.06) }));
-    const dummy = new THREE.Object3D();
-    const units = FANS.map((f, idx) => {
-      const unit = new THREE.Group();
-      unit.position.set(f.x, 0, f.z);
-      // thân máy trắng trên phao, trục ngang ra hai bánh guồng như bản vẽ
-      unit.add(mesh(new THREE.BoxGeometry(1.05, 0.5, 0.72), white, { pos: [0, 0.42, 0] }));
-      unit.add(mesh(new THREE.CylinderGeometry(0.2, 0.24, 0.32, 10), dark, { pos: [0, 0.82, 0] }));
-      unit.add(mesh(new THREE.BoxGeometry(0.75, 0.2, 0.92), floatMat, { pos: [0, 0.1, 0] }));
-      unit.add(mesh(new THREE.CylinderGeometry(0.045, 0.045, 2.5, 8), dark, { pos: [0, 0.3, 0.02], rot: [0, 0, Math.PI / 2] }));
-      for (const s of [-1, 1]) {
-        unit.add(mesh(new THREE.CylinderGeometry(0.2, 0.2, 1.05, 10), floatMat, { pos: [s * 1.18, 0.07, -0.5], rot: [Math.PI / 2, 0, 0] }));
-        unit.add(mesh(new THREE.BoxGeometry(0.06, 0.06, 0.62), dark, { pos: [s * 0.82, 0.26, -0.28] }));
-      }
-      const wheels = [-1, 1].map((s) => {
-        const w = new THREE.Group();
-        w.position.set(s * 1.05, 0.3, 0.02);
-        w.add(mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.5, 8), dark, { rot: [0, 0, Math.PI / 2] }));
-        for (let k = 0; k < 6; k++) {
-          const a = (k / 6) * Math.PI * 2;
-          w.add(mesh(new THREE.BoxGeometry(0.46, 0.34, 0.04), blade, { pos: [0, Math.cos(a) * 0.3, Math.sin(a) * 0.3], rot: [-a, 0, 0] }));
+    const leaf = ['#659a24', '#5c9120', '#6fa42b'].map((c) => mat(c, { flat: true, rough: 1 }));
+    for (const [px, py, r] of [[103, 388, 0.46], [141, 376, 0.46], [470, 393, 0.46], [509, 382, 0.46], [690, 393, 0.46], [729, 382, 0.46], [1264, 376, 0.46], [1303, 388, 0.46]]) {
+      const [x, z] = P(px, py);
+      props.add(mesh(new THREE.IcosahedronGeometry(r, 1), pick(leaf), { pos: [x, BANK_Y + r * 0.72, z], scale: [1.1, 0.92, 1.1] }));
+      props.add(mesh(new THREE.IcosahedronGeometry(r * 0.6, 1), pick(leaf), { pos: [x + r * 0.5, BANK_Y + r * 0.45, z + r * 0.4] }));
+    }
+    const reedMats = ['#7f9a3a', '#93aa45', '#6b8a30'].map((c) => mat(c, { flat: true, side: THREE.DoubleSide }));
+    const blade = new THREE.ConeGeometry(0.028, 1, 3);
+    const clear = [...seats.map((s) => [s.pos.x, s.pos.z]), P(894, 500), P(1176, 490), P(1176, 870), P(360, 490), P(360, 860), P(1353, 490)];
+    for (const [bank, dir] of [[bankN, 1], [bankS, -1]]) {
+      for (let k = 0; k < 52; k++) {
+        const x = range(-19, 19);
+        const z = bank(x) + dir * range(-0.2, 0.22);
+        if (clear.some(([cx, cz]) => Math.hypot(cx - x, cz - z) < 1.05)) continue;
+        for (let b = 0; b < 5; b++) {
+          const h = range(0.45, 0.95);
+          props.add(mesh(blade, pick(reedMats), { pos: [x + range(-0.13, 0.13), BANK_Y * 0.55 + h / 2, z + range(-0.1, 0.1)], rot: [range(-0.22, 0.22), 0, range(-0.22, 0.22)], scale: [1, h, 1], cast: false }));
         }
-        bake(w);
-        w.userData.noBake = true;
-        unit.add(w);
-        return w;
-      });
-      // dây điện nổi về bờ
-      const shoreZ = -POND_HZ;
-      props.add(box(0.03, 0.03, Math.abs(shoreZ - f.z) - 0.2, mat('#16181a'), [f.x + (idx ? 0.36 : -0.36), 0.06, (shoreZ + f.z) / 2], { cast: false }));
-      unit.userData.noBake = true;
-      bake(unit);
-      scene.add(unit);
-      return { unit, wheels, phase: idx * 1.7 };
-    });
-    updaters.push((t) => {
-      for (const u of units) {
-        u.wheels.forEach((w, i) => (w.rotation.x = t * (i ? 9.5 : -9.5)));
-        u.unit.position.y = Math.sin(t * 2.6 + u.phase) * 0.018;
-        u.unit.rotation.z = Math.sin(t * 2.1 + u.phase) * 0.012;
       }
-      drops.forEach((d, i) => {
-        const age = (t * d.speed + d.phase) % 1;
-        const f = FANS[d.fan];
-        dummy.position.set(f.x + d.side * 1.05 + d.dx, 0.1 + 4 * age * (1 - age) * d.up, f.z + 0.3 + age * d.kick);
-        dummy.scale.setScalar(d.size * (1 - age * 0.5));
-        dummy.updateMatrix();
-        spray.setMatrixAt(i, dummy.matrix);
-      });
-      spray.instanceMatrix.needsUpdate = true;
-    });
+    }
   }
-
-  // ---------------------------------------------------------------- Hàng dừa và mấy con chó nằm dưới gốc
   const crowns = [];
-  for (const [px, py, tall] of [[176, 62, 7.2], [353, 48, 8.4], [529, 62, 7.5], [706, 48, 8.8], [882, 62, 7.4], [1059, 48, 8.2], [1382, 112, 7.8]]) {
+  // dừa nước: bẹ lá mọc thẳng từ gốc sát đất
+  for (const [px, py] of [[118, 900], [558, 923], [1338, 895], [1376, 905]]) {
+    const [x, z] = P(px, py);
+    const tree = nipa(x, BANK_Y, z);
+    scene.add(tree);
+    crowns.push({ crown: tree.userData.crown, phase: rnd() * 6 });
+  }
+  // vài cây dừa cao phía sau làng
+  for (const [px, py, tall] of [[60, 70, 6.2], [400, 90, 6.8], [760, 70, 7], [960, 110, 6.4], [1440, 90, 6.6]]) {
     const [x, z] = P(px, py);
     const tree = palm(x, BANK_Y, z, tall);
     scene.add(tree);
@@ -985,13 +1284,14 @@ export function buildWorld(scene, overview) {
       c.crown.rotation.x = Math.cos(t * 0.9 + c.phase) * (0.02 + Math.abs(env.wind) * 0.03);
     }
   });
+  // mấy con chó nằm dưới gốc đa và trước quán
   {
-    const [x1, z1] = P(176, 62);
-    const [x2, z2] = P(1382, 112);
+    const [x1, z1] = P(235, 290);
+    const [x2, z2] = P(1000, 300);
     const pack = [
-      makeDog({ pos: [x1 - 0.5, BANK_Y, z1 + 1.15], rot: 0.5, coat: '#c8964e', belly: '#ecd3a0' }),
-      makeDog({ pos: [x1 - 1.9, BANK_Y, z1 + 2.2], rot: 2.2, coat: '#2f2a26', belly: '#c9b79a', scale: 0.92 }),
-      makeDog({ pos: [x2 - 0.9, BANK_Y, z2 + 0.9], rot: -1.2, coat: '#e7dcc5', belly: '#f7f2e6', patch: '#8a5b34' }),
+      makeDog({ pos: [x1 + 0.9, BANK_Y, z1 - 0.2], rot: 0.5, coat: '#c8964e', belly: '#ecd3a0' }),
+      makeDog({ pos: [x1 - 0.9, BANK_Y, z1 - 0.3], rot: 2.2, coat: '#2f2a26', belly: '#c9b79a', scale: 0.92 }),
+      makeDog({ pos: [x2, BANK_Y, z2 - 0.1], rot: -1.2, coat: '#e7dcc5', belly: '#f7f2e6', patch: '#8a5b34' }),
     ];
     for (const d of pack) {
       scene.add(d.group);
@@ -999,106 +1299,26 @@ export function buildWorld(scene, overview) {
     }
   }
 
-  // ---------------------------------------------------------------- Quán võng
+  // ---------------------------------------------------------------- Chòi canh ruộng
   {
-    const [, zFront] = P(0, 500);
-    const [, zBack] = P(0, 265);
-    const { x0, x1 } = RIGHT;
-    const midX = (x0 + x1) / 2;
-    const width = x1 - x0;
-    const floorY = BANK_Y + 0.08;
-    const brown = ['#84500f', '#7a4a10', '#8e5915'].map((c) => mat(c, { rough: 0.95 }));
-    for (let z = zBack; z < zFront - 0.01; z += 0.46) props.add(box(width, 0.16, 0.44, pick(brown), [midX, floorY - 0.08, z + 0.22], { cast: false }));
-    const pole = mat('#9a7a48', { rough: 0.8 });
-    const postZs = [zBack + 0.1, zBack + 1.7, zFront - 0.1];
-    const postH = 2.55;
-    for (const x of [x0 + 0.08, x1 - 0.08]) {
-      for (const z of postZs) props.add(cyl(0.07, 0.085, postH, pole, [x, floorY + postH / 2, z]));
-      props.add(cyl(0.06, 0.06, zFront - zBack, pole, [x, floorY + postH, (zBack + zFront) / 2], { rot: [Math.PI / 2, 0, 0], seg: 6 }));
+    const [x, z] = P(885, 1132);
+    const base = BANK_Y - 0.02;
+    const floorY = base + 1.05;
+    for (const sx of [-1, 1]) {
+      for (const sz of [-1, 1]) props.add(cyl(0.05, 0.07, 2.45, bamboo, [x + sx * 0.55, base + 1.22, z + sz * 0.48]));
+      props.add(pole([x + sx * 0.18, base, z + 1.05], [x + sx * 0.18, floorY, z + 0.5], 0.03, bambooDark));
     }
-    for (const z of postZs) props.add(cyl(0.05, 0.05, width, pole, [midX, floorY + postH, z], { rot: [0, 0, Math.PI / 2], seg: 6 }));
-    // mái lá phía trong, che quầy nước
-    const rise = 0.6;
-    const m = new THREE.Matrix4().compose(new THREE.Vector3(midX, floorY + postH + rise / 2 + 0.05, zBack + 0.9), new THREE.Quaternion().setFromEuler(new THREE.Euler(-0.36, 0, 0)), new THREE.Vector3(1, 1, 1));
-    addTextured(thatchMat, new THREE.BoxGeometry(width + 0.5, 0.1, 2.1), m);
-    // quầy nước: hũ trà đá, ly cà phê, thùng mì gói
-    props.add(box(width - 0.5, 0.82, 0.48, mat('#6a4522', { rough: 0.9 }), [midX, floorY + 0.41, zBack + 0.72]));
-    props.add(box(width - 0.42, 0.05, 0.56, mat('#efe6cf', { rough: 0.6 }), [midX, floorY + 0.84, zBack + 0.72]));
-    props.add(cyl(0.2, 0.2, 0.42, mat('#d7572a', { rough: 0.4 }), [midX - 0.75, floorY + 1.08, zBack + 0.72], { seg: 12 }));
-    props.add(cyl(0.21, 0.21, 0.05, mat('#f4f4ec'), [midX - 0.75, floorY + 1.31, zBack + 0.72], { seg: 12 }));
-    for (let k = 0; k < 4; k++) {
-      props.add(cyl(0.06, 0.045, 0.16, mat(k % 2 ? '#2c1810' : '#c98a3c', { rough: 0.25 }), [midX - 0.22 + k * 0.19, floorY + 0.95, zBack + 0.78], { seg: 8, cast: false }));
-    }
-    props.add(box(0.46, 0.34, 0.34, mat('#e9c13f', { rough: 0.8 }), [midX + 0.82, floorY + 1.04, zBack + 0.72]));
-    props.add(box(0.48, 0.1, 0.36, mat('#d6332f', { rough: 0.8 }), [midX + 0.82, floorY + 1.05, zBack + 0.72]));
-
-    // biển quán
-    const menu = paintedBoard(640, 256, '#7a1f12', (g, w, h) => {
-      g.strokeStyle = '#ffd84d';
-      g.lineWidth = 10;
-      g.strokeRect(6, 6, w - 12, h - 12);
-      g.fillStyle = '#ffe16a';
-      g.font = '900 104px "Segoe UI", Arial, sans-serif';
-      g.fillText('QUÁN VÕNG', w / 2, 88);
-      g.fillStyle = '#ffffff';
-      g.font = '800 50px "Segoe UI", Arial, sans-serif';
-      g.fillText('Cà phê đá · Trà đá · Mì gói', w / 2, 188);
-    });
-    const signW = width * 0.98;
-    const board = mesh(new THREE.PlaneGeometry(signW, signW * 0.4), new THREE.MeshStandardMaterial({ map: menu, roughness: 0.75, side: THREE.DoubleSide }), { pos: [midX, floorY + postH + 0.62, zBack + 2.2], rot: [-0.62, 0, 0] });
-    board.userData.keep = true;
-    scene.add(board);
-    props.add(cyl(0.03, 0.03, 0.8, pole, [x0 + 0.5, floorY + postH + 0.3, zBack + 2.1], { seg: 5 }));
-    props.add(cyl(0.03, 0.03, 0.8, pole, [x1 - 0.5, floorY + postH + 0.3, zBack + 2.1], { seg: 5 }));
-
-    // dây bóng đèn vàng dọc xà, sáng lúc trời tối
-    {
-      const bulbs = [];
-      for (const x of [x0 + 0.12, x1 - 0.12]) {
-        for (let k = 0; k < 5; k++) bulbs.push(new THREE.IcosahedronGeometry(0.06, 0).translate(x, floorY + postH - 0.12 - Math.sin((k / 4) * Math.PI) * 0.1, zBack + 1.9 + (k * (zFront - zBack - 2)) / 4));
-      }
-      const m2 = new THREE.Mesh(mergeGeometries(bulbs), bulbMat);
-      m2.userData.keep = true;
-      scene.add(m2);
-    }
-
-    // ba cái võng mắc ngang, hai võng có người nằm đong đưa
-    const span = width - 0.2;
-    const hammockZs = [zFront - 2.46, zFront - 1.42, zFront - 0.42];
-    const rows = [
-      { z: hammockZs[0], colors: ['#d94b38', '#f1c232'], npc: { shirt: '#2d6da3', pants: '#3b3b3f', hat: true } },
-      { z: hammockZs[1], colors: ['#2a8f74', '#e8e2c8'], npc: { shirt: '#e8e4d8', pants: '#5a4b3a', hat: false } },
-      { z: hammockZs[2], colors: ['#3a64b0', '#e8913b'], npc: null },
-    ];
-    const swings = rows.map((row, idx) => {
-      const pivot = new THREE.Group();
-      pivot.position.set(midX, floorY + 1.95, row.z);
-      pivot.add(hammock(span, 1.02, row.colors));
-      if (row.npc) pivot.add(restingPerson(row.npc));
-      bake(pivot);
-      pivot.userData.noBake = true;
-      scene.add(pivot);
-      // cọc mắc võng ở đúng hàng này
-      for (const x of [x0 + 0.08, x1 - 0.08]) props.add(cyl(0.05, 0.06, 2.1, pole, [x, floorY + 1.05, row.z], { seg: 6 }));
-      return { pivot, phase: idx * 1.9, speed: 0.85 + idx * 0.12 };
-    });
-    // bàn nhựa thấp với ly cà phê đá
-    for (const [dx, zk] of [[-0.95, 0.5], [0.95, 1.46]]) {
-      const tz = zFront - zk - 0.46;
-      props.add(cyl(0.34, 0.26, 0.05, mat('#3a7fbd', { rough: 0.5 }), [midX + dx, floorY + 0.42, tz], { seg: 10 }));
-      props.add(cyl(0.05, 0.14, 0.4, mat('#2f6da0', { rough: 0.5 }), [midX + dx, floorY + 0.2, tz], { seg: 8 }));
-      props.add(cyl(0.055, 0.042, 0.16, mat('#2c1810', { rough: 0.25 }), [midX + dx - 0.08, floorY + 0.53, tz], { seg: 8, cast: false }));
-      props.add(cyl(0.055, 0.042, 0.16, mat('#c98a3c', { rough: 0.25 }), [midX + dx + 0.1, floorY + 0.53, tz + 0.05], { seg: 8, cast: false }));
-    }
-    updaters.push((t) => {
-      for (const s of swings) s.pivot.rotation.x = Math.sin(t * s.speed + s.phase) * (0.08 + Math.min(0.1, Math.abs(env.wind) * 0.08));
-    });
+    for (let k = 1; k < 4; k++) props.add(box(0.42, 0.03, 0.05, bambooDark, [x, base + (k * 1.05) / 4, z + 1.05 - (k * 0.55) / 4], { cast: false }));
+    props.add(box(1.3, 0.06, 1.15, pick(plank), [x, floorY, z]));
+    props.add(box(1.2, 0.5, 0.05, weave, [x, floorY + 0.28, z - 0.5]));
+    for (const sx of [-1, 1]) props.add(box(0.05, 0.5, 1, weave, [x + sx * 0.58, floorY + 0.28, z]));
+    thatchRoof(x, base + 2.42, z, 1.75, 1.65, 0.6);
   }
 
-  // ---------------------------------------------------------------- Bàn cân, bảng trắng, loa
+  // ---------------------------------------------------------------- Bàn cân, bảng trắng, loa (cạnh quán nước)
   const scale = (() => {
-    const [, zBack] = P(0, 545);
-    const [, zFront] = P(0, 677);
+    const zBack = Z(130);
+    const zFront = Z(290);
     const { x0, x1 } = RIGHT;
     const midX = (x0 + x1) / 2;
     const midZ = (zBack + zFront) / 2 + 0.25;
@@ -1143,7 +1363,7 @@ export function buildWorld(scene, overview) {
     display.userData.keep = true;
     scene.add(display);
 
-    // bảng trắng ghi tên và số ký từng chòi
+    // bảng trắng ghi tên và số ký từng chỗ
     const boardW = x1 - x0 + 0.2;
     const boardH = boardW * 0.5;
     const boardY = y + 0.72 + boardH / 2;
@@ -1189,7 +1409,7 @@ export function buildWorld(scene, overview) {
         wb.fillStyle = '#9aa0a8';
         wb.font = '700 44px "Segoe UI", Arial, sans-serif';
         wb.textAlign = 'center';
-        wb.fillText('Chưa có chòi nào lên cá', 360, 216);
+        wb.fillText('Chưa có ai lên cá', 360, 216);
       }
       wbTex.needsUpdate = true;
     };
@@ -1258,23 +1478,6 @@ export function buildWorld(scene, overview) {
     };
   })();
 
-  // ---------------------------------------------------------------- Bãi xe máy
-  {
-    const paint = ['#c7302b', '#222a33', '#2a62b0', '#e5e0d2', '#2f7d53', '#e0a02a'];
-    const [, row1] = P(0, 873);
-    const [, row2] = P(0, 962);
-    const [, row3] = P(0, 1050);
-    const cols = [RIGHT.x0 + 0.5, RIGHT.x0 + 1.25, RIGHT.x0 + 2];
-    const spots = [[cols[0], row1], [cols[1], row1], [cols[2], row1], [cols[0], row2], [cols[1], row2], [cols[0], row3]];
-    spots.forEach(([x, z], i) => {
-      const bike = motorbike(paint[i % paint.length]);
-      bike.position.set(x, BANK_Y + 0.02, z);
-      bike.rotation.y = Math.PI + range(-0.07, 0.07);
-      bike.scale.setScalar(0.8);
-      flatten(bike, props);
-    });
-  }
-
   // ---------------------------------------------------------------- Cảnh xa: rặng cây, xóm nhà, núi thấp
   {
     const greens = ['#3f7a3a', '#4d8a3e', '#356b34', '#5a9446', '#2f6130'].map((c) => mat(c, { flat: true, rough: 1 }));
@@ -1284,8 +1487,9 @@ export function buildWorld(scene, overview) {
       blob(x + range(-0.7, 0.7), -36 + range(-1.2, 1.2), range(1.7, 2.9), 1.1);
       if (rnd() < 0.55) blob(x + range(-1, 1), -39 + range(-1, 1), range(2.1, 3.3), 1.25);
     }
-    // ba phía còn lại chỉ thấy lúc quay cận
+    // ba phía còn lại chỉ thấy lúc quay cận; chừa khúc sông chảy qua
     for (let z = -30; z <= 46; z += 3) {
+      if (Math.abs(z) < 8.5) continue;
       blob(-44 + range(-2, 2), z, range(1.9, 3.2), 1.2);
       blob(44 + range(-2, 2), z, range(1.9, 3.2), 1.2);
     }
@@ -1299,7 +1503,7 @@ export function buildWorld(scene, overview) {
       house(x, z, s, roof);
       blob(x + 3.4, z - 0.6, 1.5, 1.3);
     }
-    for (const [x, z, r] of [[-26, -19, 2], [-20, -20, 1.5], [24, -20, 2], [31, -18, 1.7], [-30, -5, 2.1], [32, 3, 2.1], [-24, 18, 2], [26, 22, 2]]) blob(x, z, r, 1.25);
+    for (const [x, z, r] of [[-26, -19, 2], [-20, -20, 1.5], [24, -20, 2], [31, -18, 1.7], [-30, -11, 2.1], [32, 10, 2.1], [-24, 18, 2], [26, 22, 2]]) blob(x, z, r, 1.25);
     // dãy núi thấp sau rặng cây
     const hillMat = mat('#7f9d94', { flat: true, rough: 1 });
     for (let x = -72; x <= 72; x += 9) farProps.add(mesh(new THREE.IcosahedronGeometry(1, 1), hillMat, { pos: [x + range(-2, 2), 0, -47 + range(-1, 1)], scale: [range(7, 11), range(3, 6.5), 5], cast: false }));
@@ -1334,15 +1538,15 @@ export function buildWorld(scene, overview) {
   // đèn phụ đi theo máy quay (main.js điều khiển): giữ mặt người câu không bị tối, mạnh lên khi quay cận
   const fill = new THREE.DirectionalLight('#fff0dc', 0.3);
   scene.add(fill, fill.target);
-  // đèn tuýp dọc bờ: vài đèn thật toả rộng (phần còn lại là quầng giả cho nhẹ), thêm đèn vàng của quán
+  // đèn câu hai bờ: vài đèn thật toả rộng (phần còn lại là quầng giả cho nhẹ), thêm đèn vàng của quán và đình
   const lampLights = [
-    { at: [-5.6, 3.2, -8.8], color: '#d8fff0', power: 26 },
-    { at: [3.4, 3.2, -8.8], color: '#d8fff0', power: 26 },
-    { at: [-5.6, 3.2, 9.1], color: '#d8fff0', power: 26 },
-    { at: [3.4, 3.2, 9.1], color: '#d8fff0', power: 26 },
-    { at: [-11.2, 3.2, -0.6], color: '#d8fff0', power: 24 },
-    { at: [(RIGHT.x0 + RIGHT.x1) / 2, 2.9, -4.8], color: '#ffc27a', power: 18 },
-    { at: [(RIGHT.x0 + RIGHT.x1) / 2, 3, 0.6], color: '#fff0d8', power: 16 },
+    { at: [X(330), 3, Z(440)], color: '#d8fff0', power: 24 },
+    { at: [X(900), 3, Z(440)], color: '#d8fff0', power: 24 },
+    { at: [X(420), 3, Z(910)], color: '#d8fff0', power: 24 },
+    { at: [X(950), 3, Z(910)], color: '#d8fff0', power: 24 },
+    { at: [X(360), 3.2, Z(677)], color: '#d8fff0', power: 20 },
+    { at: [X(1117), 2.9, Z(240)], color: '#ffc27a', power: 18 },
+    { at: [X(553), 2.9, Z(260)], color: '#ffc27a', power: 14 },
   ].map(({ at, color, power }) => {
     const l = new THREE.PointLight(color, 0, 18, 1.4);
     l.position.set(...at);
@@ -1353,6 +1557,11 @@ export function buildWorld(scene, overview) {
 
   return {
     seats,
+    // chỗ đứng chờ trước quán của người phục vụ, bến đậu của xuồng bán hàng
+    service: {
+      homes: [[1072, 291], [1117, 296], [1162, 291]].map(([px, py]) => [X(px), BANK_Y, Z(py)]),
+      moor: [X(975), 0, Z(540)],
+    },
     env,
     weigh: scale.weigh,
     clearWeigh: scale.clear,
@@ -1375,6 +1584,68 @@ export function buildWorld(scene, overview) {
 }
 
 // ---------------------------------------------------------------- Đồ vật dùng chung
+
+// Thân thuyền gỗ: dài theo trục x, gốc toạ độ ở giữa mặt nước, hai đầu cong lên, có sàn và băng ngồi.
+export function boat(len, beam, color) {
+  const g = new THREE.Group();
+  const stations = [];
+  for (let i = 0; i <= 18; i++) stations.push(-len / 2 + (i * len) / 18);
+  const K_ROWS = 8;
+  const hull = sheet(
+    stations,
+    K_ROWS,
+    (x, j) => {
+      const u = (x + len / 2) / len;
+      const k = (j / K_ROWS) * 2 - 1;
+      const w = (beam / 2) * Math.sin(Math.PI * Math.min(0.995, Math.max(0.005, u))) ** 0.55;
+      const top = 0.3 + 0.32 * (2 * u - 1) ** 4;
+      return { z: k * w, y: -0.2 + (top + 0.2) * Math.abs(k) ** 1.5 };
+    },
+    true,
+  );
+  g.add(mesh(hull, mat(color, { rough: 0.85, side: THREE.DoubleSide })));
+  g.add(box(len * 0.62, 0.035, beam * 0.72, mat('#8d6135', { rough: 0.95 }), [0, 0.11, 0], { cast: false }));
+  for (const x of [-0.3, 0.3]) g.add(box(0.2, 0.05, beam * 0.86, mat('#a37546', { rough: 0.95 }), [(x * len) / 1.2, 0.2, 0], { cast: false }));
+  return g;
+}
+
+// Người làng đứng hoặc ngồi, đội nón lá. Không có hoạt cảnh, gộp được vào khối tĩnh.
+function villager({ shirt, pants, standing = false, pos = [0, 0, 0], rot = 0, hat = true }) {
+  const g = new THREE.Group();
+  g.position.set(...pos);
+  g.rotation.y = rot;
+  const skin = mat('#c99668', { rough: 0.8 });
+  const hips = standing ? 0.72 : 0.3;
+  g.add(mesh(new THREE.CapsuleGeometry(0.15, 0.32, 3, 8), mat(shirt, { rough: 0.9 }), { pos: [0, hips + 0.3, 0] }));
+  for (const s of [-1, 1]) {
+    if (standing) g.add(mesh(new THREE.CapsuleGeometry(0.07, 0.56, 3, 6), mat(pants, { rough: 0.9 }), { pos: [s * 0.08, 0.36, 0] }));
+    else g.add(mesh(new THREE.CapsuleGeometry(0.07, 0.3, 3, 6), mat(pants, { rough: 0.9 }), { pos: [s * 0.09, hips + 0.02, 0.18], rot: [Math.PI / 2 - 0.2, 0, 0] }));
+    g.add(mesh(new THREE.CapsuleGeometry(0.045, 0.36, 3, 6), skin, { pos: [s * 0.2, hips + 0.3, 0.06], rot: [-0.5, 0, s * 0.12] }));
+  }
+  g.add(mesh(new THREE.SphereGeometry(0.135, 10, 8), skin, { pos: [0, hips + 0.68, 0] }));
+  if (hat) g.add(mesh(new THREE.ConeGeometry(0.34, 0.2, 14), mat('#e6c978', { rough: 0.9, flat: true }), { pos: [0, hips + 0.84, 0] }));
+  else g.add(mesh(new THREE.SphereGeometry(0.145, 10, 8, 0, Math.PI * 2, 0, Math.PI * 0.55), mat('#2a221c', { rough: 0.95 }), { pos: [0, hips + 0.7, -0.01] }));
+  return g;
+}
+
+// Dừa nước: không thân, các bẹ lá dài mọc thẳng từ gốc rồi rủ ra ngoài.
+function nipa(x, y, z) {
+  const g = new THREE.Group();
+  g.position.set(x, y, z);
+  const leafMats = ['#2f6d12', '#387a16', '#44861d'].map((c) => mat(c, { side: THREE.DoubleSide, flat: true }));
+  const crown = new THREE.Group();
+  for (let k = 0; k < 11; k++) {
+    const holder = new THREE.Group();
+    holder.rotation.y = (k / 11) * Math.PI * 2 + range(-0.2, 0.2);
+    holder.add(mesh(frond(range(1.5, 2.05), range(0.26, 0.36), range(1, 1.45)), pick(leafMats), {}));
+    flatten(holder, crown);
+  }
+  bake(crown);
+  crown.userData.noBake = true;
+  g.add(crown);
+  g.userData.crown = crown;
+  return g;
+}
 
 // Cây dừa: thân cong ghép từ nhiều khúc, tàu lá dài rủ xuống.
 function palm(x, y, z, h) {

@@ -1,0 +1,463 @@
+import path from 'node:path';
+import { appendFileSync, mkdirSync, readFileSync, writeFileSync, renameSync } from 'node:fs';
+import { setTimeout as sleep } from 'node:timers/promises';
+import { parseEnv } from 'node:util';
+import express from 'express';
+import { TikTokLiveConnection, WebcastEvent, ControlEvent } from 'tiktok-live-connector';
+import { BY_ID, publicProvinces } from './src/provinces.js';
+import { Race } from './src/race.js';
+import { Commentator } from './src/commentator.js';
+import { createVoice } from './src/voice.js';
+
+const root = import.meta.dirname;
+const config = JSON.parse(readFileSync(path.join(root, 'config.json'), 'utf8'));
+const mcLines = JSON.parse(readFileSync(path.join(root, 'mc.json'), 'utf8'));
+const username = (process.argv[2] ?? config.tiktokUsername ?? '').trim().replace(/^@/, '');
+// DATA_DIR để chạy thử song song mà không đụng cuộc đua đang có; giọng đọc vẫn dùng chung để khỏi tốn lượt Vbee.
+const dataDir = process.env.DATA_DIR?.trim() || path.join(root, 'data');
+const port = Number(process.env.PORT) || config.port || 3009;
+const host = '127.0.0.1';
+
+const problems = [
+  [Number.isFinite(config.commentPoints) && config.commentPoints >= 1, 'commentPoints là số điểm khi comment tên tỉnh, từ 1 trở lên'],
+  [Number.isFinite(config.pointsPerCoin) && config.pointsPerCoin >= 0, 'pointsPerCoin là số điểm cho mỗi xu của quà không có trong gifts'],
+  [Array.isArray(config.gifts) && config.gifts.every((g) => g.label && Array.isArray(g.names) && g.points >= 1), 'mỗi quà trong gifts cần label, names và points ≥ 1'],
+  [Number.isInteger(config.boardSize) && config.boardSize >= 3 && config.boardSize <= 12, 'boardSize là số tỉnh trên bảng xếp hạng, từ 3 đến 12'],
+  [!config.voice?.talkEverySeconds || (config.voice.talkEverySeconds[0] > 0 && config.voice.talkEverySeconds[1] >= config.voice.talkEverySeconds[0]), 'voice.talkEverySeconds là [ít nhất, nhiều nhất] số giây giữa hai lần MC bình luận'],
+].filter(([ok]) => !ok);
+if (problems.length) throw new Error(`config.json: ${problems.map(([, text]) => text).join('; ')}`);
+
+const guide = {
+  title: config.title,
+  subtitle: config.subtitle,
+  commentPoints: config.commentPoints,
+  gifts: config.gifts.map(({ label, points, icon, names }) => ({ label, points, icon, name: names[0] })),
+  boardSize: config.boardSize,
+  mapScores: config.mapScores !== false,
+};
+
+const vbee = {
+  token: process.env.VBEE_TOKEN?.trim(),
+  appId: process.env.VBEE_APP_ID?.trim(),
+  voice: process.env.VBEE_VOICE?.trim() || 'hn_female_ngochuyen_full_48k-fhg',
+  speed: Number(process.env.VBEE_SPEED) || 1,
+};
+vbee.enabled = Boolean(vbee.token && vbee.appId);
+
+const clients = new Set();
+let status = {
+  connected: false,
+  text: username ? `Chuẩn bị kết nối @${username}` : 'Chế độ thử: chưa đặt kênh TikTok',
+};
+
+const send = (res, message) => res.write(`data: ${JSON.stringify(message)}\n\n`);
+const broadcast = (message) => clients.forEach((res) => send(res, message));
+
+function setStatus(connected, text) {
+  status = { connected, text };
+  console.log(`[TikTok] ${text}`);
+  broadcast({ type: 'status', ...status });
+}
+
+// Safe mode silences the MC until the host turns it off; the race keeps running.
+let safeMode = false;
+function setSafeMode(on, reason) {
+  if (safeMode === on) return;
+  safeMode = on;
+  console.log(`[Chế độ an toàn] ${on ? `Bật: ${reason}` : 'Tắt'}`);
+  broadcast({ type: 'safe-mode', on });
+  if (on) mc.stop();
+}
+
+// ---------- Giọng MC ----------
+const voice = createVoice({
+  enabled: vbee.enabled,
+  voice: vbee.voice,
+  speed: vbee.speed,
+  dir: path.join(root, 'data', 'tts'),
+  synthesize,
+  onError(err, text) {
+    console.error(`[Vbee] Lỗi đọc "${text}": ${err.message}`);
+    broadcast({ type: 'speak-error', message: err.message });
+  },
+});
+
+async function vbeeJson(url, init) {
+  const res = await fetch(url, { ...init, signal: AbortSignal.timeout(15_000) });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(`HTTP ${res.status}: ${JSON.stringify(body.error ?? body).slice(0, 300)}`);
+  return body;
+}
+
+// Realtime (sync) mode is not in every Vbee package, so create a batch job and poll it; no public webhook needed.
+async function synthesize(text) {
+  const headers = { Authorization: `Bearer ${vbee.token}`, 'App-Id': vbee.appId };
+  const job = await vbeeJson('https://api.vbee.vn/v1/tts', {
+    method: 'POST',
+    headers: { ...headers, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text, voiceCode: vbee.voice, mode: 'async', outputFormat: 'mp3', speed: vbee.speed, webhookUrl: 'https://callback.invalid/vbee' }),
+  });
+  if (!job.requestId) throw new Error(`Vbee không trả requestId: ${JSON.stringify(job).slice(0, 300)}`);
+  for (let attempt = 0; attempt < 66; attempt++) {
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    const result = await vbeeJson(`https://api.vbee.vn/v1/tts/requests/${encodeURIComponent(job.requestId)}`, { headers });
+    if (result.status === 'FAILED') throw new Error(`Vbee báo FAILED: ${JSON.stringify(result).slice(0, 300)}`);
+    if (result.status === 'COMPLETED' && result.audioLink) {
+      const audio = await fetch(result.audioLink, { signal: AbortSignal.timeout(15_000) });
+      if (!audio.ok) throw new Error(`Tải audio lỗi HTTP ${audio.status}`);
+      return Buffer.from(await audio.arrayBuffer());
+    }
+  }
+  throw new Error('Quá 20 giây Vbee chưa trả audio');
+}
+
+const mc = new Commentator({
+  voice,
+  lines: mcLines,
+  options: config.voice,
+  enabled: () => !safeMode,
+  emit: broadcast,
+});
+
+// ---------- Cuộc đua ----------
+const STATE_FILE = path.join(dataDir, 'race.json');
+const nameOf = (id) => BY_ID.get(id)?.name ?? id;
+const race = new Race(config, {
+  emit(msg) {
+    // id người xem chỉ dùng trong server.
+    const { userId, ...shown } = msg;
+    broadcast(shown);
+    mc.onEvent(msg);
+    if (msg.type === 'join') console.log(`[Điểm danh] ${msg.name} → ${nameOf(msg.province)}${msg.held ? ` (+${msg.held} điểm quà giữ chờ)` : ''} · ${nameOf(msg.province)} ${msg.score} điểm`);
+    if (msg.type === 'gift') console.log(`[Tiếp sức] ${msg.name} → ${nameOf(msg.province)} +${msg.points} · ${nameOf(msg.province)} ${msg.score} điểm`);
+    if (msg.type === 'pending') console.log(`[Giữ điểm] ${msg.name} chưa chọn tỉnh, đang giữ ${msg.held} điểm`);
+    if (msg.type === 'lead') console.log(`[Dẫn đầu] ${nameOf(msg.province)}${msg.previous ? ` vượt ${nameOf(msg.previous)}` : ''}`);
+  },
+});
+try {
+  race.importState(JSON.parse(readFileSync(STATE_FILE, 'utf8')));
+  console.log(`Đã nạp cuộc đua cũ: ${race.members.size} người, ${race.ranking().length} tỉnh có điểm`);
+} catch {
+  // Chưa có cuộc đua cũ.
+}
+mc.attach(race);
+function saveState() {
+  if (!race.stateDirty) return;
+  race.stateDirty = false;
+  try {
+    mkdirSync(path.dirname(STATE_FILE), { recursive: true });
+    writeFileSync(`${STATE_FILE}.tmp`, JSON.stringify(race.exportState()));
+    renameSync(`${STATE_FILE}.tmp`, STATE_FILE);
+  } catch (err) {
+    console.error(`[Đua] Không lưu được: ${err.message}`);
+  }
+}
+setInterval(saveState, 3000);
+setInterval(() => mc.tick(), 100);
+
+function warmVoice() {
+  const texts = mc.staticParts();
+  const missing = texts.filter((text) => !voice.ready(text));
+  if (!missing.length) return console.log(`[Vbee] Đã có sẵn ${texts.length} mẩu lời MC và tên tỉnh`);
+  console.log(`[Vbee] Đang tạo ${missing.length} mẩu lời MC và tên tỉnh, chỉ lần đầu...`);
+  Promise.all(missing.map((text) => voice.clip(text))).then((ids) => console.log(`[Vbee] Xong lời MC: ${ids.filter(Boolean).length}/${missing.length} mẩu`));
+}
+
+function safeImageUrl(value) {
+  try {
+    const url = new URL(String(value));
+    return url.protocol === 'https:' ? url.href : '';
+  } catch {
+    return '';
+  }
+}
+
+function viewer(user) {
+  const raw = String(user?.nickname || user?.displayId || user?.uniqueId || '').replace(/\s+/g, ' ').trim();
+  const name = Array.from(raw).slice(0, 20).join('') || 'Ẩn danh';
+  // Browsers cannot render HEIC, which TikTok sometimes lists first.
+  const urls = user?.avatarThumb?.urlList ?? user?.avatarMedium?.urlList ?? user?.profilePicture?.url ?? [];
+  const avatar = safeImageUrl(urls.find((url) => !/\.heic\b/i.test(url)) ?? urls[0] ?? '');
+  return { id: String(user?.userId || user?.id || user?.displayId || user?.uniqueId || name), name, avatar };
+}
+
+const lastSeen = new Map();
+function cooledDown(key, ms) {
+  const now = Date.now();
+  if (now - (lastSeen.get(key) ?? 0) < ms) return false;
+  lastSeen.delete(key);
+  lastSeen.set(key, now);
+  if (lastSeen.size > 20_000) lastSeen.delete(lastSeen.keys().next().value);
+  return true;
+}
+
+// Combo gifts resend a running total; only the increase is new. msgId drops exact duplicates.
+class GiftCounter {
+  constructor() {
+    this.streaks = new Map();
+    this.seen = new Set();
+  }
+
+  count({ msgId, userId, giftId, groupId, repeatCount, repeatEnd, combo }) {
+    if (msgId) {
+      if (this.seen.has(msgId)) return 0;
+      this.seen.add(msgId);
+      if (this.seen.size > 5000) this.seen.delete(this.seen.values().next().value);
+    }
+    const repeat = Math.max(1, Number(repeatCount) || 1);
+    if (!combo) return repeat;
+    const key = `${userId}:${giftId}:${groupId}`;
+    const previous = this.streaks.get(key) ?? 0;
+    const count = repeat >= previous ? repeat - previous : repeat;
+    if (repeatEnd) this.streaks.delete(key);
+    else this.streaks.set(key, Math.max(previous, repeat));
+    if (this.streaks.size > 2000) this.streaks.delete(this.streaks.keys().next().value);
+    return count;
+  }
+}
+
+// ---------- TikTok warnings, Telegram ----------
+// TikTok may push moderation notices into the room: violation warnings, punishments, presence checks.
+// Exact names: look-alikes such as WebcastGiftDynamicRestrictionMessage (hidden gifts) or battle punishments are routine.
+const MODERATION_TYPES = new Set(['WebcastPerceptionMessage', 'WebcastNoticeMessage', 'WebcastPartnershipPunishMessage', 'WebcastRoomVerifyMessage']);
+const alerts = [];
+const textOf = (t) => (typeof t === 'string' ? t : t?.defaultPattern || '');
+// TikTok also pushes these messages with every field empty; those are not warnings.
+const hasContent = (value) =>
+  Array.isArray(value) ? value.some(hasContent) : value && typeof value === 'object' ? Object.values(value).some(hasContent) : Boolean(value) && value !== '0';
+
+function reportModeration(type, data) {
+  const punish = data.punishInfo ?? {};
+  const dialog = data.dialog ?? data.perceptionDialog ?? {};
+  const parts = [punish.showReason, punish.punishReason, dialog.title, dialog.subTitle, dialog.policyTip, data.noticeTitle, data.noticeContent, data.violationReason, data.content, data.tips, data.toast, data.floatText, data.common?.displayText];
+  const text = parts.map(textOf).filter((part) => part && part !== '0').join(' · ').slice(0, 300) || type;
+  console.warn(`[TikTok cảnh báo] ${type}: ${text}`);
+  const raw = JSON.stringify(data, (key, value) => (typeof value === 'bigint' ? String(value) : value));
+  appendFileSync(path.join(root, 'moderation.log'), `${new Date().toISOString()} ${type} ${raw}\n`);
+  const alert = { at: Date.now(), text };
+  alerts.push(alert);
+  if (alerts.length > 10) alerts.shift();
+  broadcast({ type: 'moderation', ...alert });
+  setSafeMode(true, 'có cảnh báo TikTok');
+  // The same warning repeated within 10 minutes is sent to Telegram once.
+  if (cooledDown(`telegram:${text}`, 600_000)) {
+    const time = new Date(alert.at).toLocaleTimeString('vi-VN');
+    alertTelegram(`⚠️ TikTok cảnh báo phiên live @${username} lúc ${time}\n${text}\nĐã tự bật chế độ an toàn, MC tạm im. Hãy kiểm tra hộp thư TikTok.`);
+  }
+}
+
+// Read from .env on every send, so Telegram details can change without a restart.
+function telegramConfig() {
+  let file = {};
+  try {
+    file = parseEnv(readFileSync(path.join(root, '.env'), 'utf8'));
+  } catch {
+    // No .env file: use the process environment only.
+  }
+  const read = (key) => String(file[key] ?? process.env[key] ?? '').trim();
+  return { token: read('TELEGRAM_BOT_TOKEN'), chatId: read('TELEGRAM_ADMIN_CHAT_ID') };
+}
+
+// Returns an error message, or '' once sent. The token is part of the URL, so the URL is never logged.
+async function sendTelegram(text) {
+  const { token, chatId } = telegramConfig();
+  if (!token || !chatId) return 'Thiếu TELEGRAM_BOT_TOKEN hoặc TELEGRAM_ADMIN_CHAT_ID trong .env';
+  try {
+    const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: chatId, text }),
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (res.ok) return '';
+    const body = await res.json().catch(() => ({}));
+    return `Telegram báo lỗi ${res.status}: ${body.description ?? ''}`.trim();
+  } catch (err) {
+    return `Không gửi được Telegram: ${err.message}`;
+  }
+}
+
+// Telegram can be unreachable from this network for minutes at a time.
+async function alertTelegram(text) {
+  for (let attempt = 1; attempt <= 30; attempt++) {
+    const error = await sendTelegram(text);
+    if (!error) {
+      if (attempt > 1) console.log(`[Telegram] Đã gửi được cảnh báo ở lần thử thứ ${attempt}`);
+      return;
+    }
+    if (attempt === 1) console.error(`[Telegram] ${error}. Sẽ thử lại mỗi phút trong 30 phút.`);
+    await sleep(60_000);
+  }
+  console.error('[Telegram] Sau 30 phút vẫn không gửi được cảnh báo, bỏ qua.');
+}
+
+// ---------- TikTok LIVE ----------
+// Diamonds from real TikTok gifts in the current LIVE room (panel test gifts don't count); reconnects keep the count.
+let session = { roomId: '', diamonds: 0, gifts: 0, since: 0 };
+const giftCounter = new GiftCounter();
+
+function connectTikTok() {
+  const conn = new TikTokLiveConnection(username, { processInitialData: false });
+
+  conn.on(ControlEvent.DECODED_DATA, (type, event) => {
+    const data = event?.data ?? event ?? {};
+    const { common, ...fields } = data;
+    // Control messages (pause, end...) count only when they carry a punishment.
+    const warning = type === 'WebcastControlMessage' ? [data.punishInfo, data.perceptionDialog] : MODERATION_TYPES.has(type) ? [fields, common?.displayText] : [];
+    if (hasContent(warning)) reportModeration(type, data);
+  });
+  conn.on(WebcastEvent.CHAT, (e) => race.comment(viewer(e.user), String(e.comment ?? e.content ?? '').slice(0, 200)));
+  conn.on(WebcastEvent.LIKE, (e) => race.like(viewer(e.user), Math.max(1, Number(e.likeCount ?? e.count) || 1)));
+  conn.on(WebcastEvent.GIFT, (e) => {
+    if (!e.gift && !e.giftDetails) return;
+    const gift = e.giftDetails ?? e.gift;
+    const count = giftCounter.count({
+      msgId: e.common?.msgId ? String(e.common.msgId) : '',
+      userId: e.user?.userId ?? e.user?.id,
+      giftId: e.giftId,
+      groupId: e.groupId,
+      repeatCount: e.repeatCount,
+      repeatEnd: Number(e.repeatEnd) === 1,
+      combo: Number(gift.giftType ?? gift.type) === 1,
+    });
+    if (count <= 0) return;
+    const who = viewer(e.user);
+    const info = { name: String(gift.giftName ?? gift.name ?? '').slice(0, 40), coins: Number(gift.diamondCount) || 0 };
+    console.log(`[Quà] ${who.name}: ${info.name} (${info.coins} xu) x${count}`);
+    session.diamonds += info.coins * count;
+    session.gifts += count;
+    broadcast({ type: 'session', ...session });
+    race.gift(who, info, count);
+  });
+  conn.on(WebcastEvent.STREAM_END, ({ action }) => {
+    console.log(`[Phiên live] Tổng: ${session.diamonds.toLocaleString('vi-VN')} kim cương từ ${session.gifts} quà`);
+    // Action 4: TikTok suspended the LIVE (3 is the host ending it).
+    if (action === 4) reportModeration('StreamSuspended', { tips: 'TikTok đã đình chỉ phiên live' });
+    setStatus(false, action === 4 ? `TikTok đã đình chỉ phiên live của @${username}` : `@${username} đã kết thúc live`);
+  });
+  conn.on(ControlEvent.ERROR, (err) => console.error('[TikTok]', err?.message ?? err));
+  conn.on(ControlEvent.DISCONNECTED, () => retry(10_000, 'Mất kết nối TikTok'));
+
+  let timer;
+  let busy = false;
+  function retry(ms, reason) {
+    setStatus(false, `${reason}, thử lại sau ${ms / 1000} giây`);
+    clearTimeout(timer);
+    timer = setTimeout(run, ms);
+  }
+  async function run() {
+    if (busy || conn.isConnected) return;
+    busy = true;
+    try {
+      setStatus(false, `Đang chờ @${username} lên live...`);
+      await conn.waitUntilLive(30);
+      const state = await conn.connect();
+      if (state.roomId !== session.roomId) {
+        session = { roomId: state.roomId, diamonds: 0, gifts: 0, since: Date.now() };
+        broadcast({ type: 'session', ...session });
+      }
+      setStatus(true, `Đã kết nối live @${username} (room ${state.roomId})`);
+    } catch (err) {
+      retry(30_000, `Lỗi: ${err?.message ?? err}`);
+    } finally {
+      busy = false;
+    }
+  }
+  run();
+}
+
+// ---------- Web server ----------
+const app = express();
+app.disable('x-powered-by');
+// Only answer requests addressed to this machine (blocks DNS rebinding).
+app.use((req, res, next) => (['127.0.0.1', 'localhost'].includes(req.hostname) ? next() : res.status(403).end()));
+app.use(express.static(path.join(root, 'public')));
+app.use(express.json({ limit: '4kb' }));
+
+app.get('/events', (req, res) => {
+  res.set({ 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', Connection: 'keep-alive' });
+  res.flushHeaders();
+  res.write('retry: 2000\n\n');
+  send(res, {
+    type: 'snapshot',
+    status,
+    guide,
+    provinces: publicProvinces(),
+    race: race.snapshot(),
+    alerts,
+    session,
+    safeMode,
+    tts: { enabled: vbee.enabled, voice: vbee.voice },
+  });
+  clients.add(res);
+  res.on('close', () => clients.delete(res));
+});
+setInterval(() => clients.forEach((res) => res.write(': ping\n\n')), 20_000);
+
+app.get('/tts/:id', (req, res) => {
+  const audio = voice.audio(req.params.id);
+  if (!audio) return res.status(404).end();
+  res.set('Cache-Control', 'public, max-age=31536000, immutable').type('audio/mpeg').send(audio);
+});
+
+const clampInt = (value, min, max) => Math.min(max, Math.max(min, Math.trunc(Number(value)) || min));
+
+// JSON-only endpoints: browsers cannot send application/json cross-site without a CORS preflight.
+app.post('/api/simulate', (req, res) => {
+  if (!req.is('application/json')) return res.status(415).end();
+  const { kind, name, text, count, coins, gift } = req.body ?? {};
+  const nickname = typeof name === 'string' && name.trim() ? name : 'Bạn thử';
+  const who = viewer({ id: `sim:${nickname}`, nickname });
+  if (kind === 'chat') race.comment(who, String(text ?? '').slice(0, 200));
+  else if (kind === 'gift') race.gift(who, { name: String(gift ?? '').slice(0, 40), coins: clampInt(coins, 1, 100_000) }, clampInt(count, 1, 999));
+  else if (kind === 'like') race.like(who, clampInt(count, 1, 99));
+  else return res.status(400).json({ error: 'kind không hợp lệ' });
+  res.status(204).end();
+});
+
+app.post('/api/reset', (req, res) => {
+  if (!req.is('application/json')) return res.status(415).end();
+  race.reset();
+  saveState();
+  console.log('[Đua] Đã bắt đầu vòng mới');
+  res.status(204).end();
+});
+
+app.post('/api/mc', (req, res) => {
+  if (!req.is('application/json')) return res.status(415).end();
+  if (!mc.on) return res.json({ message: vbee.enabled ? 'MC đang im vì chế độ an toàn.' : 'MC chưa có tiếng: cần VBEE_TOKEN và VBEE_APP_ID trong .env.' });
+  res.json({ message: mc.talkNow() ? 'MC sẽ bình luận ngay khi rảnh.' : 'Giọng đọc đang bận tạo mẩu, thử lại sau ít giây.' });
+});
+
+app.post('/api/safe-mode', (req, res) => {
+  if (!req.is('application/json')) return res.status(415).end();
+  setSafeMode(req.body?.on === true, 'bật tay từ bảng điều khiển');
+  res.status(204).end();
+});
+
+app.post('/api/telegram-test', async (req, res) => {
+  if (!req.is('application/json')) return res.status(415).end();
+  const error = await sendTelegram('✅ Đua Tỉnh đã kết nối Telegram. Nếu TikTok cảnh báo phiên live, tin sẽ được gửi vào đây.');
+  res.json({ message: error || 'Đã gửi tin thử, bạn kiểm tra Telegram nhé.' });
+});
+
+app.listen(port, host, (err) => {
+  if (err) throw err;
+  console.log(`Màn hình game:   http://${host}:${port}/`);
+  console.log(`Bảng điều khiển: http://${host}:${port}/panel.html`);
+  const { token, chatId } = telegramConfig();
+  console.log(token && chatId ? 'Báo cảnh báo qua Telegram: bật' : 'Báo cảnh báo qua Telegram: tắt (thiếu TELEGRAM_BOT_TOKEN hoặc TELEGRAM_ADMIN_CHAT_ID trong .env)');
+  if (!vbee.enabled) console.log('Vbee: tắt, MC không có tiếng (thiếu VBEE_TOKEN hoặc VBEE_APP_ID trong .env)');
+  else if (config.voice?.enabled === false) console.log('MC: tắt (voice.enabled = false trong config.json)');
+  else {
+    console.log(`MC đọc bằng giọng ${vbee.voice}`);
+    warmVoice();
+  }
+  if (username) connectTikTok();
+  else console.log('Chưa đặt kênh TikTok (npm start -- ten_kenh, hoặc tiktokUsername trong config.json). Đang ở chế độ thử.');
+});
+
+process.on('SIGINT', () => {
+  saveState();
+  process.exit(0);
+});

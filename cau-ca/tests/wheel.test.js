@@ -5,7 +5,7 @@ import { Wheel } from '../src/wheel.js';
 import { Pond } from '../src/pond.js';
 import { Sky } from '../src/sky.js';
 
-const config = JSON.parse(readFileSync(new URL('../config.json', import.meta.url), 'utf8'));
+const { bots: _bots, ...config } = JSON.parse(readFileSync(new URL('../config.json', import.meta.url), 'utf8'));
 const wheelCfg = config.wheel;
 const slot = (id) => wheelCfg.slots.find((s) => s.id === id);
 const who = (n) => ({ id: `u${n}`, name: `Người ${n}`, avatar: '' });

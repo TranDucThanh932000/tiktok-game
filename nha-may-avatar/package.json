@@ -1,0 +1,19 @@
+{
+  "name": "nha-may-avatar",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Nhà máy avatar bằng bóng màu tương tác TikTok LIVE",
+  "type": "module",
+  "engines": {
+    "node": ">=22.9"
+  },
+  "scripts": {
+    "start": "node --env-file-if-exists=.env server.js",
+    "test": "node --test tests/*.test.js",
+    "window": "start \"\" msedge --app=http://127.0.0.1:3140/?overlay=1 --window-size=456,820 --window-position=0,0 --user-data-dir=D:\\tiktok-cache\\nha-may-avatar-window --disable-component-update --no-first-run --no-default-browser-check --autoplay-policy=no-user-gesture-required --disable-backgrounding-occluded-windows --disable-renderer-backgrounding --disable-background-timer-throttling --disable-features=CalculateNativeWinOcclusion"
+  },
+  "dependencies": {
+    "express": "^5.3.0",
+    "tiktok-live-connector": "^2.5.0"
+  }
+}

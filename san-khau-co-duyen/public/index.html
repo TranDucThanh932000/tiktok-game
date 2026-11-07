@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="referrer" content="no-referrer">
+<title>Sân Khấu Có Duyên</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><path d=%22M16 28C6 20 2 14 6 8c3-4 8-3 10 1 2-4 7-5 10-1 4 6 0 12-10 20z%22 fill=%22%23FF8FB5%22/></svg>">
+<link rel="stylesheet" href="/fonts/fonts.css">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<div id="stage">
+  <div class="a" style="left:0;top:0;width:450px;height:52px;background:#6a2357"></div>
+  <div class="scal" style="left:0"></div><div class="scal" style="left:56px"></div><div class="scal" style="left:112px"></div><div class="scal" style="left:168px"></div><div class="scal" style="left:224px"></div><div class="scal" style="left:280px"></div><div class="scal" style="left:336px"></div><div class="scal" style="left:392px"></div>
+
+  <div class="a" id="topbar">
+    <div class="d" id="title">Sân Khấu Có Duyên</div>
+    <div style="display:flex;gap:6px">
+      <span class="pill" id="pair-pill" style="background:rgba(255,255,255,.12)">CHƯA CÓ CẶP</span>
+      <span class="pill" id="phase-pill"></span>
+    </div>
+  </div>
+
+  <div class="a" id="guide">
+    <div class="row1"><span data-icon="pig" data-size="16"></span><span>Nam: Heo</span><span class="sep">·</span><span data-icon="clover" data-size="16"></span><span>Nữ: Cỏ ba lá</span><span class="sep">·</span><span>“đẹp đôi”: <b>+1</b></span></div>
+    <div id="guide-line"></div>
+  </div>
+
+  <div class="a" id="score">
+    <span class="lbl">ĐIỂM ĐẸP ĐÔI</span>
+    <span class="d" id="score-num">0</span>
+    <span id="score-state">● đang nhận</span>
+  </div>
+  <div class="a" id="waitstrip">ĐANG CHỜ CẶP — TƯƠNG TÁC CHƯA CỘNG<br>ĐIỂM CHO CẶP NÀO</div>
+
+  <div class="a" id="deck"></div>
+  <div class="a beam" style="left:98px;background:rgba(255,143,181,.07)"></div>
+  <div class="a beam" style="left:232px;background:rgba(94,211,154,.07)"></div>
+  <div class="a" id="glow"></div>
+  <div class="a" id="floor"></div>
+  <div class="a" style="left:0;top:516px;width:450px;height:5px;background:#ffd25e"></div>
+  <div class="a" style="left:185px;top:521px;width:80px;height:12px;background:#3a2257"></div>
+  <div class="a" style="left:179px;top:533px;width:92px;height:12px;background:#34204f"></div>
+
+  <div class="a" id="zone"></div>
+
+  <div class="mc" id="mc-duy" style="left:6px">
+    <div class="gl"></div><div class="bd" style="background:#4f7be8"></div>
+    <div class="fc"></div><div class="hs"></div>
+    <div class="ey" style="left:32px"></div><div class="ey" style="left:52px"></div>
+    <div class="mo"></div><div class="mic" style="left:68px"></div>
+    <div class="tg" style="background:#6ea8ff;color:#10203f">DUY</div>
+  </div>
+  <div class="mc" id="mc-linh" style="left:354px">
+    <div class="gl"></div><div class="hl"></div><div class="bd" style="background:#f08a4b"></div>
+    <div class="fc"></div>
+    <div class="ey" style="left:32px"></div><div class="ey" style="left:52px"></div>
+    <div class="mo"></div><div class="mic" style="left:13px"></div>
+    <div class="tg" style="background:#ffae6b;color:#3a1a05">LINH</div>
+  </div>
+
+  <div class="chair" style="left:108px;background:#8e2c55"></div>
+  <div class="cush" style="left:103px;background:#b8406f"></div>
+  <div class="av empty" id="av-male" style="left:125px;border-color:#ff8fb5">Trống</div>
+  <div class="ic" style="left:175px"><span data-icon="pig" data-size="20"></span></div>
+  <div class="nm" id="nm-male" style="left:108px;color:#ffc6da"><span>Ghế Nam</span></div>
+  <div class="noreply hide" id="nr-male" style="left:116px">CHƯA PHẢN HỒI</div>
+
+  <div class="chair" style="left:242px;background:#1b7550"></div>
+  <div class="cush" style="left:237px;background:#26996a"></div>
+  <div class="av empty" id="av-female" style="left:259px;border-color:#5ed39a">Trống</div>
+  <div class="ic" style="left:309px"><span data-icon="clover" data-size="20"></span></div>
+  <div class="nm" id="nm-female" style="left:242px;color:#b5efd1"><span>Ghế Nữ</span></div>
+  <div class="noreply hide" id="nr-female" style="left:250px">CHƯA PHẢN HỒI</div>
+
+  <div class="a hide" id="demo-tag">DIỄN MẪU · KHÔNG PHẢI KHÁN GIẢ</div>
+  <div class="a hide" id="ribbon"></div>
+  <span class="a" id="heart" data-icon="heart-deco" data-size="34"></span>
+
+  <div id="cap" class="hide"></div>
+
+  <div class="a" style="left:0;top:592px;width:450px;height:10px;background:#2e1e4a"></div>
+  <div class="a" style="left:0;top:662px;width:450px;height:10px;background:#2e1e4a"></div>
+  <div class="a" style="left:0;top:732px;width:450px;height:10px;background:#2e1e4a"></div>
+  <div class="a" id="door-label">LỐI VÀO</div>
+  <div class="a" id="door"></div>
+  <div id="crowd"></div>
+
+  <div class="a hide" id="toasts"></div>
+  <div class="a hide" id="card"></div>
+  <div class="a hide" id="banner"></div>
+  <div class="a hide" id="mile"></div>
+  <div class="a hide" id="note"></div>
+
+  <div class="a hide" id="pause-dim"></div>
+  <div class="a hide" id="pause-card"></div>
+  <div class="a hide" id="testmark">CHẾ ĐỘ THỬ</div>
+  <div class="a hide" id="unmute">Bấm để bật tiếng</div>
+</div>
+<script type="module" src="/js/main.js"></script>
+</body>
+</html>

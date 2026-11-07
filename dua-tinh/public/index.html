@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Đua Top Tỉnh Thành</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏁</text></svg>">
+  <link rel="stylesheet" href="/fonts/fonts.css">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div id="stage">
+    <svg id="map" viewBox="0 0 1080 1920" width="1080" height="1920" aria-hidden="true"></svg>
+    <div id="badges"></div>
+
+    <header id="title">
+      <h1 id="title-text"></h1>
+      <p id="subtitle"></p>
+    </header>
+
+    <section id="board">
+      <div class="board-head"><span>BẢNG XẾP HẠNG</span><span id="totals"></span></div>
+      <div id="rows"></div>
+      <p id="board-empty">Comment tên tỉnh để lên bảng!</p>
+    </section>
+
+    <aside id="guide"></aside>
+    <div id="mc" hidden><span class="mic">🎙️</span><p id="mc-text"></p></div>
+    <div id="feed"></div>
+    <div id="fx"></div>
+    <div id="banner" hidden></div>
+    <div id="sound-hint">Bấm vào màn hình để bật âm thanh</div>
+  </div>
+  <script type="module" src="/js/main.js"></script>
+</body>
+</html>

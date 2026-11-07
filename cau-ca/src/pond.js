@@ -85,6 +85,8 @@ export class Pond {
     this.event = null;
     this.sprint = null;
     this.boss = null;
+    // Bot ngồi câu cho hồ luôn có người: chỉ thả tim, không bao giờ dùng quà (xem tickBots).
+    this.bots = (config.bots?.names ?? []).map((name, i) => ({ id: `bot:${i}`, name, avatar: '', nextTap: 0 }));
   }
 
   // ---------- Chỗ ngồi ----------
@@ -93,8 +95,17 @@ export class Pond {
     return this.current?.job.pid === id || this.queue.some((job) => job.pid === id);
   }
 
+  isBot(id) {
+    return this.bots.some((b) => b.id === id);
+  }
+
+  // Số người xem thật đang ngồi, không tính bot.
+  humans() {
+    return this.players.size - this.bots.filter((b) => this.players.has(b.id)).length;
+  }
+
   view(p) {
-    return { key: p.key, name: p.name, avatar: p.avatar, seat: p.seat, likes: p.likes, gear: this.gear.get(p.id) ?? null, perks: this.perksView(p.id), king: this.king === p.id };
+    return { key: p.key, name: p.name, avatar: p.avatar, seat: p.seat, likes: p.likes, gear: this.gear.get(p.id) ?? null, perks: this.perksView(p.id), king: this.king === p.id, bot: this.isBot(p.id) };
   }
 
   // Trả về người chơi đã ngồi, hoặc null khi hồ kín mà ai cũng đang bận giật cá.
@@ -285,8 +296,9 @@ export class Pond {
     this.emit({ type: 'perks', key: p.key, perks: this.perksView(p.id) });
   }
 
-  // Ghế VIP và rái cá giữ chỗ: không bị mời về vì ngồi im, không bị người mới đẩy ra.
+  // Ghế VIP, rái cá và bot giữ chỗ: không bị mời về vì ngồi im, không bị người mới đẩy ra.
   holdsSeat(id) {
+    if (this.isBot(id)) return true;
     const k = this.perks.get(id);
     const now = this.now();
     return Boolean(k && (k.vipUntil > now || k.otterUntil > now));
@@ -296,7 +308,8 @@ export class Pond {
     const s = this.stats.get(p.id) ?? { name: p.name, avatar: p.avatar, kg: 0, wins: 0, pulls: 0, best: 0, bestFish: '' };
     s.name = p.name;
     s.avatar = p.avatar || s.avatar;
-    this.stats.set(p.id, s);
+    // Bot không lên bảng xếp hạng, nên cũng không tranh Vua Câu với người xem.
+    if (!this.isBot(p.id)) this.stats.set(p.id, s);
     return s;
   }
 
@@ -388,7 +401,7 @@ export class Pond {
       rolls.push({ ...this.roll(this.cfg.props.net.tier, 1, event?.kgMul ?? 1), ok: true });
       count += 1;
     }
-    if (this.sprint && !this.sprint.closeAt) rolls.forEach((r) => this.sprint.rolls.add(r));
+    if (this.sprint && !this.sprint.closeAt && !this.isBot(p.id)) rolls.forEach((r) => this.sprint.rolls.add(r));
     // Bùa cá hiếm: lượt giật của người có bùa tính nhiều lần hơn vào bộ đếm cá hiếm.
     const rareStep = (event?.rareStep ?? 1) * (perk?.charm > 0 ? (this.cfg.props.charm.rareStep ?? 1) : 1);
     let job = this.queue.find((j) => j.pid === p.id && j.tier === tier);
@@ -417,7 +430,7 @@ export class Pond {
     if (effect.sprint) this.sprint = { tally: new Map(), rolls: new WeakSet(), closeAt: 0, bonus: effect.sprint.bonusKg ?? 0 };
     if (effect.boss) {
       const { hpBase, hpPerPlayer = 0, hpMax = Infinity } = effect.boss;
-      const max = Math.min(hpMax, hpBase + hpPerPlayer * this.players.size);
+      const max = Math.min(hpMax, hpBase + hpPerPlayer * this.humans());
       this.boss = { hp: max, max, hits: new Map(), down: false };
     }
     this.emitLive();
@@ -439,7 +452,7 @@ export class Pond {
   // Mỗi lần giật (dù cá có dính hay không) là một phát đánh; quà càng to càng trừ nhiều máu.
   hitBoss(p, tier, count) {
     const boss = this.boss;
-    if (!boss || boss.down) return;
+    if (!boss || boss.down || this.isBot(p.id)) return;
     const dmg = (this.event.boss.damage?.[tier] ?? 1) * count;
     boss.hp = Math.max(0, boss.hp - dmg);
     const hit = boss.hits.get(p.id) ?? { id: p.id, name: p.name, avatar: p.avatar, n: 0 };
@@ -550,8 +563,8 @@ export class Pond {
   start(job, now) {
     const p = this.players.get(job.pid);
     if (!p) return;
-    // Cá mập thưởng của sự kiện không tính vào bộ đếm cá hiếm.
-    if (job.tier !== 'boss') {
+    // Cá mập thưởng của sự kiện và cá của bot không tính vào bộ đếm cá hiếm, nên bot không lấy mất cá hiếm.
+    if (job.tier !== 'boss' && !this.isBot(job.pid)) {
       this.splitRare(job);
       // Con cá hiếm luôn đưa bộ đếm về đúng mốc, kể cả khi mỗi lần giật tính nhiều lần.
       const every = this.cfg.rare?.every;
@@ -601,10 +614,27 @@ export class Pond {
       }
     }
     this.emit({ type: 'reveal', id: pull.id, key: p.key, name: p.name, tier: pull.tier, kg, wins, count: pull.results.length, best, total: s.kg });
-    this.emitBoard();
-    this.rareShown = this.hooked;
-    if (this.cfg.rare?.every > 0) this.emit({ type: 'rare', ...this.rareView() });
+    if (!this.isBot(p.id)) {
+      this.emitBoard();
+      this.rareShown = this.hooked;
+      if (this.cfg.rare?.every > 0) this.emit({ type: 'rare', ...this.rareView() });
+    }
     return { id: pull.id, p, kg, wins, best, tier: pull.tier };
+  }
+
+  // Bot luôn ngồi trong hồ (bị mời ra thì tự quay lại) và thả tim đều đều như người xem.
+  // Đủ tim mà camera đang bận thì bot chờ, để lượt của người xem thật không phải xếp sau bot.
+  tickBots(now) {
+    const { tapEverySeconds, tapLikes } = this.cfg.bots ?? {};
+    for (const bot of this.bots) {
+      const p = this.players.get(bot.id) ?? this.seat(bot);
+      if (!p || now < bot.nextTap) continue;
+      bot.nextTap = now + (tapEverySeconds[0] + this.random() * (tapEverySeconds[1] - tapEverySeconds[0])) * 1000;
+      const count = tapLikes[0] + Math.floor(this.random() * (tapLikes[1] - tapLikes[0] + 1));
+      const per = this.event?.likesPerPull ?? this.cfg.likesPerPull;
+      if (p.likes + count >= per && (this.current || this.queue.length)) continue;
+      this.like(bot, count);
+    }
   }
 
   tick() {
@@ -627,6 +657,7 @@ export class Pond {
     }
     if (this.sprint?.closeAt && (now >= this.sprint.closeAt || !this.sprintPending())) this.settleSprint();
     this.tickPerks(now);
+    this.tickBots(now);
     // Ngồi quá idleLeaveSeconds mà không giật cá lần nào thì tự ra về.
     const idleMs = this.cfg.idleLeaveSeconds * 1000;
     for (const p of [...this.players.values()]) {

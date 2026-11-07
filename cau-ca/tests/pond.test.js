@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { Pond, matchesWord, giftTier } from '../src/pond.js';
 
-const config = JSON.parse(readFileSync(new URL('../config.json', import.meta.url), 'utf8'));
+const { bots: botConfig, ...config } = JSON.parse(readFileSync(new URL('../config.json', import.meta.url), 'utf8'));
 
 function make({ random = () => 0.5, cfg = config } = {}) {
   const events = [];
@@ -12,6 +12,86 @@ function make({ random = () => 0.5, cfg = config } = {}) {
   return { pond, events, advance: (ms) => (t += ms), of: (type) => events.filter((e) => e.type === type) };
 }
 const who = (n) => ({ id: `u${n}`, name: `Người ${n}`, avatar: '' });
+
+// Chạy tick đều 100 ms như server, trong ms mili giây.
+function run(tools, ms) {
+  for (let t = 0; t < ms; t += 100) {
+    tools.advance(100);
+    tools.pond.tick();
+  }
+}
+const withBots = (random) => make({ random, cfg: { ...config, bots: botConfig } });
+
+test('3 bot luôn ngồi trong hồ: không tự về, không bị đẩy ra, bị mời ra thì quay lại', () => {
+  const tools = withBots();
+  const { pond } = tools;
+  pond.tick();
+  assert.equal(pond.players.size, 3);
+  assert.equal(pond.humans(), 0);
+  run(tools, (config.idleLeaveSeconds + 10) * 1000);
+  assert.equal(pond.players.size, 3, 'ngồi lâu vẫn không về');
+  for (let i = 0; i < config.seats - 3; i++) pond.seat(who(i));
+  assert.equal(pond.seat(who(99), { force: true }).seat !== undefined, true, 'quà đẩy người xem ngồi im, không đẩy bot');
+  for (const bot of pond.bots) assert.ok(pond.players.has(bot.id));
+  pond.clearPond();
+  assert.equal(pond.players.size, 0);
+  pond.tick();
+  assert.equal(pond.players.size, 3);
+});
+
+test('bot chỉ thả tim: có lượt câu cá đồng nhưng không lên bảng, không đụng cá hiếm', () => {
+  const tools = withBots(() => 0.1);
+  const { pond, of } = tools;
+  pond.setHooked(config.rare.every - 1);
+  tools.events.length = 0;
+  run(tools, 120_000);
+  const pulls = of('pull');
+  assert.ok(pulls.length >= 3, `phải có lượt giật, có ${pulls.length}`);
+  assert.ok(pulls.every((p) => p.tier === 'like'), 'chỉ giật cá đồng từ tim');
+  assert.ok(of('likes').length > 0);
+  assert.equal(of('gift').length + of('gear').length + of('prop').length, 0);
+  assert.equal(pond.stats.size, 0);
+  assert.deepEqual(pond.board(), []);
+  assert.equal(pond.king, null);
+  assert.equal(of('board').length, 0);
+  assert.equal(pond.hooked, config.rare.every - 1, 'con cá hiếm vẫn để dành cho người xem');
+});
+
+test('bot nhường camera: đủ tim mà đang có lượt của người xem thì chờ', () => {
+  const tools = withBots();
+  const { pond } = tools;
+  pond.tick();
+  pond.comment(who(1), 'câu');
+  for (const bot of pond.bots) pond.players.get(bot.id).likes = config.likesPerPull - 1;
+  pond.gift(who(1), { name: 'Rose', coins: 1 }, 1);
+  pond.tick();
+  assert.equal(pond.current, null, 'người xem còn đang tiếp đất');
+  assert.equal(pond.queue.length, 1);
+  assert.equal(pond.queue[0].pid, 'u1');
+  for (const bot of pond.bots) assert.equal(pond.players.get(bot.id).likes, config.likesPerPull - 1, 'tim của bot giữ nguyên');
+});
+
+test('sự kiện: bot không đánh cá hô chúa, không tính vào máu của nó, không tranh thi câu', () => {
+  const tools = withBots(() => 0.1);
+  const { pond, of } = tools;
+  pond.tick();
+  pond.comment(who(1), 'câu');
+  const bossEffect = config.wheel.slots.find((s) => s.id === 'boss').effect;
+  pond.startEvent(bossEffect);
+  assert.equal(pond.boss.max, bossEffect.boss.hpBase + bossEffect.boss.hpPerPlayer);
+  run(tools, 30_000);
+  assert.ok(of('pull').length > 0);
+  assert.equal(of('boss-hit').length, 0);
+  assert.equal(pond.boss.hp, pond.boss.max);
+  pond.endEvent();
+
+  pond.startEvent(config.wheel.slots.find((s) => s.id === 'sprint').effect);
+  run(tools, 30_000);
+  pond.endEvent();
+  run(tools, 100);
+  const end = of('sprint-end').at(-1);
+  assert.equal(end.name, null, 'chỉ có bot câu thì không ai thắng');
+});
 
 test('comment "câu" cho ngồi xuống hồ, chữ khác thì không', () => {
   assert.ok(matchesWord('Câu!!', config.joinWords));

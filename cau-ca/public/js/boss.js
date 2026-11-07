@@ -1,4 +1,4 @@
-// Con cá mập của sự kiện "Cá mập vào hồ": lượn vòng trên hồ, vây lưng nhô khỏi mặt nước.
+// Con cá hô chúa của sự kiện "Cá hô chúa về": lượn vòng giữa dòng sông, vây lưng nhô khỏi mặt nước.
 // Hết máu thì nhảy lên rồi rơi xuống nước, hết giờ thì lặn mất. Mô hình tạo một lần rồi dùng lại.
 import * as THREE from 'three';
 import { makeFish } from './fish.js';

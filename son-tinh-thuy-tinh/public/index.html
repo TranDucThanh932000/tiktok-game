@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sơn Tinh · Thủy Tinh</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⛰️</text></svg>">
+  <link rel="stylesheet" href="/fonts/fonts.css">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div id="stage">
+    <svg id="scene" viewBox="0 0 1080 1920" aria-hidden="true">
+      <defs>
+        <linearGradient id="g-sky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#5fb8f5"/>
+          <stop offset=".45" stop-color="#a9dcff"/>
+          <stop offset="1" stop-color="#e6f6ff"/>
+        </linearGradient>
+        <linearGradient id="g-sea" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#4fa8f2"/>
+          <stop offset="1" stop-color="#1b5aa6"/>
+        </linearGradient>
+        <linearGradient id="g-land" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#86d26f"/>
+          <stop offset="1" stop-color="#3f8a43"/>
+        </linearGradient>
+        <radialGradient id="g-sun">
+          <stop offset="0" stop-color="#fff6c0"/>
+          <stop offset=".5" stop-color="#fff6c0" stop-opacity=".5"/>
+          <stop offset="1" stop-color="#fff6c0" stop-opacity="0"/>
+        </radialGradient>
+      </defs>
+      <rect width="1080" height="1920" fill="url(#g-sky)"/>
+      <circle cx="540" cy="620" r="300" fill="url(#g-sun)"/>
+      <g fill="#fff" opacity=".92">
+        <path d="M40 470 q10 -38 52 -30 q20 -34 64 -18 q40 -6 46 34 q30 8 20 40 h-176 q-26 -6 -6 -26 z"/>
+        <path d="M840 430 q12 -34 50 -26 q22 -30 62 -14 q38 -4 42 32 q28 8 18 36 h-164 q-24 -6 -8 -28 z"/>
+        <path d="M640 420 q8 -24 36 -18 q16 -22 44 -10 q28 -2 30 22 q20 6 12 26 h-118 q-18 -4 -4 -20 z" opacity=".75"/>
+      </g>
+
+      <!-- Bên trái: núi của Sơn Tinh -->
+      <path d="M0 610 L80 530 L140 590 L230 460 L310 560 L370 520 L480 720 L520 870 L0 870 Z" fill="#a6d79b"/>
+      <path d="M214 484 L230 460 L247 486 L236 480 L228 490 Z" fill="#fff"/>
+      <path d="M356 540 L370 520 L384 546 L372 540 Z" fill="#fff"/>
+      <path d="M0 720 C50 680 110 650 160 646 C220 642 280 670 320 710 C370 760 400 810 430 870 L0 870 Z" fill="#5fae5a"/>
+      <path d="M60 760 l14 -22 l14 22 M200 720 l12 -18 l12 18 M300 780 l12 -18 l12 18" stroke="#3d8a3f" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+
+      <!-- Bên phải: biển và con sóng lớn của Thủy Tinh -->
+      <path d="M560 770 C700 750 880 740 1080 730 L1080 880 L560 880 Z" fill="url(#g-sea)"/>
+      <path d="M690 880 C710 800 770 740 850 700 C920 666 990 640 1040 590 C1060 570 1080 560 1080 560 L1080 880 Z" fill="#2f7fd8"/>
+      <path d="M1080 560 C1046 596 1000 606 968 640 C1006 628 1044 640 1064 672 L1080 680 Z" fill="#e8f6ff"/>
+      <path d="M740 820 q22 -14 44 0 t44 0 t44 0 t44 0 t44 0 t44 0 t44 0" stroke="#bfe3ff" stroke-width="6" fill="none" stroke-linecap="round"/>
+
+      <!-- Giữa: cung điện Vua Hùng, Mị Nương đứng trước sân -->
+      <rect x="430" y="700" width="220" height="150" fill="#f3d9a4"/>
+      <g fill="#b3372d">
+        <rect x="446" y="706" width="16" height="144"/>
+        <rect x="496" y="706" width="16" height="144"/>
+        <rect x="568" y="706" width="16" height="144"/>
+        <rect x="618" y="706" width="16" height="144"/>
+      </g>
+      <path d="M398 712 Q540 652 682 712 L668 724 Q540 672 412 724 Z" fill="#8f2a22"/>
+      <path d="M424 672 Q540 600 656 672 L646 686 Q540 622 434 686 Z" fill="#a8322a"/>
+      <path d="M398 712 q-14 -10 -6 -26 M682 712 q14 -10 6 -26 M424 672 q-12 -8 -4 -22 M656 672 q12 -8 4 -22" stroke="#ffcf3f" stroke-width="5" fill="none" stroke-linecap="round"/>
+      <circle cx="540" cy="616" r="9" fill="#ffcf3f"/>
+      <rect x="396" y="846" width="288" height="24" rx="6" fill="#c9a26b"/>
+
+      <path d="M0 856 Q270 840 540 856 T1080 856 L1080 884 L0 884 Z" fill="#d9c08a"/>
+
+      <!-- Dưới: đất bên Sơn Tinh, nước bên Thủy Tinh -->
+      <path d="M0 880 L560 880 Q520 1400 560 1920 L0 1920 Z" fill="url(#g-land)"/>
+      <path d="M560 880 L1080 880 L1080 1920 L560 1920 Q520 1400 560 880 Z" fill="url(#g-sea)"/>
+      <path d="M548 880 Q508 1400 548 1920 L574 1920 Q534 1400 574 880 Z" fill="#f1d9a0"/>
+      <g stroke="#3d8a3f" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".7">
+        <path d="M40 1420 l8 -16 l8 16 M150 1560 l8 -16 l8 16 M300 1460 l8 -16 l8 16 M420 1620 l8 -16 l8 16 M90 1720 l8 -16 l8 16 M250 1800 l8 -16 l8 16 M460 1860 l8 -16 l8 16"/>
+      </g>
+      <g class="swell" stroke="#9fd2ff" stroke-width="5" fill="none" stroke-linecap="round" opacity=".7">
+        <path d="M640 1430 q20 -12 40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0"/>
+        <path d="M660 1600 q20 -12 40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0"/>
+        <path d="M640 1770 q20 -12 40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0"/>
+      </g>
+    </svg>
+
+    <header id="title"><b id="title-text"></b><small id="subtitle"></small></header>
+
+    <section id="hud">
+      <div class="side son" id="hud-son">
+        <div class="portrait"></div>
+        <div class="info">
+          <div class="name"><b></b><span class="troops"></span></div>
+          <div class="hp"><i class="trail"></i><i class="fill"></i><span class="num"></span></div>
+          <div class="meta"><span class="pips"></span><span class="dmg"></span></div>
+        </div>
+      </div>
+      <div id="center"><small id="round-label"></small><b id="clock"></b></div>
+      <div class="side thuy" id="hud-thuy">
+        <div class="portrait"></div>
+        <div class="info">
+          <div class="name"><b></b><span class="troops"></span></div>
+          <div class="hp"><i class="trail"></i><i class="fill"></i><span class="num"></span></div>
+          <div class="meta"><span class="pips"></span><span class="dmg"></span></div>
+        </div>
+      </div>
+    </section>
+
+    <div id="hero-son" class="hero son"><div class="body"></div></div>
+    <div id="mi"><div class="body"></div></div>
+    <div id="hero-thuy" class="hero thuy"><div class="body"></div></div>
+
+    <section id="board">
+      <div id="lobby" class="mode">
+        <h2>CHỌN PHE</h2>
+        <div class="pick">
+          <div class="card son"><i class="icon"></i><b></b><small></small><em id="lobby-son"></em></div>
+          <div class="vs">VS</div>
+          <div class="card thuy"><i class="icon"></i><b></b><small></small><em id="lobby-thuy"></em></div>
+        </div>
+        <p id="lobby-note"></p>
+      </div>
+      <div id="play" class="mode" hidden>
+        <header class="board-head"><span id="topic"></span><span id="hint-note"></span></header>
+        <div id="tiles"></div>
+        <div class="wordbar"><i id="wordfill"></i></div>
+        <p id="foot"></p>
+      </div>
+      <div id="result" class="mode" hidden>
+        <h2 id="result-title"></h2>
+        <p id="result-sub"></p>
+        <div id="result-score"><span class="son"></span><b>:</b><span class="thuy"></span></div>
+        <p id="result-mvp"></p>
+        <p id="result-next"></p>
+      </div>
+    </section>
+
+    <section id="guide"></section>
+
+    <section id="armies">
+      <div class="army son" id="army-son"><h4></h4><div class="troop-field"></div><span class="more"></span></div>
+      <div class="army thuy" id="army-thuy"><h4></h4><div class="troop-field"></div><span class="more"></span></div>
+    </section>
+
+    <div id="toast" hidden></div>
+    <div id="wedding" hidden>
+      <div class="card">
+        <h1 id="wed-title"></h1>
+        <p id="wed-score"></p>
+        <ol id="wed-top"></ol>
+        <p id="wed-note"></p>
+      </div>
+    </div>
+    <div id="fx"></div>
+    <div id="sound-hint">Bấm vào màn hình để bật âm thanh</div>
+  </div>
+  <script type="module" src="/js/main.js"></script>
+</body>
+</html>

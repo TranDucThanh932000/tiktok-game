@@ -2,7 +2,7 @@
   "name": "cau-ca",
   "version": "1.0.0",
   "private": true,
-  "description": "Hồ câu dịch vụ 3D kiểu Việt cho TikTok LIVE: comment câu để rơi từ trời xuống chòi câu, thả tim và tặng quà để giật cá",
+  "description": "Câu cá 3D trên khúc sông quê Việt cho TikTok LIVE: comment câu để rơi từ trời xuống bờ sông, thả tim và tặng quà để giật cá",
   "type": "module",
   "scripts": {
     "start": "node --env-file-if-exists=.env server.js",

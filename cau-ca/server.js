@@ -42,7 +42,14 @@ const problems = [
   [!wheelCfg || (Array.isArray(wheelCfg.slots) && wheelCfg.slots.every(slotOk) && wheelCfg.slots.some((s) => s.weight > 0) && new Set(wheelCfg.slots.map((s) => s.id)).size === wheelCfg.slots.length), 'wheel.slots: mỗi ô cần id riêng, label, icon, text, weight và effect hợp lệ (rareStep cần mục rare, boss cần tiers.boss), và ít nhất một ô có weight > 0'],
   [!wheelCfg?.goldenLikes || wheelCfg.slots?.some((s) => s.goldWeight > 0), 'wheel.goldenLikes cần ít nhất một ô có goldWeight > 0, hoặc đặt goldenLikes bằng 0 để tắt vòng vàng'],
   [Array.isArray(config.joinWords) && config.joinWords.length > 0, 'joinWords là danh sách từ để xuống hồ, ví dụ ["câu", "cau"]'],
-  [Number.isInteger(config.seats) && config.seats >= 4 && config.seats <= 20, 'seats (số chòi đang mở) là số nguyên từ 4 đến 20, vì khu hồ có 20 chòi'],
+  [Number.isInteger(config.seats) && config.seats >= 4 && config.seats <= 20, 'seats (số chỗ câu đang mở) là số nguyên từ 4 đến 20, vì bản đồ có 20 chỗ'],
+  [
+    !config.bots ||
+      (Array.isArray(config.bots.names) && config.bots.names.length < config.seats && config.bots.names.every((n) => typeof n === 'string' && n.trim()) &&
+        inRange(config.bots.tapEverySeconds?.[0], 0.1, 3600) && config.bots.tapEverySeconds[1] >= config.bots.tapEverySeconds[0] &&
+        Number.isInteger(config.bots.tapLikes?.[0]) && Number.isInteger(config.bots.tapLikes[1]) && config.bots.tapLikes[0] >= 1 && config.bots.tapLikes[1] >= config.bots.tapLikes[0]),
+    'bots cần names (ít hơn số chỗ seats), tapEverySeconds là [ít nhất, nhiều nhất] số giây giữa hai lần thả tim, tapLikes là [ít nhất, nhiều nhất] số tim mỗi lần',
+  ],
   [inRange(config.likesPerPull, 1, 100_000) && inRange(config.maxLikePullsQueued, 1, 100), 'likesPerPull là số tim cho 1 lần giật, maxLikePullsQueued từ 1 đến 100'],
   [inRange(config.successRate, 0, 1), 'successRate là tỉ lệ thành công từ 0 đến 1, ví dụ 0.6'],
   [inRange(config.focusMs, 800, 10_000) && inRange(config.rushFocusMs, 500, 10_000) && (config.sharkFocusMs === undefined || inRange(config.sharkFocusMs, 800, 20_000)), 'focusMs, rushFocusMs, sharkFocusMs là thời gian quay cận (ms)'],
@@ -128,15 +135,15 @@ const pond = new Pond(config, {
   ready(job, now) {
     if (!voice.enabled || safeMode) return true;
     const p = pond.players.get(job.pid);
-    return !p || Boolean(voice.ready(spokenName(p.name))) || now - job.createdAt >= NAME_WAIT_MS;
+    return !p || pond.isBot(p.id) || Boolean(voice.ready(spokenName(p.name))) || now - job.createdAt >= NAME_WAIT_MS;
   },
   emit(msg) {
     if (msg.type === 'board') boardDirty = true;
     if (msg.type === 'rare') rareDirty = true;
     // 'queued' chỉ dùng trong server, không gửi xuống trang game.
     if (msg.type === 'queued') return;
-    // Tạo sẵn mẩu giọng tên người chơi ngay khi họ xuống hồ.
-    if (msg.type === 'join') voice.clip(spokenName(msg.player.name), { urgent: true });
+    // Tạo sẵn mẩu giọng tên người chơi ngay khi họ xuống hồ (bot không được đọc tên).
+    if (msg.type === 'join' && !msg.player.bot) voice.clip(spokenName(msg.player.name), { urgent: true });
     broadcast(msg);
     eventVoice(msg);
   },
@@ -189,7 +196,7 @@ setInterval(() => {
 // Vòng quay sự kiện: Wheel lo hẹn giờ và bốc ô, Pond áp hiệu ứng, Sky giữ thời tiết trong lúc sự kiện chạy.
 const wheel = wheelCfg
   ? new Wheel(wheelCfg, {
-      players: () => pond.players.size,
+      players: () => pond.humans(),
       startEvent(slot) {
         console.log(`[Vòng quay] ${slot.label}`);
         pond.startEvent(slot.effect ?? {});
@@ -212,7 +219,8 @@ const fmtKg = (kg) => kg.toLocaleString('vi-VN', { maximumFractionDigits: 1 });
 
 setInterval(() => {
   const done = pond.tick();
-  if (!done) return;
+  // Giọng đọc chúc mừng và nhật ký chỉ dành cho người xem thật, không dành cho bot.
+  if (!done || pond.isBot(done.p.id)) return;
   const { p, kg, wins, best, tier } = done;
   if (tier === 'rare') console.log(`[Cá hiếm] ${p.name} ${wins ? `câu được ${best.fish} ${fmtKg(best.kg)} kg!` : 'để xổng cá hiếm'}`);
   else if (wins) console.log(`[Giật cá] ${p.name}: ${wins} con, ${fmtKg(kg)} kg (con to nhất: ${best.fish} ${fmtKg(best.kg)} kg)`);
@@ -221,32 +229,32 @@ setInterval(() => {
 }, 100);
 
 // ---------- Giọng đọc: ghép từ các mẩu có sẵn để đọc tức thì ----------
-// Lời chúc mừng = "Chúc mừng" + tên + "câu được cá chép" + "nặng 4 ký"; mọi mẩu đều đã tạo sẵn
+// Lời chúc mừng = "Bà con ơi" + tên + "vừa giật được cá lóc đồng" + "4 ký"; mọi mẩu đều đã tạo sẵn
 // (tên người chơi tạo lúc họ xuống hồ), nên đọc ngay lúc cá lên, không phải chờ Vbee.
 const VOICE = { join: true, congrats: true, ...config.voice };
 const V = {
-  hello: 'Chúc mừng',
-  you: 'bạn',
-  sharkIntro: 'Quá đỉnh!',
-  rareIntro: 'Cá hiếm!',
-  fish: 'câu được {fish}',
+  hello: 'Bà con ơi',
+  you: 'có bạn',
+  sharkIntro: 'Trời đất ơi, cá chúa!',
+  rareIntro: 'Ối giời, cá hiếm!',
+  fish: 'vừa giật được {fish}',
   kg: 'nặng {kg} ký',
-  many: 'câu được {n} con cá',
-  manyLots: 'câu được cả một mẻ cá',
-  joined: 'đã xuống hồ câu',
-  and: 'và',
-  others: 'và nhiều bạn khác',
-  wheelSoon: 'Vòng quay Thần Hồ sắp bắt đầu',
-  wheelGold: 'Vòng quay vàng!',
+  many: 'vừa giật được {n} con cá',
+  manyLots: 'vừa giật được cả một mẻ cá đầy xô',
+  joined: 'đã ra bến thả câu',
+  and: 'với',
+  others: 'với nhiều bà con khác',
+  wheelSoon: 'Vòng quay Thần Sông sắp bắt đầu, bà con ơi',
+  wheelGold: 'Vòng quay vàng đấy bà con!',
   wheelSpin: 'đang quay',
-  bossDown: 'đã kéo được cá mập',
-  bossFled: 'Cá mập đã bơi đi mất',
-  sprintWin: 'thắng thi câu nhanh',
-  hut: 'Chòi số {n}',
+  bossDown: 'đã kéo được cá hô chúa',
+  bossFled: 'Cá hô chúa lặn mất rồi',
+  sprintWin: 'thắng hội thi câu của làng',
+  hut: 'Chỗ số {n}',
   ...config.voice?.text,
 };
 const HEAVY_TIERS = new Set(['shark', 'rare', 'boss']);
-// Cá thường đọc tròn ký (dưới 1 ký thì bỏ phần cân nặng), cá mập và cá hiếm tròn chục ký.
+// Cá thường đọc tròn ký (dưới 1 ký thì bỏ phần cân nặng), cá chúa và cá hiếm tròn chục ký.
 const kgWord = (kg, tier) => (HEAVY_TIERS.has(tier) ? String(Math.round(kg / 10) * 10) : kg < 1 ? '' : String(Math.round(kg)));
 
 // Giọng đọc của vòng quay; tên người chơi đã có sẵn từ lúc họ xuống hồ.
@@ -274,7 +282,7 @@ function eventVoice(msg) {
 function congratsTexts({ p, wins, best, tier }) {
   const name = spokenName(p.name);
   const texts = tier === 'shark' || tier === 'boss' ? [V.sharkIntro] : tier === 'rare' ? [V.rareIntro] : [];
-  // Thỉnh thoảng loa đọc thêm số chòi; không đọc mọi lần để câu ngắn, kẻo đông lượt giật thì giọng đọc bị dồn.
+  // Thỉnh thoảng loa đọc thêm số chỗ ngồi; không đọc mọi lần để câu ngắn, kẻo đông lượt giật thì giọng đọc bị dồn.
   if (Math.random() < (VOICE.hutChance ?? 0)) texts.push(V.hut.replace('{n}', p.seat + 1));
   texts.push(V.hello, voice.ready(name) ? name : V.you);
   if (wins > 1) texts.push(wins <= 10 ? V.many.replace('{n}', wins) : V.manyLots);
@@ -775,7 +783,7 @@ app.post('/api/safe-mode', (req, res) => {
 
 app.post('/api/telegram-test', async (req, res) => {
   if (!req.is('application/json')) return res.status(415).end();
-  const error = await sendTelegram('✅ Hồ câu cá đã kết nối Telegram. Nếu TikTok cảnh báo phiên live, tin sẽ được gửi vào đây.');
+  const error = await sendTelegram('✅ Game câu cá đã kết nối Telegram. Nếu TikTok cảnh báo phiên live, tin sẽ được gửi vào đây.');
   res.json({ message: error || 'Đã gửi tin thử, bạn kiểm tra Telegram nhé.' });
 });
 

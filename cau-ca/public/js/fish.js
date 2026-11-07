@@ -7,10 +7,17 @@ const EYE_WHITE = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 
 const EYE_BLACK = new THREE.MeshStandardMaterial({ color: '#111111', roughness: 0.2 });
 
 // Chiều dài hiển thị theo cân nặng (phóng đại cho dễ nhìn trên điện thoại).
-export function fishLength(kg, shark) {
-  // sự kiện nhân cân nặng có thể ra cá mập vài trăm ký: giới hạn cỡ để cá vẫn nằm gọn trong khung hình
-  if (shark) return 2.2 + (Math.min(kg, 220) - 100) / 100;
+export function fishLength(kg, giant) {
+  // sự kiện nhân cân nặng có thể ra cá chúa vài trăm ký: giới hạn cỡ để cá vẫn nằm gọn trong khung hình
+  if (giant) return 2.2 + (Math.min(kg, 220) - 100) / 100;
   return 0.45 + Math.cbrt(kg) * 0.32;
+}
+
+// Mỗi con cá câu lên có hình khối riêng: gỡ khỏi cảnh mà không giải phóng thì bộ nhớ đồ hoạ tăng dần suốt buổi live.
+// Vật liệu dùng chung giữa các con nên giữ lại.
+export function removeFish(scene, fish) {
+  scene.remove(fish);
+  fish.traverse((o) => o.isMesh && o.geometry.dispose());
 }
 
 function sphere(r, material, pos, scale, rot) {
@@ -35,10 +42,9 @@ function fin(w, h, material, pos, rot) {
   return m;
 }
 
-export function makeFish({ color = '#d98c2b', belly = '#f8dd9c', name = '' } = {}, kg = 2) {
-  const shark = /mập/i.test(name);
-  const hammer = /búa/i.test(name);
-  const len = fishLength(kg, shark);
+// giant: cá chúa, cá hô con; đặt trong config.json để cá dài hẳn ra so với số ký.
+export function makeFish({ color = '#d98c2b', belly = '#f8dd9c', name = '', giant = false } = {}, kg = 2) {
+  const len = fishLength(kg, giant);
   const g = new THREE.Group();
   const body = new THREE.Group();
   g.add(body);
@@ -46,54 +52,29 @@ export function makeFish({ color = '#d98c2b', belly = '#f8dd9c', name = '' } = {
   const under = mat(belly, { rough: 0.5 });
   const finMat = mat(color, { rough: 0.5, side: THREE.DoubleSide });
 
-  if (shark) {
-    // thân thon dài, bụng trắng, vây lưng to, đuôi lưỡi liềm
-    body.add(sphere(0.5, skin, [0, 0.03, 0], [1, 0.36, 0.34]));
-    body.add(sphere(0.5, under, [0.02, -0.04, 0], [0.96, 0.3, 0.31]));
-    body.add(sphere(0.2, skin, [0.48, 0.0, 0], [1.1, 0.55, 0.62]));
-    if (hammer) body.add(sphere(0.2, skin, [0.58, 0.02, 0], [0.35, 0.18, 1.6]));
-    body.add(fin(0.32, 0.36, finMat, [-0.1, 0.14, 0], [0, 0, 0]));
-    body.add(fin(0.26, 0.2, finMat, [0.12, -0.08, 0.12], [-1.1, 0.4, -0.3]));
-    body.add(fin(0.26, 0.2, finMat, [0.12, -0.08, -0.12], [1.1, -0.4, -0.3]));
-    // miệng có răng
-    const mouth = new THREE.Mesh(new THREE.TorusGeometry(0.07, 0.016, 6, 12, Math.PI), mat('#3a1010'));
-    mouth.position.set(0.56, -0.07, 0);
-    mouth.rotation.set(Math.PI / 2, 0, Math.PI);
-    body.add(mouth);
-    for (let i = 0; i < 6; i++) {
-      const tooth = new THREE.Mesh(new THREE.ConeGeometry(0.012, 0.03, 3), mat('#ffffff'));
-      const a = (i / 5) * Math.PI;
-      tooth.position.set(0.56 - Math.sin(a) * 0.06, -0.07 + 0.012, Math.cos(a) * 0.065);
-      body.add(tooth);
-    }
+  body.add(sphere(0.5, skin, [0, 0.02, 0], [1, 0.48, 0.27]));
+  body.add(sphere(0.5, under, [0.03, -0.05, 0], [0.88, 0.36, 0.25]));
+  body.add(fin(0.22, 0.16, finMat, [-0.12, 0.2, 0], [0, 0, 0]));
+  body.add(fin(0.12, 0.1, finMat, [0.12, -0.12, 0.1], [-1.0, 0.3, -0.4]));
+  body.add(fin(0.12, 0.1, finMat, [0.12, -0.12, -0.1], [1.0, -0.3, -0.4]));
+  // mang + môi
+  const gill = new THREE.Mesh(new THREE.TorusGeometry(0.11, 0.008, 4, 10, Math.PI), mat(belly));
+  gill.position.set(0.24, 0.01, 0);
+  gill.rotation.set(0, Math.PI / 2, Math.PI / 2);
+  gill.scale.set(1, 1, 1.2);
+  body.add(gill);
+  body.add(sphere(0.04, mat('#c8655a'), [0.5, -0.02, 0], [0.6, 0.6, 1]));
+  for (const z of [1, -1]) {
+    body.add(sphere(0.055, EYE_WHITE, [0.36, 0.07, 0.1 * z]));
+    body.add(sphere(0.032, EYE_BLACK, [0.39, 0.075, 0.125 * z]));
+  }
+  // râu cho cá trê, cá lăng, cá tra
+  if (/trê|lăng|tra\b/i.test(name)) {
     for (const z of [1, -1]) {
-      body.add(sphere(0.032, EYE_BLACK, [0.5, 0.06, 0.1 * z]));
-    }
-  } else {
-    body.add(sphere(0.5, skin, [0, 0.02, 0], [1, 0.48, 0.27]));
-    body.add(sphere(0.5, under, [0.03, -0.05, 0], [0.88, 0.36, 0.25]));
-    body.add(fin(0.22, 0.16, finMat, [-0.12, 0.2, 0], [0, 0, 0]));
-    body.add(fin(0.12, 0.1, finMat, [0.12, -0.12, 0.1], [-1.0, 0.3, -0.4]));
-    body.add(fin(0.12, 0.1, finMat, [0.12, -0.12, -0.1], [1.0, -0.3, -0.4]));
-    // mang + môi
-    const gill = new THREE.Mesh(new THREE.TorusGeometry(0.11, 0.008, 4, 10, Math.PI), mat(belly));
-    gill.position.set(0.24, 0.01, 0);
-    gill.rotation.set(0, Math.PI / 2, Math.PI / 2);
-    gill.scale.set(1, 1, 1.2);
-    body.add(gill);
-    body.add(sphere(0.04, mat('#c8655a'), [0.5, -0.02, 0], [0.6, 0.6, 1]));
-    for (const z of [1, -1]) {
-      body.add(sphere(0.055, EYE_WHITE, [0.36, 0.07, 0.1 * z]));
-      body.add(sphere(0.032, EYE_BLACK, [0.39, 0.075, 0.125 * z]));
-    }
-    // râu cho cá trê, cá lăng
-    if (/trê|lăng/i.test(name)) {
-      for (const z of [1, -1]) {
-        const whisker = new THREE.Mesh(new THREE.CylinderGeometry(0.006, 0.004, 0.3, 4), mat('#3a3028'));
-        whisker.position.set(0.55, -0.05, 0.06 * z);
-        whisker.rotation.set(0.6 * z, 0, 1.0);
-        body.add(whisker);
-      }
+      const whisker = new THREE.Mesh(new THREE.CylinderGeometry(0.006, 0.004, 0.3, 4), mat('#3a3028'));
+      whisker.position.set(0.55, -0.05, 0.06 * z);
+      whisker.rotation.set(0.6 * z, 0, 1.0);
+      body.add(whisker);
     }
   }
 
@@ -101,17 +82,10 @@ export function makeFish({ color = '#d98c2b', belly = '#f8dd9c', name = '' } = {
   const tail = new THREE.Group();
   tail.position.set(-0.45, 0.02, 0);
   const tailShape = new THREE.Shape();
-  if (shark) {
-    tailShape.moveTo(0, 0);
-    tailShape.quadraticCurveTo(-0.12, 0.12, -0.3, 0.36);
-    tailShape.quadraticCurveTo(-0.14, 0.05, -0.2, -0.2);
-    tailShape.closePath();
-  } else {
-    tailShape.moveTo(0, 0);
-    tailShape.quadraticCurveTo(-0.15, 0.08, -0.3, 0.22);
-    tailShape.quadraticCurveTo(-0.22, 0, -0.3, -0.22);
-    tailShape.quadraticCurveTo(-0.15, -0.08, 0, 0);
-  }
+  tailShape.moveTo(0, 0);
+  tailShape.quadraticCurveTo(-0.15, 0.08, -0.3, 0.22);
+  tailShape.quadraticCurveTo(-0.22, 0, -0.3, -0.22);
+  tailShape.quadraticCurveTo(-0.15, -0.08, 0, 0);
   const tailMesh = new THREE.Mesh(new THREE.ShapeGeometry(tailShape, 8), finMat);
   tailMesh.castShadow = true;
   tail.add(tailMesh);
@@ -119,7 +93,7 @@ export function makeFish({ color = '#d98c2b', belly = '#f8dd9c', name = '' } = {
 
   bake(body);
   g.scale.setScalar(len);
-  g.userData = { tail, body, length: len, shark };
+  g.userData = { tail, body, length: len };
   return g;
 }
 
@@ -142,7 +116,7 @@ function makeSwimmer(color, length, opacity) {
   return g;
 }
 
-// Đàn cá trong ao: cá hay tụ quanh hai quạt nước vì nhiều oxy, số còn lại lượn khắp ao.
+// Đàn cá dưới sông: cá hay tụ quanh chà, số còn lại lượn dọc khúc sông.
 export function addSwimmers(scene) {
   const swimmers = [];
   const add = (color, length, opacity, y, path, pace = 1) => {
@@ -152,11 +126,10 @@ export function addSwimmers(scene) {
     swimmers.push({ mesh: f, path, a: Math.random() * Math.PI * 2, speed: pace * (0.14 + Math.random() * 0.16) * (Math.random() < 0.5 ? -1 : 1), phase: Math.random() * 6, wobble: 0.05 + Math.random() * 0.1 });
   };
   const roam = ['#1f3a2c', '#24402f', '#d9942f', '#1b3328', '#2a4634', '#e8e0c8'];
-  for (let i = 0; i < 9; i++) add(roam[i % roam.length], 0.6 + Math.random() * 0.45, 0.62, -0.25, { e: { x: 0, z: 0, rx: 8.4, rz: 5.9 }, r: 0.55 + Math.random() * 0.42 });
+  for (let i = 0; i < 9; i++) add(roam[i % roam.length], 0.6 + Math.random() * 0.45, 0.62, -0.25, { e: POND.roam, r: 0.55 + Math.random() * 0.42 });
   const near = ['#1b3328', '#d9942f', '#24402f', '#1f3a2c', '#c9502c'];
-  for (const fan of POND.fans) {
-    for (let i = 0; i < 7; i++) add(near[i % near.length], 0.45 + Math.random() * 0.3, 0.68, -0.18, { e: { x: fan.x, z: fan.z + 0.5, rx: 2.5, rz: 2.3 }, r: 0.55 + Math.random() * 0.45 }, 2.1);
-  }
+  const hot = { x: POND.hot.x, z: POND.hot.z, rx: POND.hot.r, rz: POND.hot.r };
+  for (let i = 0; i < 12; i++) add(near[i % near.length], 0.45 + Math.random() * 0.3, 0.68, -0.18, { e: hot, r: 0.55 + Math.random() * 0.45 }, 2.1);
   const prev = new THREE.Vector3();
   return {
     update(t, dt) {

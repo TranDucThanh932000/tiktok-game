@@ -1,5 +1,5 @@
 // Giao diện vòng quay: bánh xe quay giữa màn hình, thanh trạng thái (đếm ngược, vòng vàng, thời gian sự kiện)
-// và khung diễn biến của thi câu nhanh / cá mập. Server đã chốt ô trúng, ở đây chỉ diễn hoạt cảnh.
+// và khung diễn biến của thi câu nhanh / cá hô chúa. Server đã chốt ô trúng, ở đây chỉ diễn hoạt cảnh.
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const clock = (ms) => {
@@ -81,7 +81,7 @@ export function createWheelUi({ sfx, onEvent }) {
     box.classList.toggle('golden', s.golden);
     box.classList.remove('landed');
     $('wheel-title').textContent = s.golden ? '👑 VÒNG QUAY VÀNG 👑' : '🎡 VÒNG QUAY THẦN HỒ';
-    $('wheel-who').textContent = s.spinner ? `✨ ${s.spinner.name} đang quay!` : 'Thần Hồ đang quay...';
+    $('wheel-who').textContent = s.spinner ? `✨ ${s.spinner.name} đang quay!` : 'Thần Sông đang quay...';
     $('wheel-result').innerHTML = `<div class="big">${esc(slot.icon)} ${esc(slot.label)}</div><div class="sub">${esc(slot.text)}</div>`;
   }
 
@@ -192,7 +192,7 @@ export function createWheelUi({ sfx, onEvent }) {
         sfx.win(spin.golden);
       }
     },
-    // Khung diễn biến thi câu nhanh / cá mập.
+    // Khung diễn biến thi câu nhanh / cá hô chúa.
     setLive(msg) {
       // Vừa có kết quả thì giữ dòng kết quả thêm một lúc: bản tin cuối (hết sự kiện, thanh máu về 0) không được ghi đè.
       if (performance.now() < liveHold && (!msg?.mode || msg.hp === 0)) return;
@@ -204,7 +204,7 @@ export function createWheelUi({ sfx, onEvent }) {
       liveHold = 0;
       live.classList.add('on');
       live.classList.toggle('boss', msg.mode === 'boss');
-      $('live-title').textContent = msg.mode === 'boss' ? '🦈 CÁ MẬP VÀO HỒ' : msg.closing ? '⏱️ Đang chốt kết quả...' : '⏱️ THI CÂU NHANH';
+      $('live-title').textContent = msg.mode === 'boss' ? '🐉 CÁ HÔ CHÚA VỀ SÔNG' : msg.closing ? '⏱️ Đang chốt kết quả...' : '⏱️ THI CÂU NHANH';
       const hasHp = msg.mode === 'boss';
       $('live-hp').hidden = !hasHp;
       if (hasHp) {

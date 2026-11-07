@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bảng điều khiển · Sơn Tinh Thủy Tinh</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⛰️</text></svg>">
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: "Segoe UI", Arial, sans-serif; background: #12202c; color: #eef4f8; }
+    main { max-width: 700px; padding: 16px; }
+    h1 { margin: 0 0 10px; font-size: 24px; }
+    h2 { margin: 18px 0 8px; font-size: 15px; color: #ffcf3f; text-transform: uppercase; letter-spacing: 1px; }
+    #status { margin: 0; padding: 8px 12px; border-radius: 8px; background: #3a1d24; }
+    #status.on { background: #1d3a26; }
+    .info { margin: 8px 0 0; padding: 8px 12px; border-radius: 8px; background: #1c3242; font-size: 15px; }
+    #alerts p { margin: 8px 0 0; padding: 8px 12px; border: 1px solid #c0392b; border-radius: 8px; background: #4a1717; font-size: 14px; }
+    .hint { margin: 0 0 8px; font-size: 14px; color: #a9bfd0; }
+    label { display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px; font-size: 14px; }
+    input { width: 100%; max-width: 300px; padding: 8px 10px; border: 1px solid #3f5d75; border-radius: 8px; background: #172a38; color: inherit; font: inherit; }
+    input[type="number"] { max-width: 90px; }
+    .row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .row label { margin: 0; }
+    button { padding: 9px 14px; border: 1px solid #4f7593; border-radius: 8px; background: #22405a; color: inherit; font: inherit; cursor: pointer; }
+    button:hover { background: #2c5274; }
+    button.son { border-color: #5fae5a; background: #24502c; }
+    button.thuy { border-color: #4a9be8; background: #1f4570; }
+    .gift-icon { width: 28px; height: 28px; margin: -6px 6px -6px -4px; object-fit: contain; vertical-align: middle; }
+    .danger { border-color: #a0403a; background: #3a1d1d; }
+    #log { min-height: 1.4em; font-size: 14px; color: #a9bfd0; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th { padding: 4px 8px; text-align: left; color: #a9bfd0; font-weight: 600; border-bottom: 1px solid #3f5d75; }
+    td { padding: 3px 8px; border-bottom: 1px solid #22405a; }
+    td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>⛰️🌊 Bảng điều khiển · Sơn Tinh Thủy Tinh</h1>
+    <p id="status">Đang kết nối máy chủ game...</p>
+    <p class="info" id="game-info"></p>
+    <p class="info" id="session"></p>
+    <div id="alerts"></div>
+
+    <h2>Người xem giả lập</h2>
+    <label>Tên <input id="name" value="Bạn thử" maxlength="20"></label>
+    <div class="row">
+      <button type="button" class="son" data-chat="Sơn Tinh">⛰️ Comment SƠN TINH</button>
+      <button type="button" class="thuy" data-chat="Thủy Tinh">🌊 Comment THỦY TINH</button>
+      <button type="button" id="right">✅ Đoán đúng</button>
+      <button type="button" id="wrong">❌ Đoán sai</button>
+    </div>
+    <div class="row">
+      <input id="free" maxlength="100" value="ca chep">
+      <button type="button" id="free-send">💬 Gửi comment bất kỳ</button>
+    </div>
+    <div class="row"><label>Số quà mỗi lần bấm <input id="count" type="number" min="1" max="99" value="1"></label></div>
+    <div class="row" id="gifts-son"></div>
+    <div class="row" id="gifts-thuy"></div>
+
+    <h2>Thử đông người</h2>
+    <p class="hint">Người thử cũng vào trận như người xem thật, nên bấm "Trận mới" trước khi live.</p>
+    <div class="row">
+      <button type="button" id="crowd">👥 Mỗi phe thêm 10 người</button>
+      <button type="button" id="race">🎯 Hai phe tranh đoán 30 giây</button>
+      <button type="button" id="rain">🎁 Mưa quà</button>
+    </div>
+
+    <h2>Điều khiển</h2>
+    <div class="row">
+      <button type="button" data-control="next">▶️ Sang bước tiếp (vào hiệp ngay)</button>
+      <button type="button" data-control="hint">💡 Mở thêm 1 chữ</button>
+      <button type="button" data-control="skip">⏭️ Đổi từ khác</button>
+      <button type="button" data-control="end">⏹️ Kết thúc hiệp ngay</button>
+    </div>
+    <div class="row">
+      <button type="button" id="reset" class="danger">🧹 Trận mới (xóa hết)</button>
+      <button type="button" id="telegram-test">📨 Gửi thử Telegram</button>
+    </div>
+    <p id="log"></p>
+
+    <h2>Đoán giỏi trong trận</h2>
+    <table>
+      <thead><tr><th>Người chơi</th><th>Phe</th><th class="n">Số từ</th></tr></thead>
+      <tbody id="ranks"></tbody>
+    </table>
+  </main>
+
+  <script type="module">
+    const $ = (id) => document.getElementById(id);
+    const post = (url, body = {}) => fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    const chat = (name, text) => post('/api/simulate', { kind: 'chat', name, text });
+    const right = (name) => post('/api/simulate', { kind: 'right', name });
+    const pick = (list) => list[Math.floor(Math.random() * list.length)];
+    const SIDES = ['son', 'thuy'];
+    const PHASES = { lobby: 'Đang chọn phe', round: 'Đang đấu', roundEnd: 'Nghỉ giữa hiệp', matchEnd: 'Đang rước Mị Nương' };
+    const WRONG = ['con mèo', 'bánh mì', 'hoa sen', 'xe đạp', 'cá voi', 'trà sữa', 'cây tre', 'bóng đá', 'mưa rào', 'ba lô'];
+
+    let guide = null;
+    let state = null;
+    const players = new Map(); // pid -> người chơi
+    const bots = { son: [], thuy: [] };
+
+    // 12 tên ghép 7 họ cho 84 người khác nhau trước khi phải thêm số.
+    let botNo = 0;
+    const FAMILY = ['Nguyễn', 'Trần', 'Lê', 'Phạm', 'Hoàng', 'Vũ', 'Đặng'];
+    const GIVEN = ['Lan Anh', 'Minh Tú', 'Quốc Bảo', 'Ngọc Mai', 'Đức Huy', 'Bích Ngọc', 'Tuấn Kiệt', 'Hải Yến', 'Gia Hân', 'Thành Đạt', 'Thu Hà', 'Hoàng Nam'];
+    const botName = () => {
+      const i = botNo++;
+      return `${GIVEN[i % GIVEN.length]} ${FAMILY[i % FAMILY.length]}${i >= 84 ? i : ''}`;
+    };
+    const sideName = (side) => guide?.sides[side].name ?? side;
+
+    for (const button of document.querySelectorAll('[data-chat]')) button.onclick = () => chat($('name').value, button.dataset.chat);
+    $('right').onclick = async () => {
+      const { message } = await (await right($('name').value)).json();
+      if (message) $('log').textContent = message;
+    };
+    $('wrong').onclick = () => chat($('name').value, pick(WRONG));
+    $('free-send').onclick = () => chat($('name').value, $('free').value);
+
+    $('crowd').onclick = () => {
+      for (const side of SIDES) {
+        for (let i = 0; i < 10; i++) {
+          const name = botName();
+          bots[side].push(name);
+          // Người xem gõ đủ kiểu: có dấu, không dấu, viết tắt, số.
+          const text = side === 'son' ? pick(['Sơn Tinh', 'son tinh', 'ST', '1', 'phe sơn tinh']) : pick(['Thủy Tinh', 'thuy tinh', 'TT', '2', 'team thủy tinh']);
+          setTimeout(() => chat(name, text), Math.random() * 5000);
+        }
+      }
+    };
+    $('race').onclick = () => {
+      const all = [...bots.son, ...bots.thuy];
+      if (!all.length) return ($('log').textContent = 'Chưa có người thử nào, bấm "Mỗi phe thêm 10 người" trước.');
+      for (let at = 0; at < 30_000; at += 1200) setTimeout(() => chat(pick(all), pick(WRONG)), at + Math.random() * 1000);
+      for (let at = 3000; at < 30_000; at += 3000 + Math.random() * 4000) setTimeout(() => right(pick(all)), at);
+      $('log').textContent = 'Hai phe đang tranh đoán trong 30 giây.';
+    };
+    $('rain').onclick = () => {
+      const all = [...bots.son, ...bots.thuy, $('name').value];
+      for (let i = 0; i < 8; i++) {
+        const gift = pick(guide.gifts);
+        setTimeout(() => sendGift(pick(all), gift, 1 + Math.floor(Math.random() * 3)), Math.random() * 6000);
+      }
+    };
+
+    for (const button of document.querySelectorAll('[data-control]')) {
+      button.onclick = async () => {
+        const { ok } = await (await post('/api/control', { action: button.dataset.control })).json();
+        if (!ok) $('log').textContent = 'Lúc này không làm được việc đó.';
+      };
+    }
+    $('reset').onclick = () => {
+      if (confirm('Xóa tỉ số, quà và danh sách người đã chọn phe để mở trận mới?')) post('/api/control', { action: 'reset' });
+    };
+    $('telegram-test').onclick = async () => {
+      $('log').textContent = 'Đang gửi tin thử Telegram...';
+      const { message } = await (await post('/api/telegram-test')).json();
+      $('log').textContent = message;
+    };
+
+    const sendGift = (name, gift, count) => post('/api/simulate', { kind: 'gift', name, gift: gift.name, giftId: gift.id, count });
+    function renderGifts() {
+      for (const side of SIDES) {
+        $(`gifts-${side}`).replaceChildren(
+          ...guide.gifts.filter((g) => g.side === side).map((gift) => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = side;
+            button.append(Object.assign(new Image(), { className: 'gift-icon', alt: '', src: gift.icon }), `${gift.label} ${gift.coins} xu · +${gift.bonus}`);
+            button.onclick = () => sendGift($('name').value, gift, Number($('count').value) || 1);
+            return button;
+          }),
+        );
+      }
+    }
+
+    function renderInfo() {
+      if (!state || !guide) return;
+      const s = state;
+      const side = (key) => `${sideName(key)}: ${s.counts[key]} quân, máu ${s.hp[key]}/${guide.hp}, mỗi từ -${s.damage[key]}${s.bonus[key] ? ` (quà +${s.bonus[key]})` : ''}`;
+      $('game-info').textContent = `⚔️ ${PHASES[s.phase]}${s.round ? `, hiệp ${s.round}` : ''} · tỉ số ${s.wins.son}-${s.wins.thuy} (thắng ${guide.winsToMarry} hiệp rước Mị Nương). ${side('son')}. ${side('thuy')}.`;
+    }
+
+    function renderRanks() {
+      const list = [...players.values()].filter((p) => p.words > 0).sort((a, b) => b.words - a.words).slice(0, 20);
+      $('ranks').replaceChildren(
+        ...list.map((p) => {
+          const tr = document.createElement('tr');
+          for (const [text, cls] of [[p.name, ''], [sideName(p.side), ''], [p.words, 'n']]) tr.append(Object.assign(document.createElement('td'), { textContent: text, className: cls }));
+          return tr;
+        }),
+      );
+    }
+
+    function showStatus({ connected, text }) {
+      $('status').textContent = text;
+      $('status').classList.toggle('on', connected);
+    }
+    const showAlert = ({ at, text }) => $('alerts').prepend(Object.assign(document.createElement('p'), { textContent: `⚠️ ${new Date(at).toLocaleTimeString('vi-VN')} TikTok cảnh báo: ${text}` }));
+    const showSession = ({ roomId, diamonds, gifts, since }) => {
+      $('session').textContent = roomId
+        ? `💎 Phiên live này (từ ${new Date(since).toLocaleTimeString('vi-VN')}): ${diamonds.toLocaleString('vi-VN')} kim cương từ ${gifts.toLocaleString('vi-VN')} lượt.`
+        : '💎 Chưa có phiên live nào từ lúc bật server.';
+    };
+
+    const events = new EventSource('/events');
+    events.onmessage = (event) => {
+      const msg = JSON.parse(event.data);
+      if (msg.state) {
+        state = msg.state;
+        renderInfo();
+      }
+      switch (msg.type) {
+        case 'snapshot':
+          guide = msg.guide;
+          state = msg.game;
+          players.clear();
+          for (const p of msg.game.players) players.set(p.pid, p);
+          renderGifts();
+          showStatus(msg.status);
+          $('alerts').replaceChildren();
+          msg.alerts.forEach(showAlert);
+          showSession(msg.session);
+          $('log').textContent = `Bộ từ: ${msg.bankSize} từ`;
+          renderInfo();
+          renderRanks();
+          break;
+        case 'reset':
+          players.clear();
+          bots.son = [];
+          bots.thuy = [];
+          renderRanks();
+          $('log').textContent = 'Đã mở trận mới, mọi người chọn phe lại.';
+          break;
+        case 'join':
+          players.set(msg.player.pid, msg.player);
+          break;
+        case 'hit':
+          if (players.has(msg.pid)) players.get(msg.pid).words++;
+          renderRanks();
+          $('log').textContent = `${msg.name} (${sideName(msg.side)}) đoán đúng "${msg.answer}", ${sideName(msg.target)} -${msg.damage}`;
+          break;
+        case 'timeout':
+          $('log').textContent = `${msg.kind === 'skip' ? 'Đã đổi từ' : 'Hết giờ'}: "${msg.answer}"`;
+          break;
+        case 'round-end':
+          $('log').textContent = `Hiệp ${msg.round}: ${msg.winner ? `${sideName(msg.winner)} thắng` : 'hòa'}${msg.answer ? `, từ đang đoán là "${msg.answer}"` : ''}`;
+          break;
+        case 'match-end':
+          $('log').textContent = `${sideName(msg.side)} rước Mị Nương, tỉ số ${msg.wins.son}-${msg.wins.thuy}`;
+          break;
+        case 'gift':
+          $('log').textContent = `${msg.name}: ${msg.label} x${msg.count} → ${sideName(msg.side)} +${msg.added} mỗi từ${msg.later ? ' (tính cho hiệp sau)' : ''}`;
+          break;
+        case 'status':
+          showStatus(msg);
+          break;
+        case 'moderation':
+          showAlert(msg);
+          break;
+        case 'session':
+          showSession(msg);
+          break;
+      }
+    };
+    events.onerror = () => showStatus({ connected: false, text: 'Mất kết nối tới máy chủ game, kiểm tra cửa sổ đang chạy npm start.' });
+  </script>
+</body>
+</html>
