@@ -1,0 +1,62 @@
+{
+  "fixes": {
+    "H₂O": "hát hai ô",
+    "CO₂": "cê ô hai",
+    "O₂": "ô xy",
+    "NaCl": "na tri clo rua",
+    "TP.": "Thành phố",
+    "Số La Mã X": "Số La Mã ích",
+    "(Olympic)": ", Ô lim pích,"
+  },
+
+  "letters": ["A", "Bê", "Xê", "Đê"],
+
+  "welcome": [
+    "Xin chào các bạn, chào mừng đến với Rung Chuông Vàng!",
+    "Rung Chuông Vàng chính thức bắt đầu!"
+  ],
+  "first": ["Chúng ta đến với câu hỏi đầu tiên.", "Câu hỏi đầu tiên."],
+  "number": "Câu hỏi số {n}.",
+  "rescueAsk": ["Câu hỏi cứu trợ.", "Đây là câu hỏi cứu trợ."],
+  "goldenAsk": "Câu hỏi vàng số {n}.",
+  "go": ["Mời các bạn trả lời.", "Thời gian bắt đầu!", "Các bạn hãy chọn đáp án."],
+  "goGolden": ["{name}, mời bạn trả lời.", "Thời gian bắt đầu, {name} hãy bình tĩnh."],
+  "readBoard": ["Mời các bạn đọc câu hỏi trên màn hình.", "Câu hỏi đã có trên màn hình, mời các bạn trả lời."],
+
+  "timeUp": ["Hết giờ!", "Thời gian đã hết!"],
+  "answerIs": ["Đáp án đúng là {letter}.", "Đáp án chính xác là {letter}."],
+  "allRight": ["Tuyệt vời, tất cả các bạn đều trả lời đúng!", "Không ai phải rời sàn ở câu hỏi này!"],
+  "allWrong": ["Cả sàn thi đều trả lời sai! Không ai phải rời sàn.", "Câu hỏi quá khó, cả sàn cùng sai nên không ai bị loại."],
+  "out": ["Rất tiếc, {n} bạn phải rời sàn thi.", "{n} bạn đã phải chia tay sàn thi."],
+  "outSome": ["Rất tiếc, một số bạn phải rời sàn thi."],
+  "saved": ["{name} đã được phao cứu sinh giữ lại!", "May quá, phao cứu sinh đã giữ {name} ở lại sàn."],
+  "fastest": ["{name} là người trả lời đúng nhanh nhất.", "Nhanh nhất là {name}!"],
+  "remain": "Trên sàn thi còn {n} bạn.",
+
+  "rescueIntro": [
+    "Cứu trợ! Các bạn đã rời sàn, hãy trả lời đúng câu hỏi tiếp theo để quay trở lại sàn thi!",
+    "Tín hiệu cứu trợ đã bật! Bạn nào đã rời sàn, trả lời đúng câu tiếp theo sẽ được quay lại."
+  ],
+  "back": ["Chúc mừng {n} bạn đã quay trở lại sàn thi!", "{n} bạn đã được cứu trợ thành công!"],
+  "backNone": ["Rất tiếc, không ai được cứu trợ lần này."],
+
+  "goldenIntro": ["Chỉ còn một người duy nhất trên sàn thi!", "Sàn thi chỉ còn lại một người!"],
+  "goldenName": ["Xin chúc mừng {name}!", "Đó chính là {name}!"],
+  "goldenRule": "Hãy trả lời đúng {n} câu hỏi vàng để rung chuông vàng!",
+  "goldenRight": ["Chính xác!", "Hoàn toàn chính xác!"],
+  "goldenLeft": "Còn {n} câu nữa để rung chuông vàng.",
+  "goldenWrong": ["Rất tiếc! Chiếc chuông vàng vẫn chưa được rung.", "Thật đáng tiếc, chỉ còn chút nữa thôi!"],
+
+  "bell": ["Xin chúc mừng {name} đã rung chuông vàng!", "Chiếc chuông vàng đã vang lên! Xin chúc mừng {name}!"],
+  "fail": ["Xin chúc mừng {name}, người trụ lại cuối cùng trên sàn thi!"],
+  "many": ["Xin chúc mừng {n} bạn đã cùng về đích!"],
+  "empty": ["Sàn thi đã trống."],
+  "nextMatch": ["Trận mới sẽ bắt đầu ngay sau đây.", "Hẹn gặp lại các bạn ở trận tiếp theo."],
+
+  "join": ["Chào mừng {name} lên sàn thi!", "{name} đã lên sàn!", "Xin chào {name}!"],
+  "invite": ["Sàn thi đang mở, comment vào để tham gia nhé!", "Comment vào để lên sàn thi cùng mọi người nào!"],
+  "urge": ["Nhanh lên nào, sắp hết giờ rồi!", "Còn vài giây nữa thôi!"],
+  "cheer": ["Cảm ơn {name} đã cổ vũ!", "Cảm ơn {name} nhé!"],
+  "shield": ["{name} nhận thêm phao cứu sinh!", "Cảm ơn {name}, phao cứu sinh đã sẵn sàng!"],
+  "revive": ["{name} đã quay trở lại sàn thi!", "Chào mừng {name} trở lại sàn thi!"]
+}

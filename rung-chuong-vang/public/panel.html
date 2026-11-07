@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bảng điều khiển · Rung Chuông Vàng</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔔</text></svg>">
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: "Segoe UI", Arial, sans-serif; background: #111735; color: #eef1fb; }
+    main { max-width: 720px; padding: 16px; }
+    h1 { margin: 0 0 10px; font-size: 24px; }
+    h2 { margin: 18px 0 8px; font-size: 15px; color: #ffcf3f; text-transform: uppercase; letter-spacing: 1px; }
+    #status { margin: 0; padding: 8px 12px; border-radius: 8px; background: #3a1d24; }
+    #status.on { background: #1d3a26; }
+    .info { margin: 8px 0 0; padding: 8px 12px; border-radius: 8px; background: #1c2752; font-size: 15px; }
+    #answer { margin: 8px 0 0; padding: 10px 12px; border: 2px solid #ffcf3f; border-radius: 8px; background: #2a2410; font-size: 16px; }
+    #answer b { color: #ffcf3f; font-size: 20px; }
+    #alerts p { margin: 8px 0 0; padding: 8px 12px; border: 1px solid #c0392b; border-radius: 8px; background: #4a1717; font-size: 14px; }
+    #mute-box { display: flex; align-items: center; gap: 10px; margin-top: 8px; padding: 8px 12px; border: 1px solid #3f4f8a; border-radius: 8px; font-size: 14px; }
+    #mute-box.on { border-color: #f5d354; background: #4a3a10; }
+    #mute-box span { flex: 1; }
+    .hint { margin: 0 0 8px; font-size: 14px; color: #a9b4dc; }
+    label { display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px; font-size: 14px; }
+    input { width: 100%; max-width: 300px; padding: 8px 10px; border: 1px solid #3f4f8a; border-radius: 8px; background: #18214a; color: inherit; font: inherit; }
+    input[type="number"] { max-width: 90px; }
+    .row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .row label { margin: 0; }
+    button { padding: 9px 14px; border: 1px solid #4f62a8; border-radius: 8px; background: #22306a; color: inherit; font: inherit; cursor: pointer; }
+    button:hover { background: #2c3e86; }
+    button.key { min-width: 52px; font-weight: 700; }
+    button.gold { border-color: #ffcf3f; background: #4a3a10; }
+    .gift-icon { width: 28px; height: 28px; margin: -6px 6px -6px -4px; object-fit: contain; vertical-align: middle; }
+    .danger { border-color: #a0403a; background: #3a1d1d; }
+    #log { min-height: 1.4em; font-size: 14px; color: #a9b4dc; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th { padding: 4px 8px; text-align: left; color: #a9b4dc; font-weight: 600; border-bottom: 1px solid #3f4f8a; }
+    td { padding: 3px 8px; border-bottom: 1px solid #22306a; }
+    td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; }
+    td.out { color: #ff9a8a; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>🔔 Bảng điều khiển · Rung Chuông Vàng</h1>
+    <p id="status">Đang kết nối máy chủ game...</p>
+    <p class="info" id="game-info"></p>
+    <p id="answer" hidden></p>
+    <p class="info" id="session"></p>
+    <p class="info" id="tts"></p>
+    <div id="mute-box"><span id="mute"></span><button type="button" id="mute-toggle"></button></div>
+    <div id="alerts"></div>
+
+    <h2>Người xem giả lập</h2>
+    <label>Tên <input id="name" value="Bạn thử" maxlength="20"></label>
+    <div class="row">
+      <button type="button" class="gold" data-chat="vào">🙋 Comment VÀO</button>
+      <button type="button" class="key" data-chat="A">A</button>
+      <button type="button" class="key" data-chat="B">B</button>
+      <button type="button" class="key" data-chat="C">C</button>
+      <button type="button" class="key" data-chat="D">D</button>
+      <button type="button" id="right">✅ Trả lời đúng</button>
+      <button type="button" id="wrong">❌ Trả lời sai</button>
+    </div>
+    <div class="row">
+      <input id="free" maxlength="100" value="đáp án b nha">
+      <button type="button" id="free-send">💬 Gửi comment bất kỳ</button>
+    </div>
+    <div class="row"><label>Số quà mỗi lần bấm <input id="count" type="number" min="1" max="99" value="1"></label></div>
+    <div class="row" id="gifts"></div>
+
+    <h2>Thử đông người</h2>
+    <p class="hint">Người thử cũng lên sàn như người xem thật, nên bấm "Trận mới" trước khi live.</p>
+    <div class="row">
+      <label>Số người <input id="crowd-size" type="number" min="1" max="200" value="20"></label>
+      <label>Tỉ lệ trả lời đúng (%) <input id="crowd-rate" type="number" min="0" max="100" value="75"></label>
+    </div>
+    <div class="row">
+      <button type="button" id="crowd">👥 Thêm người lên sàn</button>
+      <button type="button" id="crowd-answer">🎯 Cả sàn trả lời câu này</button>
+      <button type="button" id="auto">🤖 Tự trả lời mọi câu: tắt</button>
+      <button type="button" id="rain">🎁 Mưa quà</button>
+    </div>
+
+    <h2>Điều khiển</h2>
+    <div class="row">
+      <button type="button" data-control="next">▶️ Sang bước tiếp</button>
+      <button type="button" data-control="skip">⏭️ Đổi câu khác (không loại ai)</button>
+      <button type="button" data-control="stop">⏹️ Kết thúc trận ngay</button>
+    </div>
+    <div class="row">
+      <button type="button" id="reset" class="danger">🧹 Trận mới (xóa hết)</button>
+      <button type="button" id="telegram-test">📨 Gửi thử Telegram</button>
+    </div>
+    <p class="hint">"Sang bước tiếp": đang mở sàn thì hỏi câu 1 ngay, đang hỏi thì công bố đáp án ngay, đang công bố thì sang câu sau.</p>
+    <p id="log"></p>
+
+    <h2>Người chơi trong trận</h2>
+    <table>
+      <thead><tr><th>Người chơi</th><th>Trạng thái</th><th class="n">Phao</th><th class="n">Câu đúng</th></tr></thead>
+      <tbody id="ranks"></tbody>
+    </table>
+  </main>
+
+  <script type="module">
+    const $ = (id) => document.getElementById(id);
+    const post = (url, body = {}) => fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    const sim = async (body) => (await post('/api/simulate', body)).json();
+    const chat = (name, text) => sim({ kind: 'chat', name, text });
+    const pick = (list) => list[Math.floor(Math.random() * list.length)];
+    const PHASES = { lobby: 'Đang mở sàn', intro: 'Đang giới thiệu', asking: 'Đang hỏi', reveal: 'Đang công bố đáp án', end: 'Đã kết thúc' };
+    const MODES = { main: 'câu thường', rescue: 'cứu trợ', golden: 'câu hỏi vàng' };
+    const KINDS = { bell: 'RUNG CHUÔNG VÀNG', fail: 'người cuối cùng dừng ở câu hỏi vàng', many: 'nhiều người cùng về đích', empty: 'sàn trống' };
+
+    let guide = null;
+    let state = null;
+    const players = new Map(); // pid -> người chơi
+    const bots = [];
+    let auto = false;
+
+    // 12 tên ghép 7 họ cho 84 người khác nhau trước khi phải thêm số.
+    let botNo = 0;
+    const FAMILY = ['Nguyễn', 'Trần', 'Lê', 'Phạm', 'Hoàng', 'Vũ', 'Đặng'];
+    const GIVEN = ['Lan Anh', 'Minh Tú', 'Quốc Bảo', 'Ngọc Mai', 'Đức Huy', 'Bích Ngọc', 'Tuấn Kiệt', 'Hải Yến', 'Gia Hân', 'Thành Đạt', 'Thu Hà', 'Hoàng Nam'];
+    const botName = () => {
+      const i = botNo++;
+      return `${GIVEN[i % GIVEN.length]} ${FAMILY[i % FAMILY.length]}${i >= 84 ? i : ''}`;
+    };
+    const num = (id, min, max) => Math.min(max, Math.max(min, Number($(id).value) || min));
+
+    for (const button of document.querySelectorAll('[data-chat]')) button.onclick = () => chat($('name').value, button.dataset.chat);
+    for (const kind of ['right', 'wrong']) {
+      $(kind).onclick = async () => {
+        const { message } = await sim({ kind, name: $('name').value });
+        if (message) $('log').textContent = message;
+      };
+    }
+    $('free-send').onclick = () => chat($('name').value, $('free').value);
+
+    $('crowd').onclick = () => {
+      const n = num('crowd-size', 1, 200);
+      for (let i = 0; i < n; i++) {
+        const name = botName();
+        bots.push(name);
+        // Người xem gõ đủ kiểu: có dấu, không dấu, kèm chữ đệm.
+        setTimeout(() => chat(name, pick(['vào', 'VÀO', 'vao', 'vô', 'tham gia', 'cho em vào với'])), Math.random() * 4000);
+      }
+      $('log').textContent = `Đang cho ${n} người thử lên sàn.`;
+    };
+    // Mỗi người thử còn trên sàn (hoặc đang chờ cứu trợ) trả lời trong khoảng 1 đến 11 giây.
+    function crowdAnswer() {
+      if (state?.phase !== 'asking') return ($('log').textContent = 'Chưa có câu hỏi nào đang chờ trả lời.');
+      if (!bots.length) return ($('log').textContent = 'Chưa có người thử nào, bấm "Thêm người lên sàn" trước.');
+      const rate = num('crowd-rate', 0, 100) / 100;
+      for (const name of bots) setTimeout(() => sim({ kind: Math.random() < rate ? 'right' : 'wrong', name }), 1000 + Math.random() * 10_000);
+    }
+    $('crowd-answer').onclick = crowdAnswer;
+    $('auto').onclick = () => {
+      auto = !auto;
+      $('auto').textContent = `🤖 Tự trả lời mọi câu: ${auto ? 'bật' : 'tắt'}`;
+      if (auto && state?.phase === 'asking') crowdAnswer();
+    };
+    $('rain').onclick = () => {
+      const all = [...bots, $('name').value];
+      for (let i = 0; i < 8; i++) setTimeout(() => sendGift(pick(all), pick(guide.gifts), 1 + Math.floor(Math.random() * 2)), Math.random() * 6000);
+    };
+
+    for (const button of document.querySelectorAll('[data-control]')) {
+      button.onclick = async () => {
+        const { ok } = await (await post('/api/control', { action: button.dataset.control })).json();
+        if (!ok) $('log').textContent = 'Lúc này không làm được việc đó.';
+      };
+    }
+    $('reset').onclick = () => {
+      if (confirm('Xóa hết người trên sàn để mở trận mới?')) post('/api/control', { action: 'reset' });
+    };
+    $('telegram-test').onclick = async () => {
+      $('log').textContent = 'Đang gửi tin thử Telegram...';
+      const { message } = await (await post('/api/telegram-test')).json();
+      $('log').textContent = message;
+    };
+
+    let mcMuted = false;
+    function showMute({ on, reason }) {
+      mcMuted = on;
+      $('mute-box').classList.toggle('on', on);
+      $('mute').textContent = on ? `🔇 MC đang tắt tiếng${reason ? ` (${reason})` : ''}. Trận vẫn chạy bình thường.` : '🎤 MC đang nói. Tự tắt tiếng khi TikTok cảnh báo phiên live.';
+      $('mute-toggle').textContent = on ? 'Bật lại MC' : 'Tắt tiếng MC';
+    }
+    $('mute-toggle').onclick = () => post('/api/mc-mute', { on: !mcMuted });
+
+    const sendGift = (name, gift, count) => sim({ kind: 'gift', name, coins: gift.coins, count });
+    function renderGifts() {
+      $('gifts').replaceChildren(
+        ...guide.gifts.map((gift) => {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.append(Object.assign(new Image(), { className: 'gift-icon', alt: '', src: gift.icon }), `${gift.giftLabel || 'Quà'} ${gift.coins} xu · ${gift.label}`);
+          button.onclick = () => sendGift($('name').value, gift, Number($('count').value) || 1);
+          return button;
+        }),
+      );
+    }
+
+    function renderInfo() {
+      if (!state) return;
+      const s = state;
+      const where = s.phase === 'lobby' ? '' : s.mode === 'main' ? `, câu ${s.questionNo}/${s.maxQuestions}` : s.mode === 'golden' ? `, câu hỏi vàng ${s.goldenNo}/${s.goldenTotal}` : `, ${MODES[s.mode]}`;
+      const answered = s.phase === 'asking' ? ` · ${s.answered}/${s.eligible} đã trả lời` : '';
+      const end = s.phase === 'end' && s.champion ? ` · ${KINDS[s.champion.kind]}: ${s.champion.winners.map((w) => w.name).join(', ')}` : '';
+      $('game-info').textContent = `🔔 ${PHASES[s.phase]}${where}${answered} · trên sàn ${s.alive}, đã rời sàn ${s.out} · còn ${s.rescuesLeft} lượt cứu trợ${end}`;
+    }
+
+    // Đáp án chỉ lấy riêng cho bảng điều khiển, màn hình game không nhận trước.
+    async function showAnswer() {
+      const box = $('answer');
+      if (state?.phase !== 'asking' || !state.question) return (box.hidden = true);
+      const { letter, text } = await (await fetch('/api/answer')).json();
+      box.hidden = !letter;
+      if (letter) box.replaceChildren('Đáp án đúng (chỉ bảng điều khiển thấy): ', Object.assign(document.createElement('b'), { textContent: `${letter}. ${text}` }), ` · ${state.question.text}`);
+    }
+
+    function renderRanks() {
+      const list = [...players.values()].sort((a, b) => b.alive - a.alive || b.correct - a.correct || a.pid - b.pid).slice(0, 40);
+      $('ranks').replaceChildren(
+        ...list.map((p) => {
+          const tr = document.createElement('tr');
+          for (const [text, cls] of [[p.name, ''], [p.alive ? 'Trên sàn' : 'Đã rời sàn', p.alive ? '' : 'out'], [p.shields, 'n'], [p.correct, 'n']]) tr.append(Object.assign(document.createElement('td'), { textContent: text, className: cls }));
+          return tr;
+        }),
+      );
+    }
+
+    function showStatus({ connected, text }) {
+      $('status').textContent = text;
+      $('status').classList.toggle('on', connected);
+    }
+    const showAlert = ({ at, text }) => $('alerts').prepend(Object.assign(document.createElement('p'), { textContent: `⚠️ ${new Date(at).toLocaleTimeString('vi-VN')} TikTok cảnh báo: ${text}` }));
+    const showSession = ({ roomId, diamonds, gifts, since }) => {
+      $('session').textContent = roomId
+        ? `💎 Phiên live này (từ ${new Date(since).toLocaleTimeString('vi-VN')}): ${diamonds.toLocaleString('vi-VN')} kim cương từ ${gifts.toLocaleString('vi-VN')} lượt.`
+        : '💎 Chưa có phiên live nào từ lúc bật server.';
+    };
+
+    let rankTimer = 0;
+    const ranksSoon = () => {
+      if (!rankTimer) rankTimer = setTimeout(() => ((rankTimer = 0), renderRanks()), 300);
+    };
+
+    const events = new EventSource('/events');
+    events.onmessage = (event) => {
+      const msg = JSON.parse(event.data);
+      if (msg.state) {
+        state = msg.state;
+        renderInfo();
+      }
+      switch (msg.type) {
+        case 'snapshot':
+          guide = msg.guide;
+          state = msg.game;
+          players.clear();
+          for (const p of msg.game.players) players.set(p.pid, p);
+          renderGifts();
+          showStatus(msg.status);
+          $('alerts').replaceChildren();
+          msg.alerts.forEach(showAlert);
+          showSession(msg.session);
+          $('tts').textContent = msg.tts.enabled ? `🔊 MC đọc bằng giọng Vbee ${msg.tts.voice}` : '🔇 MC chưa có tiếng: cần VBEE_TOKEN và VBEE_APP_ID trong .env rồi chạy lại server';
+          $('mute-box').hidden = !msg.tts.enabled;
+          showMute(msg.mcMuted);
+          $('log').textContent = `Bộ câu hỏi: ${msg.bankSize} câu`;
+          renderInfo();
+          renderRanks();
+          showAnswer();
+          break;
+        case 'reset':
+          players.clear();
+          bots.length = 0;
+          renderRanks();
+          showAnswer();
+          $('log').textContent = 'Đã mở trận mới, mọi người comment VÀO để lên sàn.';
+          break;
+        case 'join':
+          players.set(msg.player.pid, msg.player);
+          ranksSoon();
+          break;
+        case 'ask':
+          showAnswer();
+          if (auto) crowdAnswer();
+          break;
+        case 'reveal': {
+          const r = msg.result;
+          for (const [pid, choice] of r.picks) if (choice === r.correct && players.has(pid)) players.get(pid).correct++;
+          for (const pid of r.out) if (players.has(pid)) players.get(pid).alive = false;
+          for (const pid of r.saved) if (players.has(pid)) players.get(pid).shields--;
+          for (const pid of r.back) if (players.has(pid)) players.get(pid).alive = true;
+          renderRanks();
+          showAnswer();
+          const parts = [`Đáp án ${'ABCD'[r.correct]}. ${r.answer}`, `${r.right} người đúng`];
+          if (r.out.length) parts.push(`${r.out.length} người rời sàn`);
+          if (r.saved.length) parts.push(`${r.saved.length} người dùng phao`);
+          if (r.back.length) parts.push(`${r.back.length} người quay lại sàn`);
+          if (r.allWrong) parts.push('cả sàn cùng sai nên giữ nguyên');
+          $('log').textContent = parts.join(' · ');
+          break;
+        }
+        case 'intro':
+          showAnswer();
+          $('log').textContent = msg.mode === 'rescue' ? '🆘 Cứu trợ: người đã rời sàn trả lời đúng câu sau sẽ quay lại.' : `🔔 ${msg.finalist?.name} vào câu hỏi vàng.`;
+          break;
+        case 'skip':
+          $('log').textContent = `Đã đổi câu, đáp án câu vừa rồi: ${msg.answer}`;
+          break;
+        case 'gift': {
+          const p = msg.pid && players.get(msg.pid);
+          if (p) {
+            p.shields += msg.shields;
+            if (msg.revived) p.alive = true;
+          }
+          ranksSoon();
+          $('log').textContent = `${msg.name}: ${msg.label} x${msg.count}${msg.revived ? ' → quay lại sàn' : ''}${msg.shields ? ` → +${msg.shields} phao` : ''}${msg.effect === 'cheer' ? ' → cổ vũ' : ''}`;
+          break;
+        }
+        case 'end':
+          showAnswer();
+          $('log').textContent = `🏁 ${KINDS[msg.champion.kind]}${msg.champion.winners.length ? `: ${msg.champion.winners.map((w) => w.name).join(', ')}` : ''}`;
+          break;
+        case 'status':
+          showStatus(msg);
+          break;
+        case 'moderation':
+          showAlert(msg);
+          break;
+        case 'session':
+          showSession(msg);
+          break;
+        case 'mc-muted':
+          showMute(msg);
+          break;
+        case 'speak-error':
+          $('log').textContent = `Vbee lỗi: ${msg.message}`;
+          break;
+      }
+    };
+    events.onerror = () => showStatus({ connected: false, text: 'Mất kết nối tới máy chủ game, kiểm tra cửa sổ đang chạy npm start.' });
+  </script>
+</body>
+</html>

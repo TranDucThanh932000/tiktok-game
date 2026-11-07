@@ -15,3 +15,13 @@ Xem [hướng dẫn chạy game, cấu hình API, kiểm thử và giới hạn]
 Phòng thử hai nhân vật độc lập vẫn có tại [characters/start.bat](san-khau-co-duyen/characters/start.bat), cổng 3126. Đây không phải launcher của game chính.
 
 Các thiết kế HTML cũ trong thư mục Desktop được giữ nguyên.
+
+## Rung Chuông Vàng — gameshow loại trực tiếp
+
+Chạy [start.bat của game](rung-chuong-vang/start.bat). Nó mở game tại <http://127.0.0.1:3013> và [bảng điều khiển](http://127.0.0.1:3013/panel.html).
+
+- Người xem comment `VÀO` để lên sàn, trả lời bằng `A` `B` `C` `D`. Sai một câu là rời sàn, có cứu trợ khi sàn còn ít người, người cuối cùng trả lời câu hỏi vàng để rung chuông.
+- MC giọng nam đọc câu hỏi, công bố đáp án, gọi tên người chơi (Vbee, dùng chung tài khoản với Lớp Học).
+- Bộ 1000 câu chép từ Lớp Học. Quà tính theo giá xu: cổ vũ, phao, quay lại sàn.
+
+Xem [luật chơi, quà và cấu hình](rung-chuong-vang/README.md).

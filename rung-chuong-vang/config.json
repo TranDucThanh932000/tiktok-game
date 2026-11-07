@@ -1,0 +1,28 @@
+{
+  "tiktokUsername": "c.hoi.thanh021",
+  "port": 3013,
+  "title": "RUNG CHUÔNG VÀNG",
+  "subtitle": "Trụ lại cuối cùng để rung chuông",
+
+  "minPlayers": 2,
+  "joinUntilQuestion": 1,
+  "maxQuestions": 40,
+  "goldenQuestions": 3,
+
+  "rescue": { "minQuestion": 4, "alivePercent": 30, "maxTimes": 2 },
+
+  "timing": {
+    "lobbySeconds": 40,
+    "introSeconds": 5,
+    "askSeconds": 15,
+    "earlyCloseSeconds": 2,
+    "revealSeconds": 7,
+    "endSeconds": 18
+  },
+
+  "gifts": [
+    { "coins": 1, "effect": "cheer", "label": "Cổ vũ", "giftLabel": "Hoa hồng", "icon": "/gifts/rose.webp" },
+    { "coins": 5, "effect": "shield", "shields": 1, "label": "+1 phao", "giftLabel": "Bắn tim", "icon": "/gifts/finger-heart.webp" },
+    { "coins": 10, "effect": "revive", "shields": 1, "label": "Quay lại sàn", "giftLabel": "Heo may mắn", "icon": "/gifts/lucky-pig.webp" }
+  ]
+}

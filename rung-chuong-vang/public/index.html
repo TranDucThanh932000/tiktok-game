@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rung Chuông Vàng</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔔</text></svg>">
+  <link rel="stylesheet" href="/fonts/fonts.css">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div id="stage">
+    <div id="backdrop" aria-hidden="true">
+      <i class="beam b1"></i><i class="beam b2"></i><i class="beam b3"></i><i class="beam b4"></i>
+      <div class="floorboard"></div>
+    </div>
+
+    <header id="title">
+      <div id="title-bell"></div>
+      <div class="words"><b id="title-text"></b><small id="subtitle"></small></div>
+    </header>
+
+    <section id="hud">
+      <div class="pill" id="q-label"></div>
+      <div id="clock"><svg viewBox="0 0 120 120"><circle class="track" cx="60" cy="60" r="52"/><circle class="arc" id="clock-arc" cx="60" cy="60" r="52"/></svg><b id="clock-num"></b></div>
+      <div class="pill right"><span id="alive-label"></span><span id="rescue-pips"></span></div>
+    </section>
+
+    <section id="card">
+      <div id="lobby" class="mode">
+        <h2>SÀN THI ĐANG MỞ</h2>
+        <p class="how">Comment <b>VÀO</b> để lên sàn thi</p>
+        <p class="how small">Trả lời bằng cách comment <b>A</b>, <b>B</b>, <b>C</b> hoặc <b>D</b><br>Sai một câu là rời sàn · người cuối cùng trả lời câu hỏi vàng</p>
+        <p id="lobby-count"></p>
+      </div>
+      <div id="ask" class="mode" hidden>
+        <header><span id="subject"></span><span id="ask-tag"></span></header>
+        <p id="q-text"></p>
+        <div id="options"></div>
+      </div>
+    </section>
+
+    <div id="mc"><span class="mic">🎤</span>MC<span class="waves"><i></i><i></i><i></i></span></div>
+
+    <p id="status"></p>
+
+    <section id="floor">
+      <header><b id="floor-title"></b><span id="floor-more"></span></header>
+      <div id="seats"></div>
+      <div id="spotlight" hidden>
+        <div class="glow"></div>
+        <div class="seat big"></div>
+        <p id="spot-note"></p>
+      </div>
+    </section>
+
+    <section id="guide"></section>
+
+    <div id="intro" hidden>
+      <div class="card">
+        <div id="intro-icon"></div>
+        <h1 id="intro-title"></h1>
+        <p id="intro-sub"></p>
+      </div>
+    </div>
+
+    <div id="finale" hidden>
+      <div class="card">
+        <div id="finale-bell"></div>
+        <h1 id="finale-title"></h1>
+        <div id="finale-winners"></div>
+        <p id="finale-sub"></p>
+        <ol id="finale-top"></ol>
+        <p id="finale-next"></p>
+      </div>
+    </div>
+
+    <div id="toast" hidden></div>
+    <div id="fx"></div>
+    <div id="sound-hint">Bấm vào màn hình để bật âm thanh</div>
+  </div>
+  <script type="module" src="/js/main.js"></script>
+</body>
+</html>

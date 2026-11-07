@@ -1,0 +1,19 @@
+{
+  "name": "rung-chuong-vang",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Rung Chuông Vàng cho TikTok LIVE: comment A B C D trả lời câu hỏi loại trực tiếp, người cuối cùng trên sàn trả lời câu hỏi vàng để rung chuông",
+  "type": "module",
+  "scripts": {
+    "start": "node --env-file-if-exists=.env server.js",
+    "test": "node --test tests/*.test.js",
+    "window": "start \"\" msedge --app=http://127.0.0.1:3013/ --window-size=456,820 --window-position=0,0 --user-data-dir=D:\\tiktok-cache\\rung-chuong-vang-window --disable-component-update --no-first-run --no-default-browser-check --autoplay-policy=no-user-gesture-required --disable-backgrounding-occluded-windows --disable-renderer-backgrounding --disable-background-timer-throttling --disable-features=CalculateNativeWinOcclusion"
+  },
+  "engines": {
+    "node": ">=22.9"
+  },
+  "dependencies": {
+    "express": "^5.3.0",
+    "tiktok-live-connector": "^2.5.0"
+  }
+}
