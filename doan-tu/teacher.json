@@ -119,6 +119,12 @@
     "Đáp án đúng chính là",
     "Câu trả lời là"
   ],
+  "fastestIs": [
+    "Bạn nhanh nhất là",
+    "Người về nhất từ này là",
+    "Cô tuyên dương bạn nhanh nhất",
+    "Ngôi sao của từ này là"
+  ],
   "nobody": [
     "Từ này khó quá ha, từ sau cố lên nhé!",
     "Chưa ai đoán ra, tiếc quá!",

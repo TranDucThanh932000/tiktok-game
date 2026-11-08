@@ -96,6 +96,20 @@ test('chưa ai đoán ra thì cứ hintEverySeconds mở thêm một chữ, tố
   assert.deepEqual(letters.map((l) => l.left), [2, 1, 0]);
   advance(1600);
   assert.equal(of('reveal')[0].count, 0);
+  assert.equal(of('reveal')[0].fastest, null);
+});
+
+test('công bố kèm bạn nhanh nhất: tên, ảnh, số giây, điểm vừa được', () => {
+  const { game, of, advance } = setup();
+  advance(3400);
+  game.comment({ id: 'id:An', name: 'An', avatar: 'https://p16.tiktokcdn.com/a.webp' }, 'mèo');
+  advance(500);
+  game.comment(who('Bình'), 'mèo');
+  advance(11_000);
+  const { fastest } = of('reveal')[0];
+  assert.deepEqual(fastest, { name: 'An', avatar: 'https://p16.tiktokcdn.com/a.webp', look: game.players.get('id:An').look, delta: 1, score: 1, seconds: 3 });
+  assert.equal(game.snapshot().reveal.fastest.name, 'An');
+  assert.ok(!JSON.stringify(game.exportState()).includes('tiktokcdn'), 'không lưu ảnh ra file');
 });
 
 test('đoán ra rồi thì thôi mở chữ', () => {

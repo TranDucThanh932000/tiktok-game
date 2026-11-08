@@ -355,6 +355,45 @@ function flyIcon(src, index) {
   };
 }
 
+// ---------- Nhanh nhất: ảnh TikTok (không tải được thì mặt chibi) và tên, hiện trong lúc công bố ----------
+let spotTimer = 0;
+function showSpotlight(fastest, endsAt, { quiet = false } = {}) {
+  const box = $('spotlight');
+  clearTimeout(spotTimer);
+  const ms = endsAt - Date.now() - 500;
+  if (!fastest || ms < 1000) return hideSpotlight(true);
+  const img = $('spot-img');
+  const face = $('spot-face');
+  face.innerHTML = studentSvg(fastest.look);
+  img.hidden = !fastest.avatar;
+  face.hidden = Boolean(fastest.avatar);
+  img.onerror = () => {
+    img.hidden = true;
+    face.hidden = false;
+  };
+  if (fastest.avatar) img.src = fastest.avatar;
+  else img.removeAttribute('src');
+  $('spot-name').textContent = fastest.name;
+  $('spot-info').replaceChildren(`Đoán đúng sau ${fastest.seconds} giây · `, el('b', '', `+${fastest.delta} điểm`));
+  box.hidden = false;
+  box.className = '';
+  if (!quiet) {
+    restart(box, 'show');
+    setTimeout(() => sparks(540, 1040, 40), 300);
+  }
+  spotTimer = setTimeout(() => hideSpotlight(), ms);
+}
+function hideSpotlight(now = false) {
+  const box = $('spotlight');
+  clearTimeout(spotTimer);
+  if (now || box.hidden) {
+    box.hidden = true;
+    return;
+  }
+  restart(box, 'hide');
+  spotTimer = setTimeout(() => (box.hidden = true), 450);
+}
+
 // ---------- Nhận tin từ server ----------
 function setPlayers(count) {
   $('players').textContent = count ? `👥 ${count} bạn có điểm` : '';
@@ -372,7 +411,9 @@ function applyGame(game) {
   if (game.phase === 'reveal' && game.reveal) {
     showReveal(game.reveal, { quiet: true });
     startTimer('reveal', game.reveal.endsAt);
+    showSpotlight(game.reveal.fastest, game.reveal.endsAt, { quiet: true });
   } else {
+    hideSpotlight(true);
     startTimer('asking', game.word.endsAt);
     if (game.count) setFootline('closing');
   }
@@ -408,6 +449,7 @@ const handlers = {
     sfx.bell();
     solved.clear();
     seats.forEach((seat) => seat.root.classList.remove('up'));
+    hideSpotlight();
     showWord(msg);
     startTimer('asking', msg.endsAt);
   },
@@ -444,6 +486,7 @@ const handlers = {
   reveal(msg) {
     startTimer('reveal', msg.endsAt);
     showReveal(msg);
+    showSpotlight(msg.fastest, msg.endsAt);
     if (msg.count) {
       sfx.fanfare();
       teacherHappy();

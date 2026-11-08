@@ -171,10 +171,22 @@ setInterval(() => {
   teacher.tick();
 }, 100);
 
+function safeImageUrl(value) {
+  try {
+    const url = new URL(String(value));
+    return url.protocol === 'https:' ? url.href : '';
+  } catch {
+    return '';
+  }
+}
+
 function viewer(user) {
   const raw = String(user?.nickname || user?.displayId || user?.uniqueId || '').replace(/\s+/g, ' ').trim();
   const name = Array.from(raw).slice(0, 20).join('') || 'Ẩn danh';
-  return { id: String(user?.userId || user?.id || user?.displayId || user?.uniqueId || name), name };
+  const urls = user?.avatarThumb?.urlList ?? user?.avatarMedium?.urlList ?? user?.profilePicture?.url ?? [];
+  // Trình duyệt không hiện được ảnh HEIC.
+  const avatar = safeImageUrl(urls.find((url) => !/\.heic\b/i.test(url)) ?? urls[0] ?? '');
+  return { id: String(user?.userId || user?.id || user?.displayId || user?.uniqueId || name), name, avatar };
 }
 
 const lastSeen = new Map();
@@ -395,9 +407,9 @@ const clampInt = (value, min, max) => Math.min(max, Math.max(min, Math.trunc(Num
 // JSON-only endpoints: browsers cannot send application/json cross-site without a CORS preflight.
 app.post('/api/simulate', (req, res) => {
   if (!req.is('application/json')) return res.status(415).end();
-  const { kind, name, text, coins, count } = req.body ?? {};
+  const { kind, name, text, coins, count, avatar } = req.body ?? {};
   const nickname = typeof name === 'string' && name.trim() ? name : 'Bạn thử';
-  const who = viewer({ id: `sim:${nickname}`, nickname });
+  const who = viewer({ id: `sim:${nickname}`, nickname, avatarThumb: { urlList: typeof avatar === 'string' ? [avatar.slice(0, 1000)] : [] } });
   if (kind === 'chat') return res.json({ result: game.comment(who, String(text ?? '').slice(0, 200)) });
   if (kind === 'right') {
     if (game.phase !== 'asking') return res.json({ result: false, message: 'Đang công bố đáp án, chờ từ mới nhé.' });

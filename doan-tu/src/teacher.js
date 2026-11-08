@@ -114,7 +114,16 @@ export class Teacher {
     } else if (msg.type === 'reveal') {
       const end = this.pick(msg.count === 0 ? 'nobody' : msg.count === 1 ? 'one' : msg.count >= 5 ? 'many' : 'some');
       const answerIs = this.pick('answerIs');
-      this.say([this.spoken(answerIs), this.answerText(game.puzzle.answer), this.spoken(end)], { main: true, text: `${answerIs} ${msg.answer}. ${end}` });
+      const parts = [this.spoken(answerIs), this.answerText(game.puzzle.answer)];
+      let text = `${answerIs} ${msg.answer}.`;
+      const name = msg.fastest ? readableName(msg.fastest.name) : '';
+      if (name) {
+        const fastestIs = this.pick('fastestIs');
+        // Tên chưa có giọng sẵn thì chỉ hiện chữ, kẻo câu đọc bị hụt tên.
+        if (this.voice.ready(name)) parts.push(this.spoken(fastestIs), name);
+        text += ` ${fastestIs} ${msg.fastest.name}!`;
+      }
+      this.say([...parts, this.spoken(end)], { main: true, text: `${text} ${end}` });
     } else if (msg.type === 'boost') {
       const name = readableName(msg.name);
       const tail = this.pick(msg.kind === 'follow' ? 'boostFollow' : msg.kind === 'share' ? 'boostShare' : 'boost');

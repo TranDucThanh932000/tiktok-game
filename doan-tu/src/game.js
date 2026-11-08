@@ -47,6 +47,8 @@ export class WordGame {
       this.players.set(who.id, player);
     }
     player.name = who.name;
+    // Ảnh TikTok có hạn dùng nên chỉ giữ trong bộ nhớ, không lưu ra file.
+    if (who.avatar) player.avatar = who.avatar;
     return player;
   }
 
@@ -92,6 +94,7 @@ export class WordGame {
     this.no++;
     this.puzzle = new Puzzle(this.deck.next(), { rng: this.rng, start, max });
     this.solvers = new Map();
+    this.askedAt = t;
     this.phase = 'asking';
     this.endsAt = t + this.ms.word;
     this.nextLetterAt = t + this.ms.hintEvery;
@@ -126,7 +129,7 @@ export class WordGame {
     player.score += delta;
     player.reachedAt = t;
     const first = this.solvers.size === 0;
-    this.solvers.set(who.id, { name: player.name, delta, boosted });
+    this.solvers.set(who.id, { name: player.name, delta, boosted, at: t });
     // Có người đoán ra thì chỉ chờ thêm một lúc cho các bạn khác, không bắt cả phòng ngồi đợi hết giờ.
     if (first) this.endsAt = Math.min(this.endsAt, t + this.ms.afterFirst);
     this.stateDirty = true;
@@ -142,9 +145,14 @@ export class WordGame {
     this.sendBoard(t);
   }
 
+  // fastest: bạn đoán đúng đầu tiên, màn hình hiện ảnh và tên trong lúc công bố.
   publicReveal() {
-    const solvers = [...this.solvers.values()];
-    return { answer: this.puzzle.display, count: solvers.length, endsAt: this.endsAt };
+    const [firstId, first] = this.solvers.entries().next().value ?? [];
+    const player = firstId === undefined ? null : this.players.get(firstId);
+    const fastest = player
+      ? { name: player.name, avatar: player.avatar ?? '', look: player.look, delta: first.delta, score: player.score, seconds: Math.max(1, Math.round((first.at - this.askedAt) / 1000)) }
+      : null;
+    return { answer: this.puzzle.display, count: this.solvers.size, endsAt: this.endsAt, fastest };
   }
 
   // Bảng điều khiển: bỏ qua từ đang đoán (công bố luôn) hoặc sang từ mới ngay khi đang công bố.

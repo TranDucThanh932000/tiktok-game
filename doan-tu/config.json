@@ -8,7 +8,7 @@
     "afterFirstSeconds": 10,
     "hintEverySeconds": 8,
     "graceSeconds": 1.5,
-    "revealSeconds": 6
+    "revealSeconds": 8
   },
   "hints": { "start": 0, "max": 0.5 },
   "boost": {

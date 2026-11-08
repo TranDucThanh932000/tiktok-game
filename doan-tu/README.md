@@ -26,7 +26,8 @@ Không cần chat "vào lớp": ai comment cũng chơi được.
 | Follow hoặc share | 1 lượt x2. Mỗi người tối đa 1 lần mỗi phút (`socialGapSeconds`) |
 
 - **Mỗi từ:** bảng hiện chủ đề, câu gợi ý và các ô chữ đóng. Chưa ai đoán ra thì cứ 8 giây (`hintEverySeconds`) cô mở thêm một chữ, nhiều nhất một nửa số chữ (`hints.max`). Hết 45 giây (`wordSeconds`) thì công bố đáp án.
-- **Có người đoán ra:** tên hiện ⚡ ở đầu danh sách, đồng hồ rút xuống còn 10 giây (`afterFirstSeconds`) để các bạn khác kịp đoán, rồi công bố và sang từ mới sau 6 giây (`revealSeconds`).
+- **Có người đoán ra:** tên hiện ⚡ ở đầu danh sách, đồng hồ rút xuống còn 10 giây (`afterFirstSeconds`) để các bạn khác kịp đoán, rồi công bố và sang từ mới sau 8 giây (`revealSeconds`).
+- **Bạn nhanh nhất:** lúc công bố, bạn đoán đúng đầu tiên được hiện to giữa màn hình gần hết thời gian công bố: ảnh đại diện TikTok, vương miện, tên, số giây đoán ra và điểm vừa được; cô gọi tên bạn ấy. Không tải được ảnh (hoặc người thử ở bảng điều khiển) thì hiện mặt chibi. Ảnh chỉ giữ trong bộ nhớ, không lưu ra file.
 - Mỗi người chỉ được cộng một lần mỗi từ. Hình trên điện thoại người xem trễ vài giây nên vẫn nhận đáp án thêm `graceSeconds` sau khi đồng hồ về 0.
 - **Lượt x2:** chỉ mất khi đoán đúng (đoán sai không mất). Tính theo số xu của quà, quà to tính theo mức gần nhất nhân lên, ví dụ 99 xu = 9 lần mức 10 xu = 117 lượt. Sửa ở `boost.tiers`.
 - **Lớp học = bảng điểm:** 40 bạn điểm cao nhất (`seats`) ngồi trong lớp theo thứ hạng, hàng đầu sát bảng là top 8, hạng cao ngồi giữa. Top 3 có điểm phát sáng với bảng Lớp trưởng / Lớp phó. Bằng điểm thì ai đạt điểm đó trước đứng trên. Người có lượt x2 từ quà cũng được vào lớp ngay, có viền hồng và hình quà.
@@ -54,7 +55,7 @@ Cô nói bằng Vbee (`VBEE_TOKEN`, `VBEE_APP_ID`, `VBEE_VOICE` trong `.env`, d�
 - **Từ mới:** câu mở đầu (12 kiểu) rồi đọc chủ đề và câu gợi ý (4 kiểu giới thiệu, mỗi từ cố định một kiểu).
 - **Mở thêm chữ:** nhắc ngắn; chữ cuối cùng có câu riêng. Giữa từ (giây 28) mà chưa ai ra thì động viên một lần. Sắp hết giờ thì giục.
 - **Đoán ra đầu tiên:** gọi tên khen; đoán ra trước khi mở chữ nào thì có lời khen "nhanh như chớp" riêng. Tên toàn ký tự đặc biệt không đọc được thì khen chung. Đủ 5, 10, 20 bạn đúng thì cô báo.
-- **Công bố:** "Đáp án là ..." (4 kiểu) kèm lời theo số bạn đúng: không ai, một bạn, vài bạn, nhiều bạn.
+- **Công bố:** "Đáp án là ..." (4 kiểu), "Bạn nhanh nhất là ..." (4 kiểu), kèm lời theo số bạn đúng: không ai, một bạn, vài bạn, nhiều bạn.
 - **Lượt x2:** gọi tên; follow và share có lời cảm ơn riêng.
 - Cùng một loại lời, cô không nói lại đúng câu vừa nói. Tổng cộng hơn 100 câu, thêm bớt thoải mái trong `teacher.json`.
 - Cô không bao giờ đọc lại nội dung comment. Lời cô hiện thêm thành bong bóng cho người xem đang tắt tiếng.

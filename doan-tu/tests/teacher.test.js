@@ -6,7 +6,7 @@ import { Teacher } from '../src/teacher.js';
 const lines = JSON.parse(readFileSync(new URL('../teacher.json', import.meta.url), 'utf8'));
 
 // Giọng giả: mẩu nào cũng có ngay, dài 1 giây; ghi lại các câu được yêu cầu tạo.
-function fakeVoice({ enabled = true, missing = [] } = {}) {
+function fakeVoice({ enabled = true, missing = [], unready = [] } = {}) {
   const asked = [];
   return {
     enabled,
@@ -15,6 +15,7 @@ function fakeVoice({ enabled = true, missing = [] } = {}) {
       asked.push(text);
       return Promise.resolve(missing.includes(text) ? null : `id:${text}`);
     },
+    ready: (text) => (enabled && !missing.includes(text) && !unready.includes(text) ? `id:${text}` : null),
     duration: () => 1000,
   };
 }
@@ -171,10 +172,24 @@ test('thiếu tên trong lời phụ thì chỉ hiện chữ; tắt Vbee hoặc 
   assert.equal(c.said[1].text, lines.letter[0]);
 });
 
+test('công bố gọi tên bạn nhanh nhất; tên chưa có giọng sẵn thì chỉ hiện chữ', async () => {
+  const a = setup();
+  a.teacher.onEvent({ type: 'reveal', answer: 'CON MÈO', count: 3, fastest: { name: 'Lan Anh 🌸' } });
+  await a.flush();
+  assert.deepEqual(a.said[0].clips.map((c) => c.id), [`id:${lines.answerIs[0]}`, 'id:con mèo', `id:${lines.fastestIs[0]}`, 'id:Lan Anh', `id:${lines.some[0]}`]);
+  assert.equal(a.said[0].text, `${lines.answerIs[0]} CON MÈO. ${lines.fastestIs[0]} Lan Anh 🌸! ${lines.some[0]}`);
+
+  const b = setup({ unready: ['Lan Anh'] });
+  b.teacher.onEvent({ type: 'reveal', answer: 'CON MÈO', count: 3, fastest: { name: 'Lan Anh' } });
+  await b.flush();
+  assert.equal(b.said[0].clips.length, 3);
+  assert.match(b.said[0].text, /Lan Anh!/);
+});
+
 test('mọi lời thoại tĩnh đều có trong danh sách tạo sẵn', () => {
   const { teacher } = setup();
   const parts = teacher.staticParts();
-  for (const key of ['newWord', 'letter', 'lastLetter', 'encourage', 'hurry', 'first', 'firstFast', 'firstNoName', 'answerIs', 'nobody', 'one', 'some', 'many', 'boost', 'boostFollow', 'boostShare'])
+  for (const key of ['newWord', 'letter', 'lastLetter', 'encourage', 'hurry', 'first', 'firstFast', 'firstNoName', 'answerIs', 'fastestIs', 'nobody', 'one', 'some', 'many', 'boost', 'boostFollow', 'boostShare'])
     for (const line of lines[key]) assert.ok(parts.includes(line), line);
   for (const line of Object.values(lines.milestones).flat()) assert.ok(parts.includes(line), line);
   assert.ok(!parts.some((p) => p.includes('{')), 'không tạo sẵn mẫu giới thiệu còn chỗ trống');

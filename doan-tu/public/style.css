@@ -235,6 +235,35 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #2b1d12; }
 #toast b { font-weight: 400; color: var(--gold); }
 #toast.big b { color: #fff; }
 
+/* ---------- Bạn nhanh nhất: ảnh và tên hiện to lúc công bố ---------- */
+#spotlight { left: 50%; top: 828px; z-index: 180; width: 680px; height: 540px; transform: translateX(-50%); pointer-events: none; }
+#spotlight.show { animation: spot-in .6s cubic-bezier(.2, 1.5, .4, 1) both; }
+#spotlight.hide { animation: spot-out .45s ease-in both; }
+.spot-rays {
+  position: absolute; left: 50%; top: 50%; width: 1100px; height: 1100px; margin: -550px 0 0 -550px; border-radius: 50%;
+  background: repeating-conic-gradient(rgba(255, 224, 102, .55) 0 10deg, rgba(255, 224, 102, 0) 10deg 20deg);
+  -webkit-mask: radial-gradient(circle, #000 18%, transparent 62%); mask: radial-gradient(circle, #000 18%, transparent 62%);
+  animation: spin 14s linear infinite;
+}
+.spot-card {
+  position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; padding: 18px 30px 22px;
+  border: 8px solid #f0b43a; border-radius: 40px; background: linear-gradient(#fffcef, #ffe9a8);
+  box-shadow: 0 10px 0 rgba(120, 70, 20, .35), 0 0 60px 16px rgba(255, 214, 60, .85);
+}
+.spot-title { padding: 2px 30px; border-radius: 999px; background: var(--red); color: var(--gold); font: 700 40px var(--bold); letter-spacing: 2px; box-shadow: 0 4px 0 #9c1c2e; }
+.spot-photo { position: relative; margin-top: 58px; width: 230px; height: 230px; animation: bob 1.2s ease-in-out infinite alternate; }
+.spot-photo img, #spot-face {
+  position: absolute; inset: 0; width: 100%; height: 100%; border-radius: 50%; object-fit: cover;
+  border: 10px solid var(--gold); background: #fff6d6; box-shadow: 0 0 0 6px #fff, 0 0 30px 10px rgba(255, 214, 60, .9);
+}
+#spot-face { overflow: hidden; }
+#spot-face svg { position: absolute; left: 50%; top: 14%; width: 92%; height: auto; transform: translateX(-50%); overflow: visible; }
+#spot-face .back, #spot-face .arm { display: none; }
+.spot-crown { position: absolute; left: 50%; top: -54px; transform: translateX(-50%) rotate(-8deg); font-size: 72px; line-height: 1; filter: drop-shadow(0 4px 2px rgba(90, 50, 20, .4)); }
+#spot-name { margin-top: 16px; max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font: 700 58px var(--bold); color: #8e1d33; line-height: 1.15; }
+#spot-info { margin-top: 2px; font-size: 36px; color: #6b3a14; }
+#spot-info b { font-family: var(--bold); color: var(--pink); }
+
 #sound-hint { left: 50%; bottom: 40px; transform: translateX(-50%); z-index: 300; padding: 6px 20px; border-radius: 999px; background: rgba(0, 0, 0, .6); color: #fff; font: 24px "Segoe UI", sans-serif; }
 
 @keyframes pop { from { transform: translateX(-50%) scale(.2); opacity: 0; } to { transform: translateX(-50%) scale(1); opacity: 1; } }
@@ -250,6 +279,8 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #2b1d12; }
 @keyframes hop { 0%, 100% { transform: translateY(0); } 45% { transform: translateY(-16px); } }
 @keyframes bob { from { transform: translateY(0); } to { transform: translateY(-5px); } }
 @keyframes spin { to { transform: rotate(360deg); } }
+@keyframes spot-in { from { opacity: 0; transform: translateX(-50%) scale(.3) rotate(-6deg); } to { opacity: 1; transform: translateX(-50%) scale(1); } }
+@keyframes spot-out { to { opacity: 0; transform: translateX(-50%) scale(.6); } }
 @keyframes sway { from { rotate: -6deg; } to { rotate: 6deg; } }
 @keyframes guide-bob { from { transform: translateY(2px) scale(.96); } to { transform: translateY(-4px) scale(1.06); } }
 @keyframes guide-glow { from { box-shadow: 0 5px 0 rgba(90, 50, 20, .3), 0 0 6px 2px rgba(255, 200, 60, .45); } to { box-shadow: 0 5px 0 rgba(90, 50, 20, .3), 0 0 24px 8px rgba(255, 200, 60, .95); } }
