@@ -1,0 +1,56 @@
+# Lớp Học Đoán Từ
+
+Game đoán từ cho TikTok LIVE màn dọc (1080×1920), giao diện lớp học chibi giống `lop-hoc`. Node + Express + `tiktok-live-connector`, màn hình là trang web mở bằng cửa sổ Edge `--app` để LIVE Studio/OBS bắt hình. Cổng 3015.
+
+## Chạy
+
+Bấm đúp `start.bat`: mở server, cửa sổ game 9:16 và bảng điều khiển.
+
+- Đổi kênh TikTok: `tiktokUsername` trong `config.json` (đọc lúc bật server, đổi xong phải chạy lại).
+- Chạy thử không kết nối TikTok: `node server.js " "`, rồi vào `http://127.0.0.1:3015/panel.html`.
+- Tắt tiếng màn hình game: thêm `?mute` vào địa chỉ.
+- Test: `npm test`.
+- Cảnh báo TikTok qua Telegram: `.env` có `TELEGRAM_BOT_TOKEN` và `TELEGRAM_ADMIN_CHAT_ID` (đã chép từ `lop-hoc`).
+
+**Trước mỗi buổi live** nên bấm "Xóa bảng điểm" ở bảng điều khiển. Điểm được lưu ở `data/board.json`, tắt server bật lại vẫn còn.
+
+## Luật chơi
+
+Không cần chat "vào lớp": ai comment cũng chơi được.
+
+| Người xem làm gì | Chuyện gì xảy ra |
+|---|---|
+| Comment đúng từ đang đoán | +1 điểm. Gõ có dấu hay không dấu, viết hoa, viết liền đều được (`ca chep`, `CÁCHÉP`). Nhận cả `đáp án là ...`, `là ...`, `... nha`. Bỏ `con`, `quả`, `cái`, `cây` cũng được (`mèo` cho `con mèo`), `trái` thay `quả` cũng được |
+| Comment sai | Không mất gì, đoán tiếp thoải mái |
+| Hoa hồng 1 xu / kem 5 xu / heo may mắn 10 xu | 1 / 6 / 13 lượt x2: đoán đúng được +2 thay vì +1 |
+| Follow hoặc share | 1 lượt x2. Mỗi người tối đa 1 lần mỗi phút (`socialGapSeconds`) |
+
+- **Mỗi từ:** bảng hiện chủ đề, câu gợi ý và các ô chữ đóng. Chưa ai đoán ra thì cứ 8 giây (`hintEverySeconds`) cô mở thêm một chữ, nhiều nhất một nửa số chữ (`hints.max`). Hết 45 giây (`wordSeconds`) thì công bố đáp án.
+- **Có người đoán ra:** tên hiện ⚡ ở đầu danh sách, đồng hồ rút xuống còn 10 giây (`afterFirstSeconds`) để các bạn khác kịp đoán, rồi công bố và sang từ mới sau 6 giây (`revealSeconds`).
+- Mỗi người chỉ được cộng một lần mỗi từ. Hình trên điện thoại người xem trễ vài giây nên vẫn nhận đáp án thêm `graceSeconds` sau khi đồng hồ về 0.
+- **Lượt x2:** chỉ mất khi đoán đúng (đoán sai không mất). Tính theo số xu của quà, quà to tính theo mức gần nhất nhân lên, ví dụ 99 xu = 9 lần mức 10 xu = 117 lượt. Sửa ở `boost.tiers`.
+- **Lớp học = bảng điểm:** 40 bạn điểm cao nhất (`seats`) ngồi trong lớp theo thứ hạng, hàng đầu sát bảng là top 8, hạng cao ngồi giữa. Top 3 có điểm phát sáng với bảng Lớp trưởng / Lớp phó. Bằng điểm thì ai đạt điểm đó trước đứng trên. Người có lượt x2 từ quà cũng được vào lớp ngay, có viền hồng và hình quà.
+- Bạn đoán đúng quay mặt lại cười, giơ tay với thẻ ✓ (hoặc x2) cho tới hết từ đó.
+- Bảng điểm cộng dồn cả buổi, không tự về 0.
+
+## Bộ từ
+
+`words.json` có 1000 từ trong 26 chủ đề, mỗi từ kèm một câu gợi ý:
+
+```json
+{ "🐾 Con vật": [["con mèo", "Bắt chuột giỏi, thích nằm sưởi nắng"]] }
+```
+
+- Từ: chỉ chữ cái và dấu cách, 3 đến 16 chữ cái, tối đa 4 tiếng.
+- Gợi ý: 8 đến 80 ký tự, **không được chứa đáp án** (so không dấu, kể cả khi bỏ `con`, `quả`...).
+- Hai từ giống nhau khi bỏ dấu (như `con dê` và `con dế`) không được cùng có trong bộ, vì người xem gõ không dấu sẽ không phân biệt được.
+
+Sửa xong khởi động lại server. File sai thì server báo rõ từ nào lỗi và không chạy. Từ được rút ngẫu nhiên, hết cả bộ mới lặp lại.
+
+## Bảng điều khiển
+
+`http://127.0.0.1:3015/panel.html`: trạng thái kết nối, kim cương phiên live, từ đang hỏi kèm **đáp án** (chỉ chủ kênh thấy), nút thử comment đúng/sai/quà/follow, thử đông người, mở thêm chữ, sang bước tiếp theo, xóa bảng điểm, gửi thử Telegram, và bảng xếp hạng.
+
+## Từ ngữ trên màn hình
+
+Bảng x2 chỉ hiện biểu tượng quà và số lượt, không dùng các từ như "tặng quà". Nội dung comment của người xem không bao giờ hiện lên màn hình, chỉ hiện tên người đoán đúng.

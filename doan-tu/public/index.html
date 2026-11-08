@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lớp Học Đoán Từ</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✏️</text></svg>">
+  <link rel="stylesheet" href="/fonts/fonts.css">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div id="stage">
+    <div class="wall-top"></div>
+    <div id="bunting"></div>
+    <div class="wall-low"></div>
+    <div class="floor"></div>
+    <div class="platform"></div>
+
+    <div id="banner"></div>
+
+    <section id="board">
+      <header class="board-head">
+        <span id="topic" class="pill"></span>
+        <span id="players"></span>
+        <span class="spacer"></span>
+        <span id="counter"></span>
+        <span id="timer" class="pill"></span>
+      </header>
+
+      <div id="hintbox">
+        <label>GỢI Ý</label>
+        <p id="hint"></p>
+      </div>
+
+      <div id="tiles"></div>
+      <p id="meta"></p>
+
+      <div id="solvers">
+        <label id="solved-count"></label>
+        <div id="chips"></div>
+      </div>
+
+      <p id="footline"></p>
+      <div class="timebar"><i id="timefill"></i></div>
+
+      <svg class="doodle star1" viewBox="0 0 40 40"><path d="M20 3l5 11 12 1-9 8 3 12-11-6-11 6 3-12-9-8 12-1Z" fill="none" stroke="#f6f3e6" stroke-width="2.5" stroke-linejoin="round"/></svg>
+      <svg class="doodle smile" viewBox="0 0 40 40"><circle cx="20" cy="20" r="16" fill="none" stroke="#f2d04f" stroke-width="2.5"/><circle cx="14" cy="16" r="2" fill="#f2d04f"/><circle cx="26" cy="16" r="2" fill="#f2d04f"/><path d="M12 24q8 8 16 0" fill="none" stroke="#f2d04f" stroke-width="2.5" stroke-linecap="round"/></svg>
+
+      <div class="tray">
+        <i class="chalk white"></i><i class="chalk yellow"></i><i class="chalk pink"></i>
+        <i class="eraser"></i>
+      </div>
+    </section>
+
+    <div id="clock">
+      <svg viewBox="0 0 120 120">
+        <circle cx="60" cy="60" r="55" fill="#fffdf3" stroke="#2a211c" stroke-width="7"/>
+        <g stroke="#2a211c" stroke-width="4" stroke-linecap="round">
+          <path d="M60 13v9M60 98v9M13 60h9M98 60h9"/>
+        </g>
+        <path id="hand-h" d="M60 60V34" stroke="#2a211c" stroke-width="5" stroke-linecap="round"/>
+        <path id="hand-m" d="M60 60V22" stroke="#2a211c" stroke-width="4" stroke-linecap="round"/>
+        <circle cx="60" cy="60" r="4.5" fill="#d3263c"/>
+      </svg>
+    </div>
+
+    <aside id="guide"></aside>
+
+    <div id="desk">
+      <i class="book b1"></i><i class="book b2"></i><i class="book b3"></i>
+      <i class="apple"></i>
+      <i class="top"></i><i class="body"></i>
+    </div>
+
+    <div id="plant"><i class="leaf l1"></i><i class="leaf l2"></i><i class="leaf l3"></i><i class="pot"></i></div>
+    <div id="teacher"></div>
+    <div id="class"></div>
+    <div id="toast" hidden></div>
+    <div id="bubble" hidden></div>
+    <div id="fx"></div>
+    <div id="sound-hint">Bấm vào màn hình để bật âm thanh</div>
+  </div>
+  <script type="module" src="/js/main.js"></script>
+</body>
+</html>

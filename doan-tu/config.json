@@ -1,0 +1,24 @@
+{
+  "tiktokUsername": "linh.phng2903",
+  "port": 3015,
+  "title": "LỚP HỌC ĐOÁN TỪ",
+  "seats": 40,
+  "timing": {
+    "wordSeconds": 45,
+    "afterFirstSeconds": 10,
+    "hintEverySeconds": 8,
+    "graceSeconds": 1.5,
+    "revealSeconds": 6
+  },
+  "hints": { "start": 0, "max": 0.5 },
+  "boost": {
+    "multiplier": 2,
+    "socialTurns": 1,
+    "socialGapSeconds": 60,
+    "tiers": [
+      { "coins": 1, "turns": 1, "label": "Hoa hồng", "icon": "/gifts/rose.webp" },
+      { "coins": 5, "turns": 6, "label": "Kem", "icon": "/gifts/kem.webp" },
+      { "coins": 10, "turns": 13, "label": "Heo may mắn", "icon": "/gifts/lucky-pig.webp" }
+    ]
+  }
+}
