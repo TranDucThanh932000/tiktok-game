@@ -5,13 +5,16 @@ import { parseEnv } from 'node:util';
 import express from 'express';
 import { TikTokLiveConnection, WebcastEvent, ControlEvent } from 'tiktok-live-connector';
 import { WordGame } from './src/game.js';
+import { Teacher } from './src/teacher.js';
+import { createVoice } from './src/voice.js';
 import { bankSize, createDeck, validateBank } from './src/words.js';
 
 const root = import.meta.dirname;
 const config = JSON.parse(readFileSync(path.join(root, 'config.json'), 'utf8'));
 const bank = JSON.parse(readFileSync(path.join(root, 'words.json'), 'utf8'));
+const teacherLines = JSON.parse(readFileSync(path.join(root, 'teacher.json'), 'utf8'));
 const username = (process.argv[2] ?? config.tiktokUsername ?? '').trim().replace(/^@/, '');
-// DATA_DIR để chạy thử song song mà không đụng bảng điểm đang có.
+// DATA_DIR để chạy thử song song mà không đụng bảng điểm đang có; giọng đọc vẫn dùng chung để khỏi tốn lượt Vbee.
 const dataDir = process.env.DATA_DIR?.trim() || path.join(root, 'data');
 const port = Number(process.env.PORT) || config.port || 3015;
 const host = '127.0.0.1';
@@ -39,6 +42,14 @@ const guide = {
   tiers: [...tiers].sort((a, b) => a.coins - b.coins).map(({ coins, turns, label, icon }) => ({ coins, turns, label, icon })),
 };
 
+const vbee = {
+  token: process.env.VBEE_TOKEN?.trim(),
+  appId: process.env.VBEE_APP_ID?.trim(),
+  voice: process.env.VBEE_VOICE?.trim() || 'hn_female_ngochuyen_full_48k-fhg',
+  speed: Number(process.env.VBEE_SPEED) || 1,
+};
+vbee.enabled = Boolean(vbee.token && vbee.appId);
+
 const clients = new Set();
 let status = {
   connected: false,
@@ -54,6 +65,69 @@ function setStatus(connected, text) {
   broadcast({ type: 'status', ...status });
 }
 
+// Safe mode silences the teacher until the host turns it off; the game keeps running.
+let safeMode = false;
+function setSafeMode(on, reason) {
+  if (safeMode === on) return;
+  safeMode = on;
+  console.log(`[Chế độ an toàn] ${on ? `Bật: ${reason}` : 'Tắt'}`);
+  broadcast({ type: 'safe-mode', on });
+  if (on) teacher.stop();
+}
+
+// ---------- Giọng cô giáo ----------
+const voice = createVoice({
+  enabled: vbee.enabled,
+  voice: vbee.voice,
+  speed: vbee.speed,
+  dir: path.join(root, 'data', 'tts'),
+  synthesize,
+  onError(err, text) {
+    console.error(`[Vbee] Lỗi đọc "${text}": ${err.message}`);
+    broadcast({ type: 'speak-error', message: err.message });
+  },
+});
+
+async function vbeeJson(url, init) {
+  const res = await fetch(url, { ...init, signal: AbortSignal.timeout(15_000) });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(`HTTP ${res.status}: ${JSON.stringify(body.error ?? body).slice(0, 300)}`);
+  return body;
+}
+
+// Realtime (sync) mode is not in every Vbee package, so create a batch job and poll it; no public webhook needed.
+async function synthesize(text) {
+  const headers = { Authorization: `Bearer ${vbee.token}`, 'App-Id': vbee.appId };
+  const job = await vbeeJson('https://api.vbee.vn/v1/tts', {
+    method: 'POST',
+    headers: { ...headers, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text, voiceCode: vbee.voice, mode: 'async', outputFormat: 'mp3', speed: vbee.speed, webhookUrl: 'https://callback.invalid/vbee' }),
+  });
+  if (!job.requestId) throw new Error(`Vbee không trả requestId: ${JSON.stringify(job).slice(0, 300)}`);
+  for (let attempt = 0; attempt < 66; attempt++) {
+    await sleep(300);
+    const result = await vbeeJson(`https://api.vbee.vn/v1/tts/requests/${encodeURIComponent(job.requestId)}`, { headers });
+    if (result.status === 'FAILED') throw new Error(`Vbee báo FAILED: ${JSON.stringify(result).slice(0, 300)}`);
+    if (result.status === 'COMPLETED' && result.audioLink) {
+      const audio = await fetch(result.audioLink, { signal: AbortSignal.timeout(15_000) });
+      if (!audio.ok) throw new Error(`Tải audio lỗi HTTP ${audio.status}`);
+      return Buffer.from(await audio.arrayBuffer());
+    }
+  }
+  throw new Error('Quá 20 giây Vbee chưa trả audio');
+}
+
+const teacher = new Teacher({ voice, lines: teacherLines, enabled: () => !safeMode, emit: broadcast });
+
+function warmVoice() {
+  teacher.prepare();
+  const texts = [...new Set(teacher.staticParts())];
+  const missing = texts.filter((text) => !voice.ready(text));
+  if (!missing.length) return console.log(`[Vbee] Đã có sẵn ${texts.length} mẩu lời cô`);
+  console.log(`[Vbee] Đang tạo ${missing.length} mẩu lời cô, chỉ lần đầu...`);
+  Promise.all(missing.map((text) => voice.clip(text))).then((ids) => console.log(`[Vbee] Xong lời cô: ${ids.filter(Boolean).length}/${missing.length} mẩu`));
+}
+
 // ---------- Trò chơi ----------
 let current = null;
 function logEvent(msg) {
@@ -64,13 +138,16 @@ function logEvent(msg) {
 }
 
 const STATE_FILE = path.join(dataDir, 'board.json');
+const deck = createDeck(bank);
 const game = new WordGame(config, {
-  deck: createDeck(bank),
+  deck,
   emit(msg) {
     broadcast(msg);
     logEvent(msg);
+    teacher.onEvent(msg);
   },
 });
+teacher.attach(game, deck);
 try {
   game.importState(JSON.parse(readFileSync(STATE_FILE, 'utf8')));
   if (game.players.size) console.log(`Đã nạp bảng điểm cũ: ${game.players.size} người chơi`);
@@ -89,7 +166,10 @@ function saveState() {
   }
 }
 setInterval(saveState, 3000);
-setInterval(() => game.tick(), 100);
+setInterval(() => {
+  game.tick();
+  teacher.tick();
+}, 100);
 
 function viewer(user) {
   const raw = String(user?.nickname || user?.displayId || user?.uniqueId || '').replace(/\s+/g, ' ').trim();
@@ -154,6 +234,7 @@ function reportModeration(type, data) {
   alerts.push(alert);
   if (alerts.length > 10) alerts.shift();
   broadcast({ type: 'moderation', ...alert });
+  setSafeMode(true, 'có cảnh báo TikTok');
   // The same warning repeated within 10 minutes is sent to Telegram once.
   if (cooledDown(`telegram:${text}`, 600_000)) {
     const time = new Date(alert.at).toLocaleTimeString('vi-VN');
@@ -294,7 +375,7 @@ app.get('/events', (req, res) => {
   res.set({ 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', Connection: 'keep-alive' });
   res.flushHeaders();
   res.write('retry: 2000\n\n');
-  send(res, { type: 'snapshot', status, guide, alerts, session, bankSize: bankSize(bank), game: game.snapshot() });
+  send(res, { type: 'snapshot', status, guide, alerts, session, safeMode, tts: { enabled: vbee.enabled, voice: vbee.voice }, bankSize: bankSize(bank), game: game.snapshot() });
   clients.add(res);
   res.on('close', () => clients.delete(res));
 });
@@ -302,6 +383,12 @@ setInterval(() => clients.forEach((res) => res.write(': ping\n\n')), 20_000);
 
 // Đáp án từ đang hỏi, cho bảng điều khiển (màn hình game không gọi tới).
 app.get('/api/word', (req, res) => res.json({ answer: game.puzzle?.display ?? '' }));
+
+app.get('/tts/:id', (req, res) => {
+  const audio = voice.audio(req.params.id);
+  if (!audio) return res.status(404).end();
+  res.set('Cache-Control', 'public, max-age=31536000, immutable').type('audio/mpeg').send(audio);
+});
 
 const clampInt = (value, min, max) => Math.min(max, Math.max(min, Math.trunc(Number(value)) || min));
 
@@ -338,6 +425,12 @@ app.post('/api/control', (req, res) => {
   res.json({ ok });
 });
 
+app.post('/api/safe-mode', (req, res) => {
+  if (!req.is('application/json')) return res.status(415).end();
+  setSafeMode(req.body?.on === true, 'bật tay từ bảng điều khiển');
+  res.status(204).end();
+});
+
 app.post('/api/telegram-test', async (req, res) => {
   if (!req.is('application/json')) return res.status(415).end();
   const error = await sendTelegram('✅ Lớp Học Đoán Từ đã kết nối Telegram. Nếu TikTok cảnh báo phiên live, tin sẽ được gửi vào đây.');
@@ -351,6 +444,10 @@ app.listen(port, host, (err) => {
   console.log(`Bộ từ: ${bankSize(bank)} từ, ${Object.keys(bank).length} chủ đề`);
   const { token, chatId } = telegramConfig();
   console.log(token && chatId ? 'Báo cảnh báo qua Telegram: bật' : 'Báo cảnh báo qua Telegram: tắt (thiếu TELEGRAM_BOT_TOKEN hoặc TELEGRAM_ADMIN_CHAT_ID trong .env)');
+  if (vbee.enabled) {
+    console.log(`Giọng cô giáo: Vbee ${vbee.voice}`);
+    warmVoice();
+  } else console.log('Giọng cô giáo: tắt (thiếu VBEE_TOKEN hoặc VBEE_APP_ID trong .env, nhớ chạy bằng npm start)');
   if (username) connectTikTok();
   else console.log('Chưa đặt kênh TikTok (npm start -- ten_kenh, hoặc tiktokUsername trong config.json). Đang ở chế độ thử.');
 });

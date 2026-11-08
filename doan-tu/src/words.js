@@ -87,18 +87,26 @@ export const bankSize = (bank) => Object.values(bank).reduce((sum, rows) => sum 
 // Rút từ không lặp cho tới khi hết bộ, hết thì xáo lại.
 export function createDeck(bank, { rng = Math.random } = {}) {
   const all = Object.entries(bank).flatMap(([topic, rows]) => rows.map(([text, hint]) => ({ topic, text: tidy(text), hint: tidy(hint) })));
-  let deck = [];
+  let deck = []; // rút từ cuối mảng
   let last = null;
+  function refill() {
+    const fresh = shuffled(all, rng);
+    // Bộ mới không mở đầu bằng đúng từ hỏi ngay trước nó.
+    const before = deck.length ? deck[0] : last;
+    if (fresh.length > 1 && fresh.at(-1) === before) [fresh[0], fresh[fresh.length - 1]] = [fresh[fresh.length - 1], fresh[0]];
+    deck = [...fresh, ...deck];
+  }
   return {
     size: all.length,
     next() {
-      if (!deck.length) {
-        deck = shuffled(all, rng);
-        // Bộ mới không mở đầu bằng đúng từ vừa hỏi.
-        if (deck.length > 1 && deck.at(-1) === last) [deck[0], deck[deck.length - 1]] = [deck[deck.length - 1], deck[0]];
-      }
+      if (!deck.length) refill();
       last = deck.pop();
       return last;
+    },
+    // Các từ sắp hỏi, để tạo sẵn giọng đọc.
+    peek(n) {
+      while (deck.length < n) refill();
+      return deck.slice(-n).reverse();
     },
   };
 }

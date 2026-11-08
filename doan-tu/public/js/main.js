@@ -1,5 +1,5 @@
 import { buntingSvg, studentSvg, teacherSvg } from './art.js';
-import { sfx, wake, onAudioState } from './audio.js';
+import { sfx, wake, onAudioState, speak, stopSpeech } from './audio.js';
 
 const W = 1080;
 const H = 1920;
@@ -10,7 +10,6 @@ const el = (tag, className, text) => {
   if (text !== undefined) node.textContent = text;
   return node;
 };
-const any = (list) => list[Math.floor(Math.random() * list.length)];
 
 const stage = $('stage');
 function fit() {
@@ -273,18 +272,26 @@ setInterval(() => {
   $('hand-h').setAttribute('transform', `rotate(${(now.getHours() % 12) * 30 + minutes / 2} 60 60)`);
 }, 1000);
 
-// ---------- Cô giáo ----------
+// ---------- Cô giáo: lời cô hiện thành bong bóng cho người xem đang tắt tiếng ----------
 let bubbleTimer = 0;
-function teacherSays(text, ms = 2600) {
+function say(msg) {
   const bubble = $('bubble');
-  bubble.textContent = text;
-  bubble.hidden = false;
-  $('teacher').classList.add('talking');
+  const teacher = $('teacher');
+  if (msg.cut) stopSpeech();
   clearTimeout(bubbleTimer);
+  if (!msg.text) {
+    bubble.hidden = true;
+    teacher.classList.remove('talking');
+    return;
+  }
+  bubble.textContent = msg.text;
+  bubble.hidden = false;
+  teacher.classList.add('talking');
   bubbleTimer = setTimeout(() => {
     bubble.hidden = true;
-    $('teacher').classList.remove('talking');
-  }, ms);
+    teacher.classList.remove('talking');
+  }, Math.max(2600, msg.ms + 600));
+  if (msg.clips.length) speak(msg);
 }
 const teacherHappy = () => restart($('teacher'), 'happy');
 
@@ -403,12 +410,10 @@ const handlers = {
     seats.forEach((seat) => seat.root.classList.remove('up'));
     showWord(msg);
     startTimer('asking', msg.endsAt);
-    teacherSays(any(['Từ mới đây, cả lớp đoán nào!', 'Đọc gợi ý rồi đoán nha!', 'Ai đoán ra đầu tiên đây?', 'Cả lớp nhìn lên bảng nè!']));
   },
   letter(msg) {
     sfx.letter();
     openTile(msg.index, msg.letter);
-    teacherSays(any(['Cô mở thêm một chữ nè!', 'Thêm một chữ cho dễ nha!', 'Nhìn kỹ các ô chữ nào!']));
   },
   correct(msg) {
     solved.set(msg.key, msg.delta);
@@ -442,16 +447,13 @@ const handlers = {
     if (msg.count) {
       sfx.fanfare();
       teacherHappy();
-      teacherSays(msg.count >= 5 ? 'Cả lớp giỏi quá!' : 'Đúng rồi, giỏi lắm!');
-    } else {
-      sfx.none();
-      teacherSays('Từ này khó quá ha, từ sau cố lên!');
-    }
+    } else sfx.none();
   },
   board(msg) {
     setPlayers(msg.players);
     renderBoard(msg.board);
   },
+  say,
   boost(msg) {
     sfx.boost();
     const index = seatOf(msg.key);

@@ -1,0 +1,171 @@
+{
+  "fixes": {
+    "SEA Games": "xi ghêm",
+    "TikTok": "tích tóc",
+    "wifi": "oai phai",
+    "livestream": "lai trim",
+    "flycam": "phờ lai cam",
+    "rubik": "ru bích",
+    "lego": "le gô",
+    "yoga": "dô ga",
+    "email": "i meo",
+    "karaoke": "ka ra ô kê",
+    "vitamin": "vi ta min",
+    "internet": "in tơ nét",
+    "F1": "ép một",
+    "GPS": "gi pi ét",
+    "AI": "ây ai",
+    "QR": "quy rờ",
+    "UNESCO": "giu nét cô",
+    "K-pop": "kê póp"
+  },
+
+  "newWord": [
+    "Từ mới đây cả lớp ơi!",
+    "Cả lớp nhìn lên bảng nào!",
+    "Từ tiếp theo nhé các em!",
+    "Nào, đoán từ này nhé!",
+    "Cô ra đề mới đây, chú ý nha!",
+    "Chuẩn bị tinh thần, từ mới tới rồi!",
+    "Lớp mình sẵn sàng chưa nào?",
+    "Từ này hay lắm, cả lớp nghe nhé!",
+    "Ai đoán ra đầu tiên từ này đây?",
+    "Mắt nhìn bảng, tay sẵn sàng nào!",
+    "Tiếp tục nhé, từ này dễ thôi!",
+    "Nghe kỹ gợi ý của cô nha!"
+  ],
+  "intro": [
+    "Chủ đề {topic}. Gợi ý: {hint}.",
+    "Thuộc chủ đề {topic} nhé. {hint}.",
+    "Chủ đề lần này là {topic}. Cô gợi ý: {hint}.",
+    "Về {topic} nhé các em. {hint}."
+  ],
+  "letter": [
+    "Cô mở thêm một chữ nhé!",
+    "Thêm một chữ cho dễ nha!",
+    "Nhìn kỹ các ô chữ nào!",
+    "Cô giúp thêm một chữ đây!",
+    "Mở thêm chữ rồi, dễ hơn rồi đó!",
+    "Một chữ nữa nè, đoán được chưa?",
+    "Nhìn chữ vừa mở, nghĩ ra chưa các em?",
+    "Cô gợi ý thêm một chữ cái nhé!"
+  ],
+  "lastLetter": [
+    "Đây là chữ cuối cô mở rồi nhé!",
+    "Cô chỉ giúp tới đây thôi, phần còn lại các em tự đoán nha!",
+    "Hết chữ để mở rồi, cố lên nào!",
+    "Gợi ý cuối cùng rồi đó các em!"
+  ],
+  "encourage": [
+    "Gợi ý rõ vậy rồi, ai đoán thử nào!",
+    "Cứ mạnh dạn comment, sai cũng không sao!",
+    "Đọc lại gợi ý trên bảng đi các em!",
+    "Gõ không dấu cũng được nha các em!",
+    "Lớp mình chưa ai ra à, khó vậy sao?",
+    "Nghĩ kỹ chút nữa, sắp ra rồi đó!"
+  ],
+  "hurry": [
+    "Sắp hết giờ rồi!",
+    "Nhanh tay lên các em ơi!",
+    "Còn vài giây thôi nhé!",
+    "Nhanh lên, đồng hồ sắp hết rồi!",
+    "Ai chưa trả lời thì nhanh lên nào!",
+    "Gấp lắm rồi, comment ngay đi!",
+    "Mấy giây cuối rồi, cố lên!",
+    "Đồng hồ đếm ngược rồi kìa!"
+  ],
+  "first": [
+    "đoán ra đầu tiên, giỏi quá!",
+    "nhanh nhất lớp, chính xác!",
+    "đoán đúng rồi, cô khen!",
+    "giỏi quá, đúng ngay luôn!",
+    "trả lời chính xác, tuyệt vời!",
+    "phản xạ nhanh thật đấy!",
+    "là người đầu tiên, xuất sắc!",
+    "đúng rồi, cả lớp vỗ tay nào!",
+    "thông minh quá, đoán trúng phóc!",
+    "về nhất từ này, giỏi lắm!"
+  ],
+  "firstFast": [
+    "đoán ra trong nháy mắt, quá đỉnh!",
+    "cô vừa đọc xong đã ra rồi, siêu thật!",
+    "nhanh như chớp luôn, giỏi quá!",
+    "chưa cần mở chữ nào đã đoán đúng, tuyệt!",
+    "thần đồng của lớp đây rồi!"
+  ],
+  "firstNoName": [
+    "Có bạn đoán ra rồi kìa!",
+    "Chính xác, có bạn đoán đúng rồi!",
+    "Đã có người tìm ra đáp án rồi nhé!",
+    "Giỏi quá, có bạn trả lời đúng rồi!"
+  ],
+  "milestones": {
+    "5": [
+      "Đã có năm bạn đoán đúng rồi!",
+      "Năm bạn ra rồi, còn ai nữa không?"
+    ],
+    "10": [
+      "Mười bạn đoán đúng rồi, lớp mình giỏi quá!",
+      "Đã có mười bạn ra rồi nhé!"
+    ],
+    "20": [
+      "Hai mươi bạn đoán đúng, cả lớp siêu quá!",
+      "Ồ, hai mươi bạn ra rồi đó!"
+    ]
+  },
+  "answerIs": [
+    "Đáp án là",
+    "Từ cần tìm là",
+    "Đáp án đúng chính là",
+    "Câu trả lời là"
+  ],
+  "nobody": [
+    "Từ này khó quá ha, từ sau cố lên nhé!",
+    "Chưa ai đoán ra, tiếc quá!",
+    "Không ai ra luôn, cô ra đề khó quá rồi!",
+    "Hụt mất rồi, từ sau mình gỡ lại nhé!",
+    "Từ này làm khó cả lớp rồi, không sao đâu!",
+    "Tiếc ghê, chỉ thiếu chút xíu thôi!"
+  ],
+  "one": [
+    "Chỉ có một bạn đoán ra thôi, giỏi thật!",
+    "Duy nhất một bạn tìm ra, xuất sắc!",
+    "Cả lớp chỉ một bạn đúng, đáng khen lắm!",
+    "Một mình một ngựa luôn, giỏi quá!"
+  ],
+  "some": [
+    "Các em giỏi lắm!",
+    "Đúng rồi, chúc mừng các em!",
+    "Các bạn đoán đúng giỏi quá!",
+    "Ai đúng thì được cộng điểm rồi nhé!",
+    "Hoan hô các bạn đoán đúng!",
+    "Chúc mừng, điểm đã được cộng!"
+  ],
+  "many": [
+    "Cả lớp giỏi quá!",
+    "Nhiều bạn đoán đúng quá, cô vui lắm!",
+    "Lớp mình học giỏi ghê!",
+    "Đông bạn ra quá, từ này dễ rồi!",
+    "Cả lớp vỗ tay khen nhau nào!",
+    "Tuyệt vời, rất nhiều bạn đúng!"
+  ],
+  "boost": [
+    "được nhân đôi điểm nhé!",
+    "có thêm lượt nhân đôi điểm!",
+    "đoán đúng từ tới được gấp đôi điểm!",
+    "đang có lượt nhân đôi, cố lên nhé!",
+    "có lượt điểm gấp đôi rồi đó!"
+  ],
+  "boostFollow": [
+    "cảm ơn em đã theo dõi lớp, được nhân đôi điểm nhé!",
+    "vừa theo dõi lớp mình, có lượt nhân đôi rồi!",
+    "chào mừng em vào lớp, cô tặng một lượt nhân đôi!",
+    "cảm ơn em đã theo dõi, từ tới đúng là gấp đôi điểm!"
+  ],
+  "boostShare": [
+    "cảm ơn em đã chia sẻ lớp học, được nhân đôi điểm!",
+    "chia sẻ cho bạn bè rồi, có lượt nhân đôi nhé!",
+    "rủ thêm bạn vào lớp, cô tặng lượt nhân đôi!",
+    "cảm ơn em đã chia sẻ, từ tới đúng là gấp đôi điểm!"
+  ]
+}

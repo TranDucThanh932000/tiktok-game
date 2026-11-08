@@ -47,9 +47,25 @@ Không cần chat "vào lớp": ai comment cũng chơi được.
 
 Sửa xong khởi động lại server. File sai thì server báo rõ từ nào lỗi và không chạy. Từ được rút ngẫu nhiên, hết cả bộ mới lặp lại.
 
+## Giọng cô giáo
+
+Cô nói bằng Vbee (`VBEE_TOKEN`, `VBEE_APP_ID`, `VBEE_VOICE` trong `.env`, dùng chung khóa với `lop-hoc`). Phải chạy bằng `start.bat` hoặc `npm start` thì mới đọc `.env`. Thiếu khóa thì game vẫn chạy, cô chỉ hiện bong bóng chữ.
+
+- **Từ mới:** câu mở đầu (12 kiểu) rồi đọc chủ đề và câu gợi ý (4 kiểu giới thiệu, mỗi từ cố định một kiểu).
+- **Mở thêm chữ:** nhắc ngắn; chữ cuối cùng có câu riêng. Giữa từ (giây 28) mà chưa ai ra thì động viên một lần. Sắp hết giờ thì giục.
+- **Đoán ra đầu tiên:** gọi tên khen; đoán ra trước khi mở chữ nào thì có lời khen "nhanh như chớp" riêng. Tên toàn ký tự đặc biệt không đọc được thì khen chung. Đủ 5, 10, 20 bạn đúng thì cô báo.
+- **Công bố:** "Đáp án là ..." (4 kiểu) kèm lời theo số bạn đúng: không ai, một bạn, vài bạn, nhiều bạn.
+- **Lượt x2:** gọi tên; follow và share có lời cảm ơn riêng.
+- Cùng một loại lời, cô không nói lại đúng câu vừa nói. Tổng cộng hơn 100 câu, thêm bớt thoải mái trong `teacher.json`.
+- Cô không bao giờ đọc lại nội dung comment. Lời cô hiện thêm thành bong bóng cho người xem đang tắt tiếng.
+
+Sửa lời thoại ở `teacher.json`; thấy đọc sai từ nào thì thêm vào `fixes` (chỉ đổi cách đọc, chữ trên bảng giữ nguyên). Mỗi mẩu giọng chỉ tạo một lần rồi lưu ở `data/tts`. Giọng gợi ý và đáp án được tạo trước 3 từ, nên chỉ tốn lượt Vbee cho từ thực sự hỏi tới; tên người chơi mới mất vài giây để tạo.
+
+Có cảnh báo từ TikTok thì tự bật **chế độ an toàn**: cô im, game vẫn chạy, chủ kênh tắt lại ở bảng điều khiển.
+
 ## Bảng điều khiển
 
-`http://127.0.0.1:3015/panel.html`: trạng thái kết nối, kim cương phiên live, từ đang hỏi kèm **đáp án** (chỉ chủ kênh thấy), nút thử comment đúng/sai/quà/follow, thử đông người, mở thêm chữ, sang bước tiếp theo, xóa bảng điểm, gửi thử Telegram, và bảng xếp hạng.
+`http://127.0.0.1:3015/panel.html`: trạng thái kết nối, kim cương phiên live, giọng cô và chế độ an toàn, từ đang hỏi kèm **đáp án** (chỉ chủ kênh thấy), nút thử comment đúng/sai/quà/follow, thử đông người, mở thêm chữ, sang bước tiếp theo, xóa bảng điểm, gửi thử Telegram, và bảng xếp hạng.
 
 ## Từ ngữ trên màn hình
 

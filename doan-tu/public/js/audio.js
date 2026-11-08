@@ -4,6 +4,8 @@ const VOLUME = muted ? 0 : 0.7;
 const ctx = new AudioContext();
 const master = new GainNode(ctx, { gain: VOLUME });
 master.connect(ctx.destination);
+const voiceOut = new GainNode(ctx, { gain: muted ? 0 : 1 });
+voiceOut.connect(ctx.destination);
 addEventListener('pointerdown', () => ctx.resume());
 
 export function wake() {
@@ -51,3 +53,88 @@ export const sfx = {
   // vào top lớp: tiếng "pop"
   pop: () => tone(520, ctx.currentTime, 0.12, 0.14, 'triangle', 1040),
 };
+
+// ---------- Giọng cô giáo: các mẩu /tts/:id phát nối nhau ----------
+const buffers = new Map(); // id -> Promise<AudioBuffer | null>
+
+// Bỏ khoảng lặng đầu/cuối, chừa 30 ms cho tự nhiên.
+function trim(buffer) {
+  const data = buffer.getChannelData(0);
+  const limit = 0.015;
+  let start = 0;
+  let end = data.length - 1;
+  while (start < end && Math.abs(data[start]) < limit) start++;
+  while (end > start && Math.abs(data[end]) < limit) end--;
+  const pad = Math.round(buffer.sampleRate * 0.03);
+  start = Math.max(0, start - pad);
+  end = Math.min(data.length, end + pad);
+  if (end - start < 16) return buffer;
+  const out = ctx.createBuffer(buffer.numberOfChannels, end - start, buffer.sampleRate);
+  for (let c = 0; c < buffer.numberOfChannels; c++) out.copyToChannel(buffer.getChannelData(c).subarray(start, end), c);
+  return out;
+}
+
+function load(id) {
+  if (!buffers.has(id)) {
+    buffers.set(
+      id,
+      fetch(`/tts/${id}`)
+        .then((res) => (res.ok ? res.arrayBuffer() : Promise.reject(new Error(res.status))))
+        .then((data) => ctx.decodeAudioData(data))
+        .then(trim)
+        .catch(() => {
+          buffers.delete(id);
+          return null;
+        }),
+    );
+    if (buffers.size > 300) buffers.delete(buffers.keys().next().value);
+  }
+  return buffers.get(id);
+}
+
+let run = 0;
+let timers = [];
+const playing = new Set();
+let doneCallback = null;
+
+export function stopSpeech() {
+  run++;
+  timers.forEach(clearTimeout);
+  timers = [];
+  for (const src of playing) src.stop();
+  playing.clear();
+  master.gain.setTargetAtTime(VOLUME, ctx.currentTime, 0.1);
+  doneCallback?.();
+  doneCallback = null;
+}
+
+// clips: [{ id }]. onDone chạy lúc nói xong hoặc bị cắt ngang.
+export async function speak({ clips, cut }, { onDone } = {}) {
+  if (cut) stopSpeech();
+  if (!clips?.length) return;
+  const mine = run;
+  const parts = await Promise.all(clips.map((clip) => load(clip.id)));
+  if (mine !== run) return;
+  doneCallback?.();
+  doneCallback = onDone ?? null;
+  const begin = ctx.currentTime + 0.02;
+  let at = begin;
+  for (const buffer of parts) {
+    if (!buffer) continue;
+    const src = new AudioBufferSourceNode(ctx, { buffer });
+    src.connect(voiceOut);
+    playing.add(src);
+    src.onended = () => playing.delete(src);
+    src.start(at);
+    at += buffer.duration + 0.04;
+  }
+  // Nhạc hiệu ứng nhỏ lại khi cô nói.
+  master.gain.setTargetAtTime(VOLUME * 0.45, begin, 0.1);
+  timers.push(
+    setTimeout(() => {
+      master.gain.setTargetAtTime(VOLUME, ctx.currentTime, 0.2);
+      doneCallback?.();
+      doneCallback = null;
+    }, (at - ctx.currentTime) * 1000),
+  );
+}

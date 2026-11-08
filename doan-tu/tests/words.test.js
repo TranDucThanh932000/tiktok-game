@@ -78,3 +78,11 @@ test('rút hết bộ từ mới lặp lại, mỗi từ kèm chủ đề và g�
   assert.ok(first.every((w) => w.hint.startsWith('số ') && (w.topic === 'A' || w.topic === 'B')));
   assert.notEqual(deck.next().text, first[2].text, 'bộ mới không mở đầu bằng từ vừa hỏi');
 });
+
+test('xem trước các từ sắp hỏi, đúng thứ tự sẽ rút, kể cả khi phải sang bộ mới', () => {
+  const deck = createDeck({ A: [['một', 'số một'], ['hai', 'số hai'], ['bốn', 'số bốn']] }, { rng: seeded(7) });
+  deck.next();
+  const ahead = deck.peek(5).map((w) => w.text);
+  assert.equal(ahead.length, 5);
+  assert.deepEqual([1, 2, 3, 4, 5].map(() => deck.next().text), ahead);
+});
