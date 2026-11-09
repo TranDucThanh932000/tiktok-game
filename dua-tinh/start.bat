@@ -8,7 +8,8 @@ if not exist "%NODE_DIR%\node.exe" (
   exit /b 1
 )
 set "PATH=%NODE_DIR%;%PATH%"
-if not exist node_modules call npm.cmd install
+rem Thieu thu vien (lan dau, hoac ban moi them three.js cho ban do 3D) thi cai.
+if not exist node_modules\three call npm.cmd install
 start "Dua Tinh - server" cmd /k npm.cmd start
 timeout /t 3 /nobreak >nul
 call npm.cmd run window

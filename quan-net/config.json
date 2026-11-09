@@ -1,0 +1,54 @@
+{
+  "tiktokUsername": "",
+  "port": 3016,
+  "title": "NET CÔ TÁM",
+  "subtitle": "INTERNET · GAME · THÂU ĐÊM",
+  "voice": { "code": "sg_female_thaotrinh_full_48k-fhg", "speed": 1.1 },
+  "room": { "rows": 4, "cols": 6, "vip": 4 },
+  "clock": { "start": "19:00", "secondsPerMinute": 3 },
+  "time": {
+    "freeMinutes": 20,
+    "commentMinutes": 1,
+    "commentGapSeconds": 10,
+    "likesPerMinute": 15,
+    "followMinutes": 30,
+    "shareMinutes": 15,
+    "shareGapSeconds": 60,
+    "kickSeconds": 10,
+    "idleKickMinutes": 5,
+    "itemMinutes": 60
+  },
+  "rates": { "boost": 2, "vip": 3, "golden": 2 },
+  "minutesPerCoin": 30,
+  "gifts": [
+    { "coins": 1, "label": "Nạp giờ", "icon": "/gifts/rose.webp" },
+    { "coins": 5, "label": "Mì + Sting", "icon": "/gifts/finger-heart.webp", "item": "mi" },
+    { "coins": 10, "label": "Lên đồ x2", "icon": "/gifts/lucky-pig.webp", "boostMinutes": 120 },
+    { "coins": 30, "label": "Máy khủng", "icon": "/gifts/doughnut.webp", "boostMinutes": 240, "rig": true },
+    { "coins": 100, "label": "Phòng VIP", "icon": "/gifts/gift-box.webp", "vipMinutes": 300 },
+    { "coins": 299, "label": "Bao net", "icon": "/gifts/corgi.webp", "everyoneMinutes": 60 },
+    { "coins": 1000, "label": "Mua tiệm", "icon": "/gifts/galaxy.webp", "everyoneMinutes": 120, "bossSeconds": 600 }
+  ],
+  "commands": {
+    "join": ["ngoi", "ngồi", "ngồi máy", "vào", "vào máy", "vào chơi", "vô", "chơi", "mở máy"],
+    "leave": ["ve", "về", "về nhà", "về thôi", "đi về", "nghỉ", "tắt máy", "out"],
+    "check": ["gio", "giờ", "xem giờ", "check giờ", "còn bao nhiêu"],
+    "buzz": ["buzz", "rung máy"],
+    "rage": ["gg", "đập phím", "cay"],
+    "hide": ["tron", "trốn", "núp", "trốn đi"]
+  },
+  "games": [
+    { "code": "volam", "aliases": ["vl", "võ lâm"], "label": "Võ Lâm", "screen": "kiemhiep" },
+    { "code": "au", "aliases": ["audition"], "label": "Audition", "screen": "nhay" },
+    { "code": "cs", "aliases": ["half life", "halflife"], "label": "Half-Life", "screen": "sung" },
+    { "code": "aoe", "aliases": ["đế chế", "de che"], "label": "Đế Chế", "screen": "dechet" },
+    { "code": "fifa", "aliases": ["pes", "bóng đá"], "label": "Bóng đá", "screen": "bong" },
+    { "code": "chat", "aliases": ["yahoo"], "label": "Yahoo", "screen": "chat" }
+  ],
+  "events": {
+    "golden": { "everySeconds": 240, "seconds": 60 },
+    "blackout": { "everySeconds": 600, "seconds": 7 },
+    "mom": { "everySeconds": 300, "seconds": 12, "minPlayers": 5, "hideMinutes": 10 }
+  },
+  "chatterSeconds": 40
+}

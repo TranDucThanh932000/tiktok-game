@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bảng điều khiển · Tiệm Net</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🖥️</text></svg>">
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: "Segoe UI", Arial, sans-serif; background: #141a2e; color: #eef2ff; }
+    main { max-width: 680px; padding: 16px; }
+    h1 { margin: 0 0 10px; font-size: 24px; }
+    h2 { margin: 18px 0 8px; font-size: 15px; color: #4fe3ff; text-transform: uppercase; letter-spacing: 1px; }
+    #status { margin: 0; padding: 8px 12px; border-radius: 8px; background: #3a1d24; }
+    #status.on { background: #1d3a26; }
+    .info { margin: 8px 0 0; padding: 8px 12px; border-radius: 8px; background: #1f2742; font-size: 15px; }
+    #alerts p { margin: 8px 0 0; padding: 8px 12px; border: 1px solid #c0392b; border-radius: 8px; background: #4a1717; font-size: 14px; }
+    #safe-box { display: flex; align-items: center; gap: 10px; margin-top: 8px; padding: 8px 12px; border: 1px solid #39456b; border-radius: 8px; font-size: 14px; }
+    #safe-box.on { border-color: #ffcf4a; background: #4a3a10; }
+    #safe-box span { flex: 1; }
+    .hint { margin: 0 0 8px; font-size: 14px; color: #aab4d6; }
+    label { display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px; font-size: 14px; }
+    input { width: 100%; max-width: 280px; padding: 8px 10px; border: 1px solid #39456b; border-radius: 8px; background: #1b2238; color: inherit; font: inherit; }
+    .row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+    button { padding: 8px 13px; border: 1px solid #4d5d8f; border-radius: 8px; background: #26304f; color: inherit; font: inherit; cursor: pointer; }
+    button:hover { background: #313d63; }
+    .gift-icon { width: 28px; height: 28px; margin: -6px 6px -6px -4px; object-fit: contain; vertical-align: middle; }
+    .danger { border-color: #a0403a; background: #3a1d1d; }
+    #log { min-height: 1.4em; font-size: 14px; color: #aab4d6; }
+    #sprites p { margin: 4px 0; }
+    #sprites .bad { color: #ff8a80; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    td { padding: 3px 8px; border-bottom: 1px solid #26304f; }
+    td:first-child { width: 2.5em; color: #aab4d6; }
+    td:last-child { text-align: right; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>🖥️ Bảng điều khiển · Tiệm Net</h1>
+    <p id="status">Đang kết nối máy chủ game...</p>
+    <p class="info" id="room">Chưa có dữ liệu tiệm.</p>
+    <p class="info" id="session"></p>
+    <p class="info" id="tts"></p>
+    <div id="alerts"></div>
+    <div id="safe-box"><span id="safe"></span><button type="button" id="safe-toggle"></button></div>
+
+    <h2>Người chơi giả lập</h2>
+    <label>Tên <input id="name" value="Bạn thử" maxlength="20"></label>
+    <div class="row" id="quick"></div>
+    <div class="row" id="games"></div>
+    <div class="row" id="gifts"></div>
+    <div class="row">
+      <button type="button" data-like="15">❤️ Thả 15 tim</button>
+      <button type="button" data-social="follow">➕ Follow</button>
+      <button type="button" data-social="share">↗️ Share</button>
+      <button type="button" id="peek">👀 Vào phòng live</button>
+    </div>
+    <label>Comment bất kỳ (thử cách gõ, ví dụ không dấu) <input id="free" maxlength="100" value=""></label>
+    <div class="row"><button type="button" id="free-send">💬 Gửi comment</button></div>
+
+    <h2>Thử đông người</h2>
+    <p class="hint">Người thử cũng được ghi vào sổ, nên bấm "Bắt đầu buổi mới" trước khi live.</p>
+    <div class="row">
+      <button type="button" data-crowd="10">👥 10 bạn gõ ngoi</button>
+      <button type="button" data-crowd="34">👥 34 bạn gõ ngoi (đầy tiệm + hàng chờ)</button>
+      <button type="button" id="crowd-gift">🌹 Mỗi bạn đang ngồi tặng 1 hoa hồng</button>
+    </div>
+
+    <h2>Chuyện trong tiệm</h2>
+    <div class="row">
+      <button type="button" data-control="golden">⭐ Giờ vàng ngay</button>
+      <button type="button" data-control="blackout">⚡ Cúp điện ngay</button>
+      <button type="button" data-control="mom">👩 Mẹ tới kiếm ngay</button>
+      <button type="button" id="talk">🔊 Cô Tám nói thử</button>
+    </div>
+    <div class="row">
+      <button type="button" id="reset" class="danger">🧹 Bắt đầu buổi mới (xóa sổ)</button>
+      <button type="button" id="telegram-test">📨 Gửi thử Telegram</button>
+    </div>
+    <p id="log"></p>
+
+    <h2>Nhân vật riêng (thư mục public/nhan-vat)</h2>
+    <div class="info" id="sprites">Đang đọc...</div>
+    <div class="row" style="margin-top:8px"><button type="button" id="sprites-reload">🔄 Đọc lại thư mục</button></div>
+
+    <h2>Bảng cày net</h2>
+    <p class="hint" id="players"></p>
+    <table><tbody id="ranks"></tbody></table>
+  </main>
+
+  <script type="module">
+    const $ = (id) => document.getElementById(id);
+    const post = (url, body = {}) => fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    const simulate = (body) => post('/api/simulate', { name: $('name').value, ...body });
+    const button = (text, onclick) => Object.assign(document.createElement('button'), { type: 'button', textContent: text, onclick });
+    const say = (text) => ($('log').textContent = text);
+
+    let guide = null;
+    let botNo = 0;
+    const FAMILY = ['Nguyễn', 'Trần', 'Lê', 'Phạm', 'Hoàng', 'Vũ', 'Đặng'];
+    const GIVEN = ['Lan Anh', 'Minh Tú', 'Quốc Bảo', 'Ngọc Mai', 'Đức Huy', 'Bích Ngọc', 'Tuấn Kiệt', 'Hải Yến', 'Gia Hân', 'Thành Đạt', 'Thu Hà', 'Hoàng Nam'];
+    const botName = () => {
+      const i = botNo++;
+      return `${GIVEN[i % GIVEN.length]} ${FAMILY[i % FAMILY.length]}${i >= 84 ? i : ''}`;
+    };
+    let seated = [];
+
+    async function comment(text) {
+      const { result } = await (await simulate({ kind: 'chat', text })).json();
+      say(result ? `"${text}" → ${JSON.stringify(result)}` : `"${text}" không phải lệnh (hoặc đang chờ giãn cách).`);
+    }
+
+    function renderButtons() {
+      const w = guide.words;
+      $('quick').replaceChildren(
+        button(`🪑 ${w.join}`, () => comment(w.join)),
+        button(`⏰ ${w.check}`, () => comment(w.check)),
+        button(`🏠 ${w.leave}`, () => comment(w.leave)),
+        button(`📳 ${w.buzz}`, () => comment(w.buzz)),
+        button(`💢 ${w.rage}`, () => comment(w.rage)),
+        button(`🙈 ${w.hide}`, () => comment(w.hide)),
+      );
+      $('games').replaceChildren(...guide.games.map((game) => button(`🎮 ${game.code} (${game.label})`, () => comment(game.code))));
+      $('gifts').replaceChildren(
+        ...guide.gifts.map((gift) => {
+          const b = button(`${gift.label} · ${gift.coins} xu`, () => simulate({ kind: 'gift', coins: gift.coins, count: 1 }));
+          b.prepend(Object.assign(new Image(), { className: 'gift-icon', alt: '', src: gift.icon }));
+          return b;
+        }),
+      );
+    }
+
+    for (const b of document.querySelectorAll('[data-like]')) b.onclick = () => simulate({ kind: 'like', count: Number(b.dataset.like) });
+    for (const b of document.querySelectorAll('[data-social]')) b.onclick = () => simulate({ kind: b.dataset.social });
+    for (const b of document.querySelectorAll('[data-control]')) {
+      b.onclick = async () => {
+        const { ok } = await (await post('/api/control', { action: b.dataset.control })).json();
+        say(ok ? `Đã bắt đầu: ${b.textContent}` : 'Chưa bắt đầu được (tiệm vắng quá, hoặc đang có chuyện khác). Mẹ chỉ tới khi đủ người chưa tặng quà đang chơi.');
+      };
+    }
+    $('peek').onclick = () => simulate({ kind: 'peek' });
+    $('talk').onclick = async () => {
+      const { ok } = await (await post('/api/control', { action: 'talk' })).json();
+      say(ok ? 'Cô Tám đang nói ở cửa sổ game.' : 'Cô Tám đang nói câu khác, bấm lại sau chút.');
+    };
+    $('free-send').onclick = () => comment($('free').value);
+    for (const b of document.querySelectorAll('[data-crowd]')) {
+      b.onclick = () => {
+        for (let i = 0; i < Number(b.dataset.crowd); i++) {
+          const name = botName();
+          setTimeout(() => post('/api/simulate', { kind: 'chat', name, text: guide?.words.join ?? 'ngoi' }), i * 300 + Math.random() * 200);
+        }
+      };
+    }
+    $('crowd-gift').onclick = () => seated.forEach((name, i) => setTimeout(() => post('/api/simulate', { kind: 'gift', name, coins: 1, count: 1 }), i * 250));
+    $('reset').onclick = () => {
+      if (confirm('Xóa toàn bộ sổ tiệm (điểm cày, giờ còn lại) và mời mọi người ra để bắt đầu buổi mới?')) post('/api/control', { action: 'reset' });
+    };
+    let safeMode = false;
+    function showSafeMode(on) {
+      safeMode = on;
+      $('safe-box').classList.toggle('on', on);
+      $('safe').textContent = on ? '🛡️ Chế độ an toàn: BẬT. Cô Tám im (chỉ hiện chữ), không tự có giờ vàng, cúp điện, mẹ tới kiếm.' : '🛡️ Chế độ an toàn: tắt. Tự bật khi có cảnh báo TikTok.';
+      $('safe-toggle').textContent = on ? 'Tắt chế độ an toàn' : 'Bật ngay';
+    }
+    $('safe-toggle').onclick = () => post('/api/safe-mode', { on: !safeMode });
+    $('telegram-test').onclick = async () => {
+      say('Đang gửi tin thử Telegram...');
+      const { message } = await (await post('/api/telegram-test')).json();
+      say(message);
+    };
+
+    async function loadSprites() {
+      const list = await (await fetch('/api/nhan-vat', { cache: 'no-store' })).json();
+      const box = $('sprites');
+      const p = (text, cls) => Object.assign(document.createElement('p'), { textContent: text, className: cls ?? '' });
+      const poses = { ngoi: 'ngồi', dung: 'đứng', sau: 'sau lưng', ngang: 'đi ngang' };
+      const pairs = list.khach.map((k) => `khách ${k.no}: ${Object.entries(poses).filter(([pose]) => k[pose]).map(([, label]) => label).join(', ')}`);
+      const owner = ['thuong', 'la', 'vui'].map((mood) => `${mood} ${list.chuTiem[mood] ? '✓' : '✗'}`).join(' · ');
+      box.replaceChildren(
+        p(list.khach.length ? `👥 ${list.khach.length} khách · ${pairs.join(' · ')}` : '👥 Khách: chưa có ảnh, đang dùng hình vẽ sẵn.'),
+        p(`🧑‍💼 Chủ tiệm: ${owner}`),
+        p(`👩 Mẹ: đi tới ${list.me?.dung ? '✓' : '✗'} · đi lên ${list.me?.sau ? '✓' : '✗'}`),
+        ...(list.unknown.length ? [p(`⚠️ Sai tên, game không dùng: ${list.unknown.join(', ')}`, 'bad')] : []),
+        p('Thêm hoặc đổi ảnh xong thì bấm F5 ở cửa sổ game, không cần tắt server.'),
+      );
+    }
+    $('sprites-reload').onclick = loadSprites;
+    loadSprites();
+
+    function renderBoard(board, players) {
+      $('players').textContent = `${players} người có điểm cày. Màn hình hiện top 10 (2 trang).`;
+      $('ranks').replaceChildren(
+        ...board.map((p, i) => {
+          const tr = document.createElement('tr');
+          for (const text of [`${i + 1}.`, p.name, `${p.score.toLocaleString('vi-VN')} phút`]) tr.append(Object.assign(document.createElement('td'), { textContent: text }));
+          return tr;
+        }),
+      );
+    }
+
+    const seats = new Map();
+    let queue = { total: 0 };
+    function renderRoom() {
+      seated = [...seats.values()].filter(Boolean).map((p) => p.name);
+      const out = [...seats.values()].filter((p) => p?.out).length;
+      $('room').textContent = `🖥️ ${seated.length}/${seats.size} máy có người (${out} hết giờ) · ⏳ ${queue.total} đang chờ`;
+    }
+    function loadGame(game) {
+      seats.clear();
+      for (const seat of game.seats) seats.set(seat.index, seat.player);
+      queue = game.queue;
+      renderRoom();
+      renderBoard(game.board, game.players);
+    }
+
+    function showStatus({ connected, text }) {
+      $('status').textContent = text;
+      $('status').classList.toggle('on', connected);
+    }
+    const showAlert = ({ at, text }) => $('alerts').prepend(Object.assign(document.createElement('p'), { textContent: `⚠️ ${new Date(at).toLocaleTimeString('vi-VN')} TikTok cảnh báo: ${text}` }));
+    const showSession = ({ roomId, diamonds, gifts, since }) => {
+      $('session').textContent = roomId
+        ? `💎 Phiên live này (từ ${new Date(since).toLocaleTimeString('vi-VN')}): ${diamonds.toLocaleString('vi-VN')} kim cương từ ${gifts.toLocaleString('vi-VN')} lượt.`
+        : '💎 Chưa có phiên live nào từ lúc bật server.';
+    };
+
+    const events = new EventSource('/events');
+    events.onmessage = (event) => {
+      const msg = JSON.parse(event.data);
+      switch (msg.type) {
+        case 'snapshot':
+          guide = msg.guide;
+          renderButtons();
+          showStatus(msg.status);
+          $('alerts').replaceChildren();
+          msg.alerts.forEach(showAlert);
+          showSession(msg.session);
+          showSafeMode(msg.safeMode);
+          $('tts').textContent = msg.tts.enabled
+            ? `🔊 Cô Tám nói bằng giọng ${msg.tts.voice} (đổi ở voice trong config.json)`
+            : '🔇 Cô Tám chưa có tiếng: cần VBEE_TOKEN và VBEE_APP_ID trong .env rồi chạy lại bằng start.bat';
+          loadGame(msg.game);
+          break;
+        case 'speak-error':
+          say(`Vbee lỗi: ${msg.message}`);
+          break;
+        case 'snapshot-game':
+          loadGame(msg.game);
+          break;
+        case 'seat':
+          seats.set(msg.seat, msg.player);
+          renderRoom();
+          break;
+        case 'leave':
+          seats.set(msg.seat, null);
+          renderRoom();
+          break;
+        case 'times':
+          for (const index of seats.keys()) seats.set(index, null);
+          for (const [index, player] of msg.list) seats.set(index, player);
+          renderRoom();
+          break;
+        case 'queue':
+          queue = msg;
+          renderRoom();
+          break;
+        case 'board':
+          renderBoard(msg.board, msg.players);
+          break;
+        case 'gift':
+          say(`🎁 ${msg.name}: ${msg.label} · +${msg.minutes} phút`);
+          break;
+        case 'mom':
+          if (msg.mom) say(`👩 Mẹ tới kiếm ${msg.mom.name}: ${msg.mom.phase}`);
+          break;
+        case 'safe-mode':
+          showSafeMode(msg.on);
+          break;
+        case 'status':
+          showStatus(msg);
+          break;
+        case 'moderation':
+          showAlert(msg);
+          break;
+        case 'session':
+          showSession(msg);
+          break;
+      }
+    };
+    events.onerror = () => showStatus({ connected: false, text: 'Mất kết nối tới máy chủ game, kiểm tra cửa sổ đang chạy npm start.' });
+  </script>
+</body>
+</html>

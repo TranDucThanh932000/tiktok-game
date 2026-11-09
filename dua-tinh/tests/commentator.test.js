@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { Race } from '../src/race.js';
-import { Commentator } from '../src/commentator.js';
+import { Commentator, segmentsOf } from '../src/commentator.js';
 
 const config = JSON.parse(readFileSync(new URL('../config.json', import.meta.url), 'utf8'));
 const lines = JSON.parse(readFileSync(new URL('../mc.json', import.meta.url), 'utf8'));
@@ -52,7 +52,7 @@ function setup({ missing, options = {}, safe = () => false } = {}) {
 const who = (name) => ({ id: `u:${name}`, name });
 const texts = (said) => said.filter((m) => m.clips?.length).map((m) => m.text);
 
-test('cảm ơn người gửi quà kèm tên tỉnh, cả combo chỉ cảm ơn một lần', () => {
+test('báo ai vừa tiếp sức cho tỉnh nào, không nói "cảm ơn", cả combo chỉ báo một lần', () => {
   const ctx = setup();
   ctx.race.comment(who('Lan'), 'Nam Định');
   for (let i = 0; i < 4; i++) {
@@ -62,9 +62,14 @@ test('cảm ơn người gửi quà kèm tên tỉnh, cả combo chỉ cảm ơn
   ctx.run(3000);
   const thanks = ctx.said.filter((m) => m.kind === 'thanks');
   assert.equal(thanks.length, 1);
-  assert.match(thanks[0].text, /Lan/);
-  assert.match(thanks[0].text, /Nam Định/);
-  assert.ok(thanks[0].clips.some((c) => c.id === 'id:Nam Định'));
+  assert.match(thanks[0].text, /^Lan (vừa )?tiếp sức cho Nam Định!$/);
+  assert.deepEqual(thanks[0].clips.map((c) => c.id.replace(/^id:/, '')).slice(0, 1), ['Lan']);
+  assert.ok(thanks[0].clips.some((c) => /^id:(vừa )?tiếp sức cho Nam Định!$/.test(c.id)), 'tên tỉnh nằm trong đoạn câu đầy đủ');
+  assert.equal(thanks[0].province, 'nam-dinh');
+  assert.deepEqual(thanks[0].giver, { name: 'Lan', avatar: '', icon: '/gifts/rose.webp', points: 4 }, 'màn hình hiện đúng người tặng và tổng điểm cả combo');
+  for (const key of ['thanks', 'thanksBig', 'thanksAnon', 'thanksPending', 'thanksPendingAnon']) {
+    for (const line of lines[key]) assert.doesNotMatch(line, /cảm ơn/i, line);
+  }
 });
 
 test('quà to có lời cảm ơn riêng', () => {
@@ -81,6 +86,8 @@ test('quà khi chưa chọn tỉnh: nhắc bình luận tên tỉnh; chọn tỉ
   a.race.gift(who('Bảo'), { name: 'Lucky Pig', coins: 10 }, 1);
   a.run(3000);
   assert.match(a.said.find((m) => m.kind === 'thanks').text, /Bảo.*bình luận tên tỉnh/i);
+  assert.equal(a.said.find((m) => m.kind === 'thanks').province, undefined);
+  assert.equal(a.said.find((m) => m.kind === 'thanks').giver, undefined, 'chưa có tỉnh thì không có camera, không hiện thẻ người tặng');
 
   const b = setup();
   b.race.gift(who('Bảo'), { name: 'Lucky Pig', coins: 10 }, 1);
@@ -88,6 +95,7 @@ test('quà khi chưa chọn tỉnh: nhắc bình luận tên tỉnh; chọn tỉ
   b.race.comment(who('Bảo'), 'Hà Nội');
   b.run(3000);
   assert.match(b.said.find((m) => m.kind === 'thanks').text, /Bảo.*Hà Nội|Hà Nội.*Bảo/);
+  assert.equal(b.said.find((m) => m.kind === 'thanks').province, 'ha-noi');
 });
 
 test('giọng tên chưa kịp có thì chờ có hạn rồi cảm ơn không tên; tên toàn ký hiệu thì không đọc tên', () => {
@@ -105,7 +113,7 @@ test('giọng tên chưa kịp có thì chờ có hạn rồi cảm ơn không t
   odd.race.comment({ id: 'u:x', name: '🌸🌸' }, 'Cà Mau');
   odd.race.gift({ id: 'u:x', name: '🌸🌸' }, { name: 'Rose', coins: 1 }, 1);
   odd.run(3000);
-  assert.match(odd.said.find((m) => m.kind === 'thanks').text, /^Cảm ơn bạn|Cà Mau vừa được tiếp sức/);
+  assert.match(odd.said.find((m) => m.kind === 'thanks').text, /^Cà Mau vừa được tiếp sức!$/);
 });
 
 test('đổi ngôi đầu: nói ngay, đổi tiếp trong lúc chờ thì chỉ nói tỉnh dẫn đầu cuối cùng', () => {
@@ -197,10 +205,33 @@ test('chế độ an toàn: MC im hoàn toàn', () => {
   assert.deepEqual(ctx.said.at(-1), { type: 'say', clips: [], cut: true });
 });
 
-test('các mẩu giọng dùng chung gồm tên 63 tỉnh và lời MC, không còn chỗ trống chưa điền', () => {
+test('các mẩu giọng dùng chung gồm tên 63 tỉnh, lời MC và cả câu cho từng tỉnh, không còn chỗ trống chưa điền', () => {
   const { mc } = setup();
   const parts = mc.staticParts();
-  for (const name of ['Nam Định', 'Thái Bình', 'Thành phố Hồ Chí Minh', 'Bà Rịa Vũng Tàu', 'Cảm ơn', 'đã tiếp sức cho']) assert.ok(parts.includes(name), name);
+  for (const name of ['Nam Định', 'Thái Bình', 'Thành phố Hồ Chí Minh', 'Bà Rịa Vũng Tàu', 'vừa tiếp sức cho']) assert.ok(parts.includes(name), name);
+  for (const full of ['vừa tiếp sức cho Nam Định!', 'Thành phố Hồ Chí Minh vừa được tiếp sức!', 'Cà Mau bị vượt mặt rồi!']) assert.ok(parts.includes(full), full);
   assert.ok(parts.every((part) => !part.includes('{') && !part.includes('}')));
-  assert.ok(parts.length > 63);
+  // Mẩu nhỏ đứng trước để MC dùng được ngay trong lúc Vbee còn tạo các câu đầy đủ.
+  assert.ok(parts.indexOf('Nam Định') < parts.indexOf('vừa tiếp sức cho Nam Định!'));
+});
+
+test('chia câu: tên người đứng riêng, mỗi đoạn chỉ có một tỉnh', () => {
+  assert.deepEqual(segmentsOf('Cảm ơn {name}! Bạn vừa tiếp sức cho {province}!'), ['Cảm ơn', '{name}', '! Bạn vừa tiếp sức cho {province}!']);
+  assert.deepEqual(segmentsOf('Ngôi đầu đổi chủ! {province} vươn lên dẫn đầu! {province2} bị vượt mặt rồi!'), ['Ngôi đầu đổi chủ! {province} vươn lên dẫn đầu!', '{province2} bị vượt mặt rồi!']);
+  assert.deepEqual(segmentsOf('{province} vừa vượt qua {province2}!'), ['{province} vừa vượt qua', '{province2}!']);
+  assert.deepEqual(segmentsOf('Mời bà con điểm danh nhé!'), ['Mời bà con điểm danh nhé!']);
+});
+
+test('câu đầy đủ chưa có giọng thì chờ một lúc, quá lâu thì ghép tạm từ mẩu nhỏ', () => {
+  const full = 'Bạn vừa tiếp sức cho Nam Định!';
+  const ctx = setup({ missing: new Set([full]) });
+  ctx.mc.lines = { ...lines, thanks: ['Cảm ơn {name}! Bạn vừa tiếp sức cho {province}!'] };
+  ctx.race.comment(who('Lan'), 'Nam Định');
+  ctx.race.gift(who('Lan'), { name: 'Rose', coins: 1 }, 1);
+  ctx.run(config.voice.thanksSettleMs + 3000);
+  assert.equal(ctx.said.filter((m) => m.kind === 'thanks').length, 0);
+  ctx.run(3000);
+  const thanks = ctx.said.find((m) => m.kind === 'thanks');
+  assert.deepEqual(thanks.clips.map((c) => c.id), ['id:Cảm ơn', 'id:Lan', 'id:Bạn vừa tiếp sức cho', 'id:Nam Định']);
+  assert.ok(thanks.clips[1].gap > thanks.clips[0].gap, 'nghỉ sau dấu chấm than, nối liền giữa "Cảm ơn" và tên');
 });

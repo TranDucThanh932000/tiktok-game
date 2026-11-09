@@ -33,7 +33,13 @@ const guide = {
   commentPoints: config.commentPoints,
   gifts: config.gifts.map(({ label, points, icon, names }) => ({ label, points, icon, name: names[0] })),
   boardSize: config.boardSize,
-  mapScores: config.mapScores !== false,
+  camera: {
+    enabled: config.camera?.enabled !== false,
+    onComment: config.camera?.onComment === true,
+    holdMs: (Number(config.camera?.holdSeconds) || 6) * 1000,
+    minDwellMs: (Number(config.camera?.minDwellSeconds) || 2.5) * 1000,
+    maxZoom: Math.max(1.2, Number(config.camera?.maxZoom) || 4),
+  },
 };
 
 const vbee = {
@@ -158,9 +164,17 @@ setInterval(() => mc.tick(), 100);
 function warmVoice() {
   const texts = mc.staticParts();
   const missing = texts.filter((text) => !voice.ready(text));
-  if (!missing.length) return console.log(`[Vbee] Đã có sẵn ${texts.length} mẩu lời MC và tên tỉnh`);
-  console.log(`[Vbee] Đang tạo ${missing.length} mẩu lời MC và tên tỉnh, chỉ lần đầu...`);
-  Promise.all(missing.map((text) => voice.clip(text))).then((ids) => console.log(`[Vbee] Xong lời MC: ${ids.filter(Boolean).length}/${missing.length} mẩu`));
+  if (!missing.length) return console.log(`[Vbee] Đã có sẵn ${texts.length} mẩu lời MC (cả câu cho từng tỉnh)`);
+  console.log(`[Vbee] Đang tạo ${missing.length}/${texts.length} mẩu lời MC (cả câu cho từng tỉnh), chỉ lần đầu. Trong lúc chờ MC tạm ghép từ mẩu nhỏ.`);
+  let done = 0;
+  let ok = 0;
+  for (const text of missing) {
+    voice.clip(text, { background: true }).then((id) => {
+      done++;
+      if (id) ok++;
+      if (done % 100 === 0 || done === missing.length) console.log(`[Vbee] Lời MC: ${ok}/${missing.length} mẩu xong${done < missing.length ? '...' : ''}`);
+    });
+  }
 }
 
 function safeImageUrl(value) {
@@ -372,6 +386,7 @@ app.disable('x-powered-by');
 // Only answer requests addressed to this machine (blocks DNS rebinding).
 app.use((req, res, next) => (['127.0.0.1', 'localhost'].includes(req.hostname) ? next() : res.status(403).end()));
 app.use(express.static(path.join(root, 'public')));
+app.use('/vendor/three', express.static(path.join(root, 'node_modules', 'three')));
 app.use(express.json({ limit: '4kb' }));
 
 app.get('/events', (req, res) => {

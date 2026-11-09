@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tiệm Net</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🖥️</text></svg>">
+  <link rel="stylesheet" href="/fonts/fonts.css">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <svg id="defs" width="0" height="0" aria-hidden="true">
+    <defs>
+      <linearGradient id="g-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6ec6ff"/><stop offset="1" stop-color="#d8f3ff"/></linearGradient>
+      <linearGradient id="g-dance" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5b2a86"/><stop offset="1" stop-color="#e0559b"/></linearGradient>
+      <linearGradient id="g-idle" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0d2b5c"/><stop offset="1" stop-color="#1b5fa8"/></linearGradient>
+      <linearGradient id="g-rgb" x1="0" x2="1"><stop offset="0" stop-color="#ff4fd8"/><stop offset=".5" stop-color="#4fd8ff"/><stop offset="1" stop-color="#8bff6a"/></linearGradient>
+    </defs>
+  </svg>
+
+  <div id="stage">
+    <div id="facade"><i class="bulbs"></i></div>
+    <div id="sign">
+      <div id="title"></div>
+      <div id="subtitle"></div>
+    </div>
+
+    <div id="stats">
+      <div class="stat"><i>🕗</i><div><b id="clock">19:00</b><small>GIỜ TIỆM</small></div></div>
+      <div class="stat"><i>🖥️</i><div><b id="free">0/0</b><small>MÁY TRỐNG</small></div></div>
+      <div class="stat"><i>⏳</i><div><b id="waiting">0</b><small>ĐANG CHỜ</small></div></div>
+      <div class="stat"><i>👀</i><div><b id="viewers">0</b><small>ĐANG XEM</small></div></div>
+    </div>
+    <div id="golden" hidden></div>
+
+    <div id="wall"></div>
+    <div id="window">
+      <div class="sky"><i class="moon"></i><i class="star s1"></i><i class="star s2"></i><i class="star s3"></i></div>
+      <div class="blinds"></div>
+    </div>
+    <div id="peek" hidden></div>
+    <div id="ac"><i></i></div>
+
+    <section id="menu">
+      <header><b>DỊCH VỤ</b></header>
+      <div id="menu-list"></div>
+    </section>
+
+    <div id="shelf">
+      <i class="board b1"></i><i class="board b2"></i>
+      <div class="row r1"><i class="pack"></i><i class="pack"></i><i class="pack"></i><i class="pack"></i><i class="pack"></i><i class="pack"></i></div>
+      <div class="row r2"><i class="can"></i><i class="can"></i><i class="can"></i><i class="can alt"></i><i class="can alt"></i><i class="can"></i><i class="can"></i></div>
+    </div>
+    <div id="owner"></div>
+    <div id="counter">
+      <div class="crt"><i></i></div>
+      <div class="cash"></div>
+      <div class="front"><span>THU NGÂN</span></div>
+    </div>
+
+    <div id="floor"></div>
+    <div id="vip-mat"><span>V<br>I<br>P</span></div>
+    <div id="room"></div>
+
+    <div id="queue">
+      <span class="qlabel">CHỜ<br>MÁY</span>
+      <div id="waiters"></div>
+      <div id="more" hidden></div>
+    </div>
+
+    <div id="walkers"></div>
+    <div id="dark" hidden><b>⚡ CÚP ĐIỆN ⚡</b></div>
+
+    <section id="board">
+      <header><b>🏆 BẢNG CÀY NET</b><span id="pages"></span></header>
+      <ol id="ranks"></ol>
+    </section>
+    <section id="guide">
+      <header><b>💬 COMMENT</b></header>
+      <div id="guide-list"></div>
+    </section>
+
+    <div id="bubble" hidden></div>
+    <div id="toast" hidden></div>
+    <div id="fx"></div>
+    <div id="sound-hint">Bấm vào màn hình để bật âm thanh</div>
+  </div>
+  <script type="module" src="/js/main.js"></script>
+</body>
+</html>

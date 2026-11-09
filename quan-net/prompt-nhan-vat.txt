@@ -1,0 +1,56 @@
+PROMPT TẠO NHÂN VẬT · TIỆM NET CÔ TÁM (bản tiết kiệm)
+
+Chỉ cần 1 ảnh (hoặc 2 ảnh nếu muốn 8 khách). Tôi sẽ tự cắt từng hình ra cho game.
+
+CÁCH LÀM
+1. Copy nguyên khối PROMPT 1, dán vào ChatGPT hoặc Gemini, chọn ảnh dọc (2:3).
+2. Tải ảnh về, đặt tên bo-1.png, bỏ vào thư mục quan-net/anh-goc/ (tạo thư mục nếu chưa có), rồi nhắn tôi.
+3. Muốn có thêm 4 khách nữa (tiệm đỡ trùng mặt): làm tiếp PROMPT 2, đính kèm ảnh bo-1.png, lưu thành bo-2.png.
+4. Công cụ cho nền trong suốt (ChatGPT) thì có thể thay câu "Background: ..." bằng "Transparent background (PNG with alpha)."
+
+Ảnh 1 gồm 20 hình, lưới 4 cột x 5 hàng:
+  Hàng 1 đến 4: 4 khách, mỗi hàng một khách: đứng nhìn trước, đứng sau lưng, đi ngang sang phải, ngồi gõ phím (sau lưng)
+  Hàng 5: cô Tám bình thường, cô Tám la, mẹ đi tới, mẹ đi về
+Ảnh 2 gồm 16 hình, lưới 4 cột x 4 hàng: 4 khách nữa, cùng 4 tư thế như trên.
+
+Các động tác khác (bước chân, gõ phím, đập phím, gục ngủ, cô Tám vui) game tự làm bằng hiệu ứng từ các hình này.
+
+
+======================================================================
+PROMPT 1 · TÊN FILE: bo-1.png · ĐÍNH KÈM: không
+----------------------------------------------------------------------
+Character sprite sheet for a 2D game. Cute 3D chibi characters: big round heads (about 45% of the body height), small bodies, short limbs. Soft vinyl toy / clay 3D render, smooth soft shading, gentle studio light from the top left, bright saturated colors, clean simple shapes, no outlines. Vietnamese internet café in the 2000s.
+Layout: a grid of 4 columns and 5 rows, 20 full-body figures in total, all at the same scale. Every figure stands alone in its own cell with clear empty space around it; figures never touch or overlap. No grid lines, no frames, no labels, no numbers, no text.
+Rows 1 to 4: four DIFFERENT customers, one customer per row. In each row the same customer is shown in 4 poses, from left to right:
+(1) front view, standing, facing the viewer, smiling;
+(2) back view, standing, seen from behind, the face is not visible;
+(3) side view, walking to the RIGHT;
+(4) sitting on a small low red plastic stool, seen from directly behind and slightly above, both hands reaching forward as if typing (no desk, no computer, no keyboard drawn).
+Row 1 customer: a high-school boy with short spiky black hair, white short-sleeve school shirt, navy trousers, black backpack, white sneakers.
+Row 2 customer: a high-school girl with a long black ponytail tied with a pink scrunchie, white short-sleeve school shirt, navy pleated skirt, white sneakers.
+Row 3 customer: a cocky teen boy with spiky bleached yellow hair, black T-shirt with an orange flame print, baggy blue jeans, silver chain necklace.
+Row 4 customer: a gamer girl with a short brown bob haircut, oversized pink hoodie, pink headphones with cat ears, black shorts.
+Row 5, from left to right:
+(1) the café owner: a chubby middle-aged Vietnamese woman with colorful plastic hair curlers, gold earrings and a pink floral pajama set, front view, relaxed and smiling, fanning herself with a woven bamboo hand fan;
+(2) the same owner shouting angrily but comically, mouth wide open, holding a small red megaphone;
+(3) a middle-aged Vietnamese mother with a low hair bun, purple traditional "ao ba ba" blouse and black trousers, front view, walking toward the viewer, angry but comical face, raising a colorful feather duster;
+(4) the same mother, back view, walking away from the viewer, holding the feather duster.
+Background: perfectly flat solid pure green #00FF00 everywhere, no gradient, no floor, no shadows. Do not use any green color on the characters. Vertical image, 2:3 aspect ratio.
+
+
+======================================================================
+PROMPT 2 (không bắt buộc) · TÊN FILE: bo-2.png · ĐÍNH KÈM: bo-1.png
+----------------------------------------------------------------------
+Use exactly the same art style, rendering and character scale as the attached image, but draw four NEW customers.
+Character sprite sheet for a 2D game. Cute 3D chibi characters: big round heads (about 45% of the body height), small bodies, short limbs. Soft vinyl toy / clay 3D render, smooth soft shading, gentle studio light from the top left, bright saturated colors, clean simple shapes, no outlines. Vietnamese internet café in the 2000s.
+Layout: a grid of 4 columns and 4 rows, 16 full-body figures in total, all at the same scale. Every figure stands alone in its own cell with clear empty space around it; figures never touch or overlap. No grid lines, no frames, no labels, no numbers, no text.
+Four DIFFERENT customers, one customer per row. In each row the same customer is shown in 4 poses, from left to right:
+(1) front view, standing, facing the viewer, smiling;
+(2) back view, standing, seen from behind, the face is not visible;
+(3) side view, walking to the RIGHT;
+(4) sitting on a small low red plastic stool, seen from directly behind and slightly above, both hands reaching forward as if typing (no desk, no computer, no keyboard drawn).
+Row 1 customer: a chubby young office worker with side-parted black hair, thick black glasses, light blue polo shirt tucked in, beige trousers, brown sandals.
+Row 2 customer: a sporty boy wearing a red baseball cap backwards, white tank top, black basketball shorts, yellow honeycomb plastic sandals.
+Row 3 customer: a cute girl with two hair buns, oversized yellow T-shirt, denim shorts, chunky white sneakers, small purple headphones around her neck.
+Row 4 customer: a teen boy in 2000s emo style with a long side-swept black fringe covering one eye, black hoodie with the hood down, big black headphones on his head, dark purple jeans.
+Background: perfectly flat solid pure green #00FF00 everywhere, no gradient, no floor, no shadows. Do not use any green color on the characters. Square image, 1:1 aspect ratio.

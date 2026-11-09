@@ -1,0 +1,177 @@
+{
+  "fixes": {
+    "Bye": "Bai",
+    "BUZZ": "Bớt",
+    "buzz": "bớt",
+    "VIP": "víp",
+    "Sting": "Xì tinh",
+    "full": "phun",
+    "x2": "gấp đôi",
+    "net": "nét",
+    "follow": "phô lô",
+    "share": "chia sẻ",
+    "ngoi": "ngồi"
+  },
+  "speak": {
+    "Audition": "Au đi sần",
+    "Half-Life": "Háp lai",
+    "Yahoo": "Da hu",
+    "volam": "vô lâm",
+    "cs": "xê ét",
+    "aoe": "a ô e",
+    "fifa": "phi pha",
+    "chat": "chát"
+  },
+  "sit": [
+    "Mời {name} vô máy!",
+    "{name} vô chơi đi con!",
+    "Mở máy cho {name} nè!",
+    "{name} ngồi đi, máy sẵn rồi!"
+  ],
+  "queue": [
+    "Hết máy rồi {name} ơi, chờ chút nha!",
+    "{name} chờ thứ {pos} nha con!",
+    "Tiệm đông quá, {name} xếp hàng thứ {pos}!"
+  ],
+  "already": [
+    "{name} đang ngồi máy rồi mà!",
+    "Ngồi rồi còn đòi ngồi nữa hả {name}?"
+  ],
+  "alreadyOut": [
+    "{name} hết giờ rồi, thả tim là chơi tiếp nha!"
+  ],
+  "expire": [
+    "{name} hết giờ rồi nha!",
+    "Hết giờ rồi {name} ơi!",
+    "{name} ơi, hết giờ rồi con!"
+  ],
+  "kick": [
+    "Hết giờ rồi, {name} nhường máy cho bạn nha!",
+    "Đứng dậy đi {name}, bạn chờ nãy giờ!",
+    "{name} về đi con, mai chơi tiếp!"
+  ],
+  "leave": [
+    "{name} về hả? Mai ghé nha!",
+    "Bye {name}, về sớm kẻo mẹ la!",
+    "{name} về rồi, mai chơi tiếp nha!"
+  ],
+  "leaveQueue": [
+    "{name} chờ lâu quá bỏ về rồi!"
+  ],
+  "idleLeave": [
+    "{name} ngủ gật rồi, cô tắt máy nha!"
+  ],
+  "follow": [
+    "Cảm ơn {name} follow tiệm, tặng {minutes} phút nè!",
+    "{name} follow rồi, cô ghi thêm {minutes} phút!"
+  ],
+  "share": [
+    "{name} share tiệm, cô tặng {minutes} phút!",
+    "Cảm ơn {name} rủ bạn tới chơi!"
+  ],
+  "gift": [
+    "{name} nạp thêm {minutes} phút nha!",
+    "Ghi sổ {name} thêm {minutes} phút!"
+  ],
+  "mi": [
+    "Một tô mì trứng với chai Sting cho {name} nè!",
+    "Có liền mì tôm cho {name}!"
+  ],
+  "boost": [
+    "{name} lên đồ rồi, cày gấp đôi nha!",
+    "Ui {name} full đồ, x2 điểm luôn!"
+  ],
+  "rig": [
+    "Cô đổi máy cấu hình khủng cho {name} nè!",
+    "{name} chơi máy xịn nhất tiệm!"
+  ],
+  "vip": [
+    "Mời {name} vô phòng VIP!",
+    "{name} lên VIP, máy lạnh riêng nha!"
+  ],
+  "vipWait": [
+    "Phòng VIP kín rồi, {name} chờ chút nha!"
+  ],
+  "treat": [
+    "{name} bao net cả tiệm! Mỗi máy thêm {minutes} phút!",
+    "Cả tiệm cảm ơn {name} bao net nha!"
+  ],
+  "boss": [
+    "Trời ơi! {name} mua lại tiệm rồi! Dạ chào ông chủ!",
+    "Từ giờ {name} là chủ tiệm nha mấy đứa!"
+  ],
+  "check": [
+    "{name} còn {minutes} phút nha!",
+    "{name} còn {minutes} phút đó con!"
+  ],
+  "checkOut": [
+    "{name} hết giờ rồi đó con!"
+  ],
+  "checkQueue": [
+    "{name} đang chờ thứ {pos} nha!"
+  ],
+  "checkNone": [
+    "{name} chưa ngồi máy, gõ ngoi đi con!",
+    "Gõ ngoi để vào máy nha {name}!"
+  ],
+  "buzz": [
+    "{name} buzz {target} kìa!",
+    "BUZZ! {target} ơi, có người kêu!"
+  ],
+  "rage": [
+    "Đập hư phím đền nha {name}!",
+    "Nhẹ tay thôi {name}, phím của cô!",
+    "{name} thua hả? Bình tĩnh con!"
+  ],
+  "golden": [
+    "Giờ vàng {game}! Chơi {game} được x2, gõ {code}!",
+    "Mấy đứa ơi, {game} đang x2! Gõ {code} để đổi!"
+  ],
+  "goldenEnd": [
+    "Hết giờ vàng rồi nha!"
+  ],
+  "blackout": [
+    "Ơ cúp điện! Ngồi im đó mấy đứa!",
+    "Trời ơi, lại cúp điện!"
+  ],
+  "blackoutEnd": [
+    "Có điện rồi! Giờ không bị trừ đâu nha!",
+    "Điện về rồi, chơi tiếp đi!"
+  ],
+  "momCome": [
+    "Chết rồi {name}! Mẹ tới kìa!",
+    "{name} ơi, mẹ tới kiếm kìa! Gõ trốn lẹ!"
+  ],
+  "momHide": [
+    "Hú hồn, {name} trốn kịp rồi!",
+    "{name} núp dưới gầm bàn, cô không thấy gì hết!"
+  ],
+  "momDrag": [
+    "{name} bị mẹ xách tai về rồi!",
+    "Thôi về đi {name}, mai ra sớm!"
+  ],
+  "momHome": [
+    "{name} tự về trước, ngoan quá!"
+  ],
+  "mom": [
+    "{name} ơi! Về ăn cơm!!!",
+    "{name}! Mẹ biết con ở đây nha!",
+    "{name}! Học bài chưa mà ra net?"
+  ],
+  "momLost": [
+    "Ủa? Đâu mất rồi?",
+    "Rõ ràng mới thấy đây mà..."
+  ],
+  "idle": [
+    "Tiệm mở thâu đêm nha mấy đứa!",
+    "Gõ ngoi là có máy liền!",
+    "Ai làm đổ Sting ra bàn đây?",
+    "Đứa nào gõ phím mạnh vậy?",
+    "Khuya rồi, coi chừng mẹ ra kiếm đó!",
+    "Phòng VIP máy lạnh mát lắm nha!",
+    "Về nhớ tắt máy nha mấy đứa!",
+    "Mì tôm trứng tiệm cô ngon nhất xóm!",
+    "Thả tim là có thêm giờ chơi nha!",
+    "Gõ giờ để coi còn bao nhiêu phút!"
+  ]
+}

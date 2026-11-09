@@ -8,12 +8,20 @@
   "pointsPerCoin": 1,
   "gifts": [
     { "label": "Hoa hồng", "names": ["Rose", "Hoa hồng"], "coins": 1, "points": 1, "icon": "/gifts/rose.webp" },
+    { "label": "Tim cam", "names": ["Heart Me", "Tim cam"], "coins": 1, "points": 1, "icon": "/gifts/heart-me.webp" },
     { "label": "Bắn tim", "names": ["Finger Heart", "Bắn tim"], "coins": 5, "points": 5, "icon": "/gifts/finger-heart.webp" },
     { "label": "Heo may mắn", "names": ["Lucky Pig", "Piggy", "Pig", "Heo", "Heo may mắn"], "coins": 10, "points": 10, "icon": "/gifts/lucky-pig.webp" }
   ],
 
   "boardSize": 10,
-  "mapScores": true,
+
+  "camera": {
+    "enabled": true,
+    "onComment": false,
+    "holdSeconds": 6,
+    "minDwellSeconds": 2.5,
+    "maxZoom": 4
+  },
 
   "voice": {
     "enabled": true,

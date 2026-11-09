@@ -1,5 +1,6 @@
 import { sfx, wake, onAudioState, speak, stopSpeech } from './audio.js';
-import { buildMap, loadMap } from './map.js';
+import { buildMap, loadMap, LAND } from './map.js';
+import { createCamera } from './camera.js';
 
 const W = 1080;
 const H = 1920;
@@ -37,6 +38,9 @@ onAudioState((running) => {
 // ---------- Trạng thái ----------
 let guide = null;
 let map = null;
+let camera = null;
+// Vị trí tỉnh trên màn hình theo góc nhìn camera 3D đang hướng tới (hiệu ứng là lớp HTML nằm trên bản đồ).
+const spot = (id) => map.point(id);
 const meta = new Map(); // id tỉnh -> { name, short, plate, region }
 const tally = new Map(); // id tỉnh -> { people, gift, score, at }
 let members = 0;
@@ -66,11 +70,8 @@ function render() {
   if (!map) return;
   const list = ranking();
   const top = list[0]?.score ?? 0;
-  const rankOf = new Map(list.map((row, i) => [row.id, i + 1]));
-  for (const [id, t] of tally) {
-    map.setScore(id, t.score, top ? Math.sqrt(t.score / top) : 0);
-    map.setRank(id, rankOf.get(id) ?? 0);
-  }
+  // Tỉnh càng nhiều điểm so với tỉnh dẫn đầu thì khối đất càng cao.
+  for (const [id, t] of tally) map.setHeat(id, top ? Math.sqrt(t.score / top) : 0);
   map.setLeader(list[0]?.id ?? null);
   renderBoard(list.slice(0, guide.boardSize), top);
   $('totals').textContent = `👥 ${fmt(members)} người`;
@@ -82,7 +83,7 @@ const rows = new Map(); // id tỉnh -> các ô của dòng
 function makeRow(id) {
   const info = meta.get(id);
   const root = el('div', 'row');
-  root.style.setProperty('--c', map.items.get(id).color);
+  root.style.setProperty('--c', LAND);
   const name = el('span', 'name', shortName(id));
   if (name.textContent.length > 12) name.classList.add('long');
   const row = { root, bar: el('i', 'bar'), rank: el('b', 'rank'), name, people: el('span', 'people'), score: el('b', 'score'), last: null };
@@ -136,10 +137,23 @@ function renderGuide() {
     row.append(icon, text, el('b', '', points));
     return row;
   };
+  // Quà không ghi tên, chỉ hiện hình; quà cùng số điểm (Hoa hồng, Tim cam) chung một dòng.
+  const byPoints = new Map();
+  for (const gift of guide.gifts) {
+    if (!byPoints.has(gift.points)) byPoints.set(gift.points, []);
+    byPoints.get(gift.points).push(gift);
+  }
+  const giftLine = (points, gifts) => {
+    const icons = el('span', 'icons');
+    icons.append(...gifts.map((gift) => Object.assign(new Image(), { src: gift.icon, alt: gift.label, title: gift.label })));
+    const row = el('div', 'line gifts');
+    row.append(icons, el('b', '', `+${points}`));
+    return row;
+  };
   $('guide').replaceChildren(
     el('h3', '', 'CÁCH CHƠI'),
     line(el('i', 'icon', '💬'), 'Comment tên tỉnh', 'Mỗi người tính 1 lần', `+${guide.commentPoints}`),
-    ...guide.gifts.map((gift) => line(Object.assign(new Image(), { src: gift.icon, alt: '' }), gift.label, '', `+${gift.points}`)),
+    ...[...byPoints].map(([points, gifts]) => giftLine(points, gifts)),
     el('p', 'note', 'Điểm cộng cho tỉnh của bạn'),
   );
 }
@@ -221,9 +235,9 @@ function nameTag(id, name, url, { force = false, ms = 1800 } = {}) {
   if (document.hidden || (tags >= MAX_TAGS && !force) || shownTags.has(key)) return;
   tags++;
   shownTags.add(key);
-  const { x, y, size } = map.point(id);
+  const { x, y, size } = spot(id);
   const node = el('div', 'tag');
-  node.style.setProperty('--c', map.items.get(id).color);
+  node.style.setProperty('--c', LAND);
   node.append(avatar(name, url, ''), name);
   Object.assign(node.style, { left: `${x}px`, top: `${y - size / 2 - 30}px` });
   fx.append(node);
@@ -263,7 +277,7 @@ function flyGift(icon, id, done) {
   // Combo lớn bắn rất nhiều sự kiện: quá số quà đang bay thì chỉ nháy tỉnh, không thêm quà bay.
   if (document.hidden || flyers >= MAX_FLYERS) return done();
   flyers++;
-  const { x, y } = map.point(id);
+  const { x, y } = spot(id);
   const from = giftOrigin(icon);
   const node = icon ? Object.assign(new Image(), { className: 'flyer', src: icon, alt: '' }) : el('div', 'flyer', '🎁');
   if (!icon) Object.assign(node.style, { fontSize: '70px', textAlign: 'center' });
@@ -288,7 +302,7 @@ function flyGift(icon, id, done) {
 
 function hearts(id, n) {
   if (busyFx()) return;
-  const { x, y } = map.point(id);
+  const { x, y } = spot(id);
   for (let i = 0; i < n; i++) {
     const node = el('div', 'heart', ['❤️', '💖', '💗'][i % 3]);
     Object.assign(node.style, { left: `${x + (Math.random() - 0.5) * 24}px`, top: `${y - 10}px` });
@@ -319,8 +333,78 @@ function leadBanner(id) {
     box.hidden = true;
   }, 3300);
   sfx.lead();
-  const { x, y } = map.point(id);
+  const { x, y } = spot(id);
   sparks(x, y, 30);
+}
+
+// ---------- Người tặng quà: thẻ to cạnh tỉnh trong lúc camera focus tỉnh đó ----------
+// Thẻ gắn với tỉnh: camera bay tới tỉnh nào thì hiện người vừa tặng cho tỉnh đó, kể cả khi camera phải chờ lượt.
+const GIVER_FRESH_MS = 30_000;
+const GIVER_COMBO_MS = 8_000;
+const givers = new Map(); // id tỉnh -> { name, avatar, icon, points, at }
+let giverShown = null; // tỉnh đang hiện thẻ
+let giverTimer = 0;
+// Thẻ chỉ hiện khi camera focus; tắt camera thì dùng thẻ tên nhỏ trên tỉnh như trước.
+const cardOn = () => guide.camera?.enabled !== false;
+
+// total: điểm đã cộng sẵn cả combo (MC đọc). Không có thì cùng một người tặng liên tiếp được cộng dồn.
+function noteGiver(province, { name, avatar, icon, points, total = false }) {
+  const prev = givers.get(province);
+  const now = performance.now();
+  const same = prev?.name === name && now - prev.at < GIVER_COMBO_MS;
+  givers.set(province, {
+    name,
+    avatar: avatar || (same ? prev.avatar : ''),
+    icon: icon || (same ? prev.icon : ''),
+    points: total || !same ? points : prev.points + points,
+    at: now,
+  });
+  if (giverShown === province) drawGiver(province, same);
+}
+
+function drawGiver(province, sameGiver = false) {
+  const g = givers.get(province);
+  const box = $('giver');
+  clearTimeout(giverTimer);
+  box.classList.remove('out');
+  // Combo của cùng một người: chỉ cập nhật điểm.
+  if (sameGiver && !box.hidden) {
+    box.querySelector('.pts').textContent = `+${fmt(g.points)}`;
+    restart(box, 'bump');
+    return;
+  }
+  const gift = el('span', 'gift');
+  gift.append(g.icon ? Object.assign(new Image(), { src: g.icon, alt: '' }) : el('i', '', '🎁'), el('b', 'pts', `+${fmt(g.points)}`));
+  const line = el('span', 'line', 'tiếp sức ');
+  line.append(el('strong', '', shortName(province)));
+  const info = el('div', 'info');
+  info.append(el('b', 'name', g.name), line, gift);
+  box.replaceChildren(avatar(g.name, g.avatar, 'ava'), info);
+  // Ngay dưới bảng xếp hạng (bảng dài ngắn theo boardSize), cạnh tỉnh đang được focus.
+  const board = $('board');
+  box.style.top = `${board.offsetTop + board.offsetHeight + 14}px`;
+  box.classList.remove('bump');
+  box.hidden = false;
+  restart(box, 'in');
+}
+
+function showGiver(province) {
+  const g = givers.get(province);
+  if (!g || performance.now() - g.at > GIVER_FRESH_MS) return hideGiver();
+  giverShown = province;
+  drawGiver(province);
+}
+
+function hideGiver() {
+  if (!giverShown) return;
+  giverShown = null;
+  const box = $('giver');
+  box.classList.add('out');
+  clearTimeout(giverTimer);
+  giverTimer = setTimeout(() => {
+    box.hidden = true;
+    box.classList.remove('out');
+  }, 350);
 }
 
 // ---------- MC ----------
@@ -336,11 +420,19 @@ function say(msg) {
   }
   speak(msg, {
     onStart() {
+      // MC đọc câu tiếp sức: camera giữ ở tỉnh đó cho tới khi nói xong, thẻ hiện đúng người MC đang đọc tên.
+      if (msg.province) {
+        if (msg.giver) noteGiver(msg.province, { ...msg.giver, total: true });
+        camera.focus(msg.province, { lockMs: 20000 });
+      }
       if (!msg.text) return;
       $('mc-text').textContent = msg.text;
       $('mc').hidden = false;
     },
-    onDone: hideMc,
+    onDone() {
+      if (msg.province) camera.unlock(msg.province);
+      hideMc();
+    },
   });
 }
 
@@ -365,11 +457,27 @@ const handlers = {
     $('title-text').textContent = guide.title;
     $('subtitle').textContent = guide.subtitle;
     for (const p of msg.provinces) meta.set(p.id, p);
-    map ??= buildMap({ root: $('map'), layer: $('badges'), data: mapData, meta, scores: guide.mapScores });
+    map ??= buildMap({ canvas: $('map'), crown: $('crown'), data: mapData, meta, maxZoom: guide.camera?.maxZoom });
+    camera ??= createCamera({
+      // Camera bay tới tỉnh nào thì hiện thẻ người vừa tặng cho tỉnh đó, lùi về toàn cảnh thì cất thẻ.
+      map: {
+        focus(id) {
+          map.focus(id);
+          showGiver(id);
+        },
+        unfocus() {
+          map.unfocus();
+          hideGiver();
+        },
+      },
+      options: guide.camera,
+    });
     renderGuide();
     applyRace(msg.race);
   },
   reset(msg) {
+    camera.reset();
+    givers.clear();
     applyRace(msg.race);
     $('feed').replaceChildren();
     sfx.reset();
@@ -378,11 +486,16 @@ const handlers = {
     wake();
     update(msg);
     members = msg.members;
-    const { x, y } = map.point(msg.province);
     const boosted = msg.held > 0;
+    // Quà gửi trước khi chọn tỉnh giờ mới được cộng: camera tới tỉnh và hiện người tặng như khi có quà.
+    if (boosted) {
+      noteGiver(msg.province, { name: msg.name, avatar: msg.avatar, icon: '', points: msg.points });
+      camera.focus(msg.province);
+    } else if (guide.camera?.onComment) camera.focus(msg.province, { holdMs: 3000, soft: true });
+    const { x, y } = spot(msg.province);
     map.flash(msg.province, boosted);
     floatText(x, y - 18, `+${fmt(msg.points)}`, boosted);
-    nameTag(msg.province, msg.name, msg.avatar, { force: boosted });
+    if (!boosted || !cardOn()) nameTag(msg.province, msg.name, msg.avatar, { force: boosted });
     sfx.join();
     addFeed({ kind: boosted ? 'gift' : 'join', name: msg.name, url: msg.avatar, line: `→ ${shortName(msg.province)}`, plus: `+${fmt(msg.points)}` });
   },
@@ -390,13 +503,16 @@ const handlers = {
     wake();
     update(msg);
     const big = msg.points >= BIG_GIFT;
-    const { x, y } = map.point(msg.province);
+    noteGiver(msg.province, msg);
+    camera.focus(msg.province);
+    const { x, y } = spot(msg.province);
     flyGift(msg.icon, msg.province, () => {
       map.flash(msg.province, true);
       floatText(x, y - 18, `+${fmt(msg.points)}`, true);
       sparks(x, y, big ? 34 : 16);
     });
-    nameTag(msg.province, msg.name, msg.avatar, { force: true, ms: 2800 });
+    // Thẻ người tặng to đã hiện cạnh tỉnh; chỉ khi tắt camera mới hiện thẻ tên nhỏ trên tỉnh như cũ.
+    if (!cardOn()) nameTag(msg.province, msg.name, msg.avatar, { force: true, ms: 2800 });
     sfx.gift(big);
     addFeed({ kind: 'gift', name: msg.name, url: msg.avatar, line: `→ ${shortName(msg.province)}`, plus: `+${fmt(msg.points)}`, icon: msg.icon, key: `${msg.name}|${msg.province}|${msg.icon}`, points: msg.points });
   },

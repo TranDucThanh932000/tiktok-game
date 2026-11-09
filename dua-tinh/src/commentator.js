@@ -1,6 +1,8 @@
 // MC cuộc đua: chỉ lên tiếng khi có quà, khi đổi ngôi đầu, và thỉnh thoảng bình luận cho cuộc đua thêm hấp dẫn.
-// Mọi câu đều ghép từ các mẩu giọng có sẵn (tên tỉnh, các đoạn lời trong mc.json, tên người gửi quà), nên server
-// biết trước độ dài và mỗi lúc chỉ có một câu đang nói. Trang game chỉ việc phát và hiện phụ đề.
+// Mỗi câu trong mc.json được chia thành vài đoạn đọc liền một hơi (segmentsOf). Đoạn có tên tỉnh được Vbee tạo sẵn
+// cho đủ 63 tỉnh, nên câu nghe trôi chảy như đọc một lần; chỉ tên người gửi quà là mẩu riêng, tạo khi cần.
+// Đoạn đầy đủ chưa kịp tạo thì tạm ghép từ các mẩu nhỏ (cụm lời, tên tỉnh) để MC không bị im.
+// Server biết trước độ dài và mỗi lúc chỉ có một câu đang nói. Trang game chỉ việc phát và hiện phụ đề.
 import { readableName, speakText } from './spoken.js';
 import { BY_ID, PROVINCES, spokenName } from './provinces.js';
 
@@ -8,8 +10,61 @@ const PRIORITY = { thanks: 5, lead: 4, reset: 4, rising: 3, talk: 1 };
 const GAP_MS = 1200;
 const RISING_GAP_MS = 30_000;
 const VOICE_BACKLOG_LIMIT = 12;
+// Chờ đoạn câu đầy đủ tối đa ngần này rồi mới tạm ghép từ mẩu nhỏ.
+const FULL_WAIT_MS = 5000;
+// Khoảng nghỉ giữa hai đoạn (giây): có dấu câu thì nghỉ như người đọc, không có thì nối liền.
+const PAUSE = 0.22;
+const JOIN = 0.04;
 const SLOT = /(\{name\}|\{province2?\})/;
+const PROVINCE_SLOT = /\{province2?\}/g;
+const CLAUSE_BREAK = /(?<=[,.!?;:])\s+/;
+const LEAD_PUNCT = /^[\s,.!?;:]+/;
 const LINE_KEYS = ['thanks', 'thanksBig', 'thanksAnon', 'thanksPending', 'thanksPendingAnon', 'leadFirst', 'lead', 'leading', 'close', 'farAhead', 'chase', 'rising', 'invite', 'empty', 'reset'];
+
+const slotsIn = (text) => new Set(text.match(PROVINCE_SLOT) ?? []);
+
+// "Cảm ơn {name}! Bạn vừa tiếp sức cho {province}!" -> ["Cảm ơn", "{name}", "! Bạn vừa tiếp sức cho {province}!"].
+// Tên người luôn đứng riêng. Mỗi đoạn còn lại chứa nhiều nhất một loại chỗ trống tỉnh, để chỉ cần tạo sẵn 63 bản.
+export function segmentsOf(template) {
+  const out = [];
+  let cur = '';
+  const flush = () => {
+    if (cur.trim()) out.push(cur.trim());
+    cur = '';
+  };
+  const add = (text) => {
+    if (!text.trim()) return;
+    const merged = cur ? `${cur} ${text}` : text;
+    if (slotsIn(merged).size <= 1) {
+      cur = merged;
+      return;
+    }
+    if (slotsIn(text).size <= 1) {
+      flush();
+      cur = text;
+      return;
+    }
+    // Một vế có cả hai tỉnh: cắt ngay trước chỗ trống tỉnh thứ hai.
+    const matches = [...text.matchAll(PROVINCE_SLOT)];
+    const second = matches.find((m) => m[0] !== matches[0][0]);
+    add(text.slice(0, second.index));
+    flush();
+    add(text.slice(second.index));
+  };
+  for (const clause of template.split(CLAUSE_BREAK)) {
+    const at = clause.indexOf('{name}');
+    if (at < 0) {
+      add(clause);
+      continue;
+    }
+    add(clause.slice(0, at));
+    flush();
+    out.push('{name}');
+    add(clause.slice(at + '{name}'.length));
+  }
+  flush();
+  return out;
+}
 
 export class Commentator {
   // trimMs: trang game cắt khoảng lặng hai đầu mỗi mẩu, nên độ dài thật ngắn hơn file một chút.
@@ -57,60 +112,112 @@ export class Commentator {
     return line;
   }
 
-  // "Cảm ơn {name} đã tiếp sức cho {province}!" -> ["Cảm ơn", tên, "đã tiếp sức cho", tên tỉnh].
+  // Lời đọc của một đoạn: điền tên tỉnh (cách đọc), bỏ dấu câu ở đầu đoạn.
+  spokenSegment(segment, vars) {
+    const filled = segment.replace(PROVINCE_SLOT, (slot) => spokenName(vars[slot.slice(1, -1)]));
+    return this.say(filled.replace(LEAD_PUNCT, '').trim());
+  }
+
+  // Cách cũ: cụm lời và tên tỉnh là các mẩu riêng. Dùng tạm khi đoạn đầy đủ chưa có giọng.
+  pieces(segment, vars) {
+    const out = [];
+    for (const piece of segment.split(SLOT)) {
+      if (piece === '{province}' || piece === '{province2}') out.push(spokenName(vars[piece.slice(1, -1)]));
+      else {
+        const spoken = piece.replace(LEAD_PUNCT, '').trim();
+        if (spoken) out.push(this.say(spoken));
+      }
+    }
+    return out;
+  }
+
+  segments(template) {
+    this.segmentCache ??= new Map();
+    if (!this.segmentCache.has(template)) this.segmentCache.set(template, segmentsOf(template));
+    return this.segmentCache.get(template);
+  }
+
+  // "Cảm ơn {name}! Bạn vừa tiếp sức cho {province}!" -> các đoạn [{ text: "Cảm ơn" }, { text: tên }, { text: "Bạn vừa tiếp sức cho Nam Định!" }].
   // Tên không đọc được thì trả về null để chọn câu không có tên, không đọc sai.
   fill(template, vars = {}) {
     if (!template) return null;
+    for (const slot of template.match(PROVINCE_SLOT) ?? []) if (!BY_ID.has(vars[slot.slice(1, -1)])) return null;
+    const segments = this.segments(template);
     const parts = [];
-    let text = '';
-    for (const piece of template.split(SLOT)) {
-      if (piece === '{name}') {
-        const spoken = readableName(vars.name ?? '');
-        if (!spoken) return null;
-        parts.push(spoken);
-        text += vars.name;
-      } else if (piece === '{province}' || piece === '{province2}') {
-        const province = BY_ID.get(vars[piece.slice(1, -1)]);
-        if (!province) return null;
-        parts.push(spokenName(province.id));
-        text += province.name;
-      } else {
-        text += piece;
-        const spoken = piece.replace(/^[\s,.!?:]+/, '').trim();
-        if (spoken) parts.push(this.say(spoken));
+    segments.forEach((segment, i) => {
+      const next = segments[i + 1] ?? '';
+      const gap = /[,.!?;:]$/.test(segment) || LEAD_PUNCT.test(next) ? PAUSE : JOIN;
+      if (segment === '{name}') {
+        parts.push({ text: readableName(vars.name ?? ''), gap });
+        return;
       }
-    }
+      const text = this.spokenSegment(segment, vars);
+      if (text) parts.push({ text, fallback: this.pieces(segment, vars), gap });
+      else if (parts.length) parts.at(-1).gap = PAUSE;
+    });
+    if (parts.some((part) => !part.text)) return null;
+    const text = template.replace(/\{name\}/g, vars.name ?? '').replace(PROVINCE_SLOT, (slot) => BY_ID.get(vars[slot.slice(1, -1)]).name);
     return { parts, text: text.trim() };
   }
 
-  // Tất cả các mẩu dùng chung: lời trong mc.json và tên 63 tỉnh. Tên người xem tạo khi cần.
+  // Các mẩu dùng chung, tạo sẵn một lần: trước là mẩu nhỏ (cụm lời, tên 63 tỉnh) để MC dùng được ngay,
+  // sau là các đoạn đầy đủ cho từng tỉnh, lời cảm ơn trước. Tên người xem tạo khi cần.
   staticParts() {
-    const out = new Set();
+    const small = new Set(PROVINCES.map((p) => spokenName(p.id)));
+    const full = new Set();
     for (const key of LINE_KEYS) {
       for (const line of this.lines[key] ?? []) {
-        for (const piece of line.split(SLOT)) {
-          if (SLOT.test(piece)) continue;
-          const spoken = piece.replace(/^[\s,.!?:]+/, '').trim();
-          if (spoken) out.add(this.say(spoken));
+        for (const segment of this.segments(line)) {
+          if (segment === '{name}') continue;
+          for (const piece of this.pieces(segment, {})) if (piece) small.add(piece);
+          const slot = segment.match(PROVINCE_SLOT)?.[0];
+          const ids = slot ? PROVINCES.map((p) => p.id) : [null];
+          for (const id of ids) {
+            const text = this.spokenSegment(segment, slot ? { [slot.slice(1, -1)]: id } : {});
+            if (text) full.add(text);
+          }
         }
       }
     }
-    for (const p of PROVINCES) out.add(spokenName(p.id));
-    return [...out];
+    for (const text of small) full.delete(text);
+    return [...small, ...full];
   }
 
   // ---------- Phát ----------
-  lengthOf(ids) {
-    return ids.reduce((sum, id) => sum + Math.max(150, this.voice.duration(id) - this.trimMs), 0);
+  lengthOf(clips) {
+    return clips.reduce((sum, clip) => sum + Math.max(150, this.voice.duration(clip.id) - this.trimMs) + clip.gap * 1000, 0);
   }
 
-  enqueue(kind, filled, { ttlMs = 10_000, points = 0, province = null } = {}) {
+  // Các mẩu sẽ phát, hoặc null nếu chưa đủ giọng. withFallback: đoạn đầy đủ chưa có thì ghép tạm từ mẩu nhỏ.
+  resolve(parts, withFallback) {
+    const clips = [];
+    for (const part of parts) {
+      const id = this.voice.ready(part.text);
+      if (id) {
+        clips.push({ id, gap: part.gap });
+        continue;
+      }
+      if (!withFallback || !part.fallback?.length) return null;
+      const ids = part.fallback.map((piece) => this.voice.ready(piece));
+      if (ids.some((piece) => !piece)) return null;
+      ids.forEach((piece, k) => clips.push({ id: piece, gap: k === ids.length - 1 ? part.gap : JOIN }));
+    }
+    return clips;
+  }
+
+  enqueue(kind, filled, { ttlMs = 10_000, points = 0, province = null, giver = null } = {}) {
     if (!this.on || !filled) return false;
     const urgent = kind === 'thanks';
-    if (!urgent && this.voice.busy() > VOICE_BACKLOG_LIMIT) return false;
-    filled.parts.forEach((part) => this.voice.clip(part, { urgent }));
-    const expires = Math.max(this.now(), this.busyUntil) + ttlMs;
-    this.queue.push({ kind, priority: PRIORITY[kind] ?? 1, parts: filled.parts, text: filled.text, expires, points, province });
+    // Lúc Vbee còn đang tạo sẵn cả nghìn đoạn thì vẫn cho nói nếu ghép tạm được ngay.
+    if (!urgent && this.voice.busy() > VOICE_BACKLOG_LIMIT && !this.resolve(filled.parts, true)) return false;
+    // Câu đã nhận thì cần đọc ngay: đưa các đoạn của nó lên trước việc tạo sẵn.
+    for (const part of filled.parts) {
+      this.voice.clip(part.text, { urgent: true });
+      if (!this.voice.ready(part.text)) part.fallback?.forEach((piece) => this.voice.clip(piece, { urgent: true }));
+    }
+    const t = this.now();
+    const expires = Math.max(t, this.busyUntil) + ttlMs;
+    this.queue.push({ kind, priority: PRIORITY[kind] ?? 1, parts: filled.parts, text: filled.text, expires, points, province, giver, at: t });
     // Quà dồn dập thì bỏ bớt lời cảm ơn nhỏ nhất; màn hình vẫn hiện đủ.
     const thanks = this.queue.filter((entry) => entry.kind === 'thanks');
     if (thanks.length > this.opt.maxThanks) {
@@ -126,10 +233,10 @@ export class Commentator {
     this.queue = this.queue.filter((entry) => entry.expires > t && !this.staleLead(entry));
     const order = [...this.queue].sort((a, b) => b.priority - a.priority);
     for (const entry of order) {
-      const ids = entry.parts.map((part) => this.voice.ready(part));
-      if (ids.some((id) => !id)) continue;
+      const clips = this.resolve(entry.parts, t - entry.at >= FULL_WAIT_MS);
+      if (!clips) continue;
       this.queue.splice(this.queue.indexOf(entry), 1);
-      this.busyUntil = t + this.lengthOf(ids) + GAP_MS;
+      this.busyUntil = t + this.lengthOf(clips) + GAP_MS;
       // Vừa nói xong thì nghỉ một lúc mới bình luận tiếp, để MC không nói liên tục.
       this.nextTalkAt = Math.max(this.nextTalkAt, this.busyUntil + 10_000);
       // Chỉ tính là đã báo ngôi đầu khi câu thật sự được đọc; câu hết hạn hay bị bỏ thì lần sau báo lại.
@@ -137,7 +244,10 @@ export class Commentator {
         this.leadSaid = entry.province;
         this.leadSaidAt = t;
       }
-      this.emit({ type: 'say', kind: entry.kind, clips: ids.map((id) => ({ id })), text: entry.text });
+      const say = { type: 'say', kind: entry.kind, clips, text: entry.text };
+      // Màn hình đưa camera tới tỉnh vừa được tiếp sức và hiện người tặng trong lúc MC nói.
+      if (entry.kind === 'thanks' && entry.province) Object.assign(say, { province: entry.province, giver: entry.giver });
+      this.emit(say);
       return;
     }
   }
@@ -187,6 +297,8 @@ export class Commentator {
     entry.points += msg.points;
     entry.last = t;
     entry.name = msg.name;
+    entry.avatar = msg.avatar || entry.avatar || '';
+    entry.icon = msg.icon || entry.icon || '';
     entry.province = msg.province ?? entry.province;
     this.thanks.delete(msg.userId);
     this.thanks.set(msg.userId, entry);
@@ -214,7 +326,9 @@ export class Commentator {
         if (nameReady) filled = this.fill(this.pick('thanksPending'), { name: entry.name });
         filled ??= this.fill(this.pick('thanksPendingAnon'));
       }
-      this.enqueue('thanks', filled, { ttlMs: 45_000, points: entry.points });
+      // giver: người tặng, để màn hình hiện tên và ảnh đại diện đúng người MC đang đọc.
+      const giver = { name: entry.name, avatar: entry.avatar, icon: entry.icon, points: entry.points };
+      this.enqueue('thanks', filled, { ttlMs: 45_000, points: entry.points, province: entry.province, giver });
     }
   }
 

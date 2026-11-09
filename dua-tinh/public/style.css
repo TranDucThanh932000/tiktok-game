@@ -2,7 +2,6 @@
   --sea-1: #12406e;
   --sea-2: #0b2a4c;
   --sea-3: #061a31;
-  --land-dark: #10294a;
   --ink: #f4f7fb;
   --dim: #a9bdd6;
   --gold: #ffd54a;
@@ -22,44 +21,17 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #04101f; }
   font-family: var(--font); color: var(--ink);
 }
 #stage > * { position: absolute; }
-#map, #badges, #fx { left: 0; top: 0; width: 1080px; height: 1920px; pointer-events: none; }
+#map, #fx { left: 0; top: 0; width: 1080px; height: 1920px; pointer-events: none; }
 
-/* ---------- Bản đồ ---------- */
-.graticule { fill: none; stroke: rgba(160, 205, 255, .07); stroke-width: 1.5; }
-.sea-label { fill: rgba(175, 212, 255, .34); font: italic 500 24px var(--font); letter-spacing: 2px; text-anchor: middle; }
-.sea-label.big { fill: rgba(175, 212, 255, .26); font: italic 700 40px var(--font); letter-spacing: 12px; }
-
-.land-base { fill: #071a30; }
-.prov .fill { fill: color-mix(in srgb, var(--c) var(--heat), var(--land-dark)); transition: fill .8s; }
-.prov .edge { fill: none; stroke: var(--c); stroke-width: 9; stroke-linejoin: round; }
-.borders { fill: none; stroke: rgba(255, 255, 255, .9); stroke-width: 1.3; stroke-linejoin: round; }
-.outline { fill: none; stroke: #f5fbff; stroke-width: 2.6; stroke-linejoin: round; }
-.leader-ring { fill: none; stroke: var(--gold); stroke-width: 4.5; stroke-linejoin: round; animation: ring 1.1s ease-in-out infinite alternate; }
-@keyframes ring { from { stroke-opacity: .5; } to { stroke-opacity: 1; } }
-
-.archipelago .frame { fill: rgba(4, 18, 36, .35); stroke: rgba(200, 228, 255, .45); stroke-width: 2; stroke-dasharray: 7 6; }
-.archipelago .isle { fill: var(--c); stroke: #fff; stroke-width: 1.2; }
-.isle-name { fill: #eaf4ff; font: 700 21px var(--font); letter-spacing: 1px; text-anchor: middle; paint-order: stroke; stroke: rgba(4, 16, 31, .7); stroke-width: 4px; }
-.isle-owner { fill: var(--dim); font: 500 18px var(--font); text-anchor: middle; paint-order: stroke; stroke: rgba(4, 16, 31, .7); stroke-width: 4px; }
-
-/* Số biển số trên từng tỉnh, điểm hiện ngay bên dưới */
-.badge {
-  position: absolute; width: var(--s); height: var(--s); margin: calc(var(--s) / -2) 0 0 calc(var(--s) / -2);
-  display: grid; place-items: center; border-radius: 50%;
-  background: #fff; border: 3px solid var(--c); box-shadow: 0 2px 5px rgba(0, 0, 0, .5);
-  color: #0c1d33; font: 700 calc(var(--s) * .48) / 1 var(--font); letter-spacing: -.5px;
+/* ---------- Bản đồ 3D (vẽ bằng three.js trong canvas #map) ---------- */
+/* Vương miện trên đỉnh tỉnh dẫn đầu: map.js đặt chỗ bằng `translate` và độ xa gần bằng `scale` mỗi khung hình. */
+#crown { left: 0; top: 0; width: 0; height: 0; pointer-events: none; transform-origin: 0 0; }
+#crown span {
+  position: absolute; left: -24px; top: -66px; width: 48px; text-align: center; font-size: 42px; line-height: 1;
+  filter: drop-shadow(0 3px 3px rgba(0, 0, 0, .55)) drop-shadow(0 0 10px rgba(255, 213, 74, .8));
+  animation: crown-bob 1.6s ease-in-out infinite alternate;
 }
-.badge .pts {
-  position: absolute; top: calc(100% + 1px); left: 50%; transform: translateX(-50%);
-  padding: 0 7px; border-radius: 10px; background: rgba(4, 16, 31, .88); border: 1.5px solid var(--c);
-  color: #fff; font: 700 15px/19px var(--font); letter-spacing: 0; white-space: nowrap;
-}
-.badge .pts:empty { display: none; }
-.badge.r1 { z-index: 3; border-color: var(--gold); box-shadow: 0 0 0 3px rgba(255, 213, 74, .5), 0 0 22px rgba(255, 213, 74, .95); }
-.badge.r1::before { content: "👑"; position: absolute; top: -17px; right: -12px; font-size: 19px; transform: rotate(18deg); filter: drop-shadow(0 2px 2px rgba(0, 0, 0, .5)); }
-.badge.r2 { z-index: 2; border-color: #e3ebf3; box-shadow: 0 0 0 3px rgba(227, 235, 243, .45), 0 2px 5px rgba(0, 0, 0, .5); }
-.badge.r3 { z-index: 2; border-color: #eba468; box-shadow: 0 0 0 3px rgba(235, 164, 104, .45), 0 2px 5px rgba(0, 0, 0, .5); }
-.badge.r1 .pts { background: var(--gold); color: #3a2600; border-color: #fff3b0; }
+@keyframes crown-bob { to { transform: translateY(-8px); } }
 
 /* ---------- Tiêu đề ---------- */
 #title { left: 640px; top: 180px; width: 426px; text-align: center; }
@@ -113,6 +85,9 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #04101f; }
 #guide .line span { flex: 1; min-width: 0; line-height: 1.05; }
 #guide .line small { display: block; font: 500 15px var(--font); color: var(--dim); }
 #guide .line b { color: var(--gold); font-size: 26px; }
+#guide .line.gifts { justify-content: space-between; }
+#guide .line .icons { display: flex; align-items: center; gap: 8px; }
+#guide .line .icons img { width: 44px; height: 44px; }
 #guide .note { margin: 6px 0 0; text-align: center; font: 500 16px var(--font); color: var(--dim); }
 
 /* ---------- MC ---------- */
@@ -124,6 +99,39 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #04101f; }
 #mc .mic { flex: none; width: 48px; height: 48px; display: grid; place-items: center; border-radius: 50%; background: #c8102e; font-size: 26px; }
 #mc p { margin: 0; align-self: center; font: 700 25px/1.25 var(--font); }
 @keyframes mc-in { from { opacity: 0; transform: translateY(12px); } }
+
+/* ---------- Người tặng quà (hiện cạnh tỉnh lúc camera focus) ---------- */
+#giver {
+  left: 652px; top: 900px; width: 414px; display: flex; align-items: center; gap: 16px; padding: 16px 20px 16px 16px;
+  border-radius: 26px; background: linear-gradient(135deg, rgba(74, 48, 0, .96), rgba(28, 16, 0, .94));
+  border: 3px solid var(--gold); box-shadow: 0 0 0 4px rgba(255, 213, 74, .22), 0 0 30px rgba(255, 213, 74, .45), 0 14px 34px rgba(0, 0, 0, .55);
+}
+/* Mũi nhọn chỉ sang tỉnh đang được focus bên trái. */
+#giver::before {
+  content: ""; position: absolute; left: -17px; top: 34px;
+  border-style: solid; border-width: 15px 17px 15px 0; border-color: transparent var(--gold) transparent transparent;
+}
+#giver.in { animation: giver-in .55s cubic-bezier(.2, .9, .3, 1.25) .25s both; }
+#giver.out { animation: giver-out .35s ease-in forwards; }
+#giver .ava {
+  flex: none; width: 116px; height: 116px; border-radius: 50%; object-fit: cover; background: #2b4a6f;
+  border: 4px solid #fff3b0; box-shadow: 0 0 0 3px rgba(255, 213, 74, .6), 0 0 22px rgba(255, 213, 74, .9);
+  display: grid; place-items: center; font: 700 52px var(--font); font-style: normal; color: #fff;
+}
+#giver .info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+#giver .name {
+  font: 700 34px/1.12 var(--font); color: #fff; text-shadow: 0 2px 3px rgba(0, 0, 0, .6); overflow-wrap: anywhere;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+#giver .line { font: 500 21px/1.25 var(--font); color: #ffe9a8; }
+/* Tên tỉnh dài (Thừa Thiên Huế) thì xuống dòng trước tên tỉnh, không cắt chữ. */
+#giver .line strong { display: inline-block; white-space: nowrap; font-size: 26px; font-weight: 700; color: var(--gold); }
+#giver .gift { display: flex; align-items: center; gap: 8px; margin-top: 2px; font: 700 36px/1 var(--font); color: var(--gold); text-shadow: 0 2px 3px rgba(0, 0, 0, .6); }
+#giver .gift img { width: 48px; height: 48px; object-fit: contain; }
+#giver .gift i { font-size: 38px; font-style: normal; }
+#giver.bump .pts { display: inline-block; animation: bump .6s ease-out; }
+@keyframes giver-in { from { opacity: 0; transform: translateX(70px) scale(.75); } }
+@keyframes giver-out { to { opacity: 0; transform: translateX(50px) scale(.9); } }
 
 /* ---------- Vừa điểm danh / tiếp sức ---------- */
 #feed { left: 778px; top: 1118px; width: 290px; display: flex; flex-direction: column; gap: 8px; }

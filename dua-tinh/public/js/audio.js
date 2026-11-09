@@ -127,7 +127,7 @@ export async function speak({ clips, cut }, { onStart, onDone } = {}) {
     playing.add(src);
     src.onended = () => playing.delete(src);
     src.start(at);
-    at += buffer.duration + 0.04;
+    at += buffer.duration + (clip.gap ?? 0.04);
   });
   onStart?.();
   master.gain.setTargetAtTime(VOLUME * 0.45, begin, 0.1);
