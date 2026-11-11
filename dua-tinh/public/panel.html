@@ -28,6 +28,8 @@
     .gift-icon { width: 28px; height: 28px; margin: -6px 6px -6px -4px; object-fit: contain; vertical-align: middle; }
     .danger { border-color: #a0403a; background: #3a1d1d; }
     #log { min-height: 1.4em; font-size: 14px; color: #a9bdd6; }
+    #quiz-now { margin: 0 0 8px; padding: 8px 12px; border-radius: 8px; background: #2d2610; font-size: 15px; }
+    #quiz-now b { color: #ffd54a; font-size: 18px; letter-spacing: 1px; }
     table { width: 100%; border-collapse: collapse; font-size: 14px; }
     th { padding: 4px 8px; text-align: left; color: #a9bdd6; font-weight: 600; border-bottom: 1px solid #3c5675; }
     td { padding: 3px 8px; border-bottom: 1px solid #22395a; }
@@ -60,6 +62,17 @@
       <button type="button" id="gift-coins">🎁 Gửi quà theo xu</button>
       <button type="button" id="like">❤️ Thả tim</button>
     </div>
+
+    <section id="quiz-box" hidden>
+      <h2>Đố chữ</h2>
+      <p id="quiz-now"></p>
+      <div class="row">
+        <button type="button" id="quiz-answer">✏️ Người thử trả lời đúng</button>
+        <button type="button" id="quiz-crowd">👥 15 người đã điểm danh trả lời đúng</button>
+        <button type="button" id="quiz-letter">🔤 Mở thêm chữ</button>
+        <button type="button" id="quiz-skip">⏭️ Công bố / câu tiếp theo</button>
+      </div>
+    </section>
 
     <h2>Thử đông người</h2>
     <p class="hint">Người thử cũng được lưu vào cuộc đua, nên bấm "Vòng mới" trước khi live.</p>
@@ -138,6 +151,31 @@
         setTimeout(() => post('/api/simulate', { kind: 'gift', name: pick(names), gift: gift.name, coins: gift.points, count: 1 + Math.floor(Math.random() * 3) }), Math.random() * 8000);
       }
     };
+    // Đố chữ: đáp án chỉ hiện ở đây cho chủ kênh, màn hình game không có.
+    async function loadQuiz() {
+      const info = await (await fetch('/api/quiz')).json();
+      $('quiz-box').hidden = !info.on;
+      if (!info.on) return;
+      const now = $('quiz-now');
+      now.replaceChildren(`Câu ${info.no} · ${info.phase === 'reveal' ? 'đang công bố' : info.phase === 'break' ? 'đang nghỉ, sắp sang câu mới' : 'đang hỏi'} · đáp án: `, Object.assign(document.createElement('b'), { textContent: info.answer }), ` · ${info.count} người đúng`);
+    }
+    const quizPost = async (action) => {
+      const res = await post('/api/quiz', { action });
+      $('log').textContent = (await res.json()).message ?? '';
+    };
+    $('quiz-answer').onclick = async () => {
+      joined.add($('name').value);
+      const res = await post('/api/simulate', { kind: 'answer', name: $('name').value });
+      if (res.status === 200) $('log').textContent = (await res.json()).message;
+    };
+    $('quiz-crowd').onclick = () => {
+      const names = [...joined];
+      if (!names.length) return ($('log').textContent = 'Chưa có người thử nào điểm danh, bấm "30 người comment tên tỉnh" trước.');
+      for (const name of names.sort(() => Math.random() - 0.5).slice(0, 15)) setTimeout(() => post('/api/simulate', { kind: 'answer', name }), Math.random() * 6000);
+    };
+    $('quiz-letter').onclick = () => quizPost('letter');
+    $('quiz-skip').onclick = () => quizPost('skip');
+
     $('likes').onclick = () => {
       for (const name of [...joined].slice(-15)) setTimeout(() => post('/api/simulate', { kind: 'like', name, count: 3 }), Math.random() * 3000);
     };
@@ -237,6 +275,17 @@
           $('tts').textContent = msg.tts.enabled ? `🔊 MC đọc bằng giọng ${msg.tts.voice}` : '🔇 MC chưa có tiếng: cần VBEE_TOKEN và VBEE_APP_ID trong .env rồi chạy lại server';
           showSafeMode(msg.safeMode);
           loadRace(msg.race);
+          loadQuiz();
+          break;
+        case 'quiz-ask':
+        case 'quiz-break':
+        case 'quiz-reveal':
+        case 'quiz-correct':
+          loadQuiz();
+          if (msg.type === 'quiz-correct' && msg.province) {
+            tally.set(msg.province, { people: msg.people, gift: msg.gift, score: msg.score, at: msg.at });
+            scheduleRanks();
+          }
           break;
         case 'reset':
           joined.clear();

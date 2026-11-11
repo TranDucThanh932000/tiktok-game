@@ -13,7 +13,19 @@
     { "label": "Heo may mắn", "names": ["Lucky Pig", "Piggy", "Pig", "Heo", "Heo may mắn"], "coins": 10, "points": 10, "icon": "/gifts/lucky-pig.webp" }
   ],
 
-  "boardSize": 10,
+  "boardSize": 3,
+
+  "quiz": {
+    "enabled": true,
+    "points": 1,
+    "wordSeconds": 30,
+    "afterFirstSeconds": 10,
+    "hintEverySeconds": 6,
+    "graceSeconds": 1.5,
+    "revealSeconds": 7,
+    "breakSeconds": 5,
+    "hints": { "start": 0, "max": 0.5 }
+  },
 
   "camera": {
     "enabled": true,

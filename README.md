@@ -25,3 +25,13 @@ Chạy [start.bat của game](rung-chuong-vang/start.bat). Nó mở game tại <
 - Bộ 1000 câu chép từ Lớp Học. Quà tính theo giá xu: cổ vũ, phao, quay lại sàn.
 
 Xem [luật chơi, quà và cấu hình](rung-chuong-vang/README.md).
+
+## Sút Penalty — tặng quà để sút
+
+Chạy [start.bat của game](sut-penalty/start.bat). Nó mở game tại <http://127.0.0.1:3017> và [bảng điều khiển](http://127.0.0.1:3017/panel.html).
+
+- 4 cầu thủ áo MU, Real, Barça, PSG và 1 thủ môn. Người xem comment tên đội để vào đội.
+- Hoa hồng = 1 lượt sút, Bánh vòng 30 xu = 50 lượt, Hộp quà 100 xu = 200 lượt, 50 tim = 1 lượt. Thủ môn bắt được 50%. Chữ trên màn hình game là tiếng Anh.
+- Ảnh chibi nhân vật: làm theo [prompt-nhan-vat.txt](sut-penalty/prompt-nhan-vat.txt) rồi `npm run cat-anh`.
+
+Xem [luật chơi, ảnh nhân vật và cấu hình](sut-penalty/README.md).

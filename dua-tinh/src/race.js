@@ -3,6 +3,7 @@
 //   comment sau (kể cả tên tỉnh khác) không cộng thêm và không đổi tỉnh.
 // - Quà: điểm theo tên quà trong config.gifts, quà khác tính theo số xu. Điểm cộng cho tỉnh của người gửi.
 //   Người chưa comment tên tỉnh thì điểm quà được giữ lại, comment tên tỉnh lúc nào thì cộng lúc đó.
+// - Đố chữ (quiz.js): trả lời đúng thì tỉnh của người đó được cộng điểm, chưa chọn tỉnh thì điểm cũng được giữ lại.
 // - Bảng xếp hạng: điểm cao đứng trên; bằng điểm thì tỉnh đạt mức điểm đó trước đứng trên.
 import { BY_ID, PROVINCES, findProvince } from './provinces.js';
 
@@ -10,7 +11,7 @@ const PLATE = new Map(PROVINCES.map((p) => [p.id, p.plates[0]]));
 const LIKE_GAP_MS = 250;
 const MAX_PENDING = 5000;
 
-const fresh = () => ({ people: 0, gift: 0, score: 0, at: 0 });
+const fresh = () => ({ people: 0, gift: 0, quiz: 0, score: 0, at: 0 });
 
 export class Race {
   constructor(config, { emit = () => {}, now = Date.now } = {}) {
@@ -30,6 +31,7 @@ export class Race {
     this.tally = new Map(PROVINCES.map((p) => [p.id, fresh()]));
     this.members = new Map(); // id người xem -> id tỉnh
     this.pending = new Map(); // id người xem -> { points, name, at }: quà gửi trước khi chọn tỉnh
+    this.quizHeld = new Map(); // id người xem -> điểm đố chữ trả lời đúng trước khi chọn tỉnh
     this.likeAt = new Map();
     this.leader = null;
     this.giftTotal = 0;
@@ -54,15 +56,16 @@ export class Race {
   }
 
   stateOf(id) {
-    const { people, gift, score, at } = this.tally.get(id);
-    return { people, gift, score, at };
+    const { people, gift, quiz, score, at } = this.tally.get(id);
+    return { people, gift, quiz, score, at };
   }
 
-  add(id, { people = 0, gift = 0 }) {
+  add(id, { people = 0, gift = 0, quiz = 0 }) {
     const t = this.tally.get(id);
     t.people += people;
     t.gift += gift;
-    t.score += people * this.commentPoints + gift;
+    t.quiz += quiz;
+    t.score += people * this.commentPoints + gift + quiz;
     // TikTok gửi nhiều tin trong cùng một gói, xử lý trong cùng một mili giây. Mốc thời gian phải tăng dần,
     // để hai tỉnh bằng điểm vẫn xếp đúng ai tới trước, không rơi xuống so biển số.
     this.lastAt = Math.max(this.now(), this.lastAt + 0.001);
@@ -90,17 +93,20 @@ export class Race {
     const province = findProvince(text);
     if (!province) return null;
     const held = this.pending.get(who.id)?.points ?? 0;
+    const quizHeld = this.quizHeld.get(who.id) ?? 0;
     this.pending.delete(who.id);
+    this.quizHeld.delete(who.id);
     this.members.set(who.id, province.id);
-    this.add(province.id, { people: 1, gift: held });
+    this.add(province.id, { people: 1, gift: held, quiz: quizHeld });
     this.emit({
       type: 'join',
       province: province.id,
       userId: who.id,
       name: who.name,
       avatar: who.avatar ?? '',
-      points: this.commentPoints + held,
+      points: this.commentPoints + held + quizHeld,
       held,
+      quizHeld,
       members: this.members.size,
       ...this.stateOf(province.id),
     });
@@ -140,6 +146,22 @@ export class Race {
     return { province: id, points };
   }
 
+  // Đố chữ trả lời đúng: cộng cho tỉnh của người đó, chưa chọn tỉnh thì giữ lại tới khi comment tên tỉnh.
+  // Không tự báo ngôi đầu: quiz.js gửi tin trả lời đúng trước rồi mới gọi checkLeader, để màn hình có điểm mới trước.
+  award(who, points) {
+    const id = this.members.get(who.id);
+    if (!id) {
+      const held = (this.quizHeld.get(who.id) ?? 0) + points;
+      this.quizHeld.delete(who.id);
+      this.quizHeld.set(who.id, held);
+      if (this.quizHeld.size > MAX_PENDING) this.quizHeld.delete(this.quizHeld.keys().next().value);
+      this.stateDirty = true;
+      return { pending: true, held };
+    }
+    this.add(id, { quiz: points });
+    return { province: id };
+  }
+
   // Thả tim chỉ làm sinh động bản đồ (tim bay lên ở tỉnh của người đó), không cộng điểm.
   like(who, count = 1) {
     const id = this.members.get(who.id);
@@ -169,6 +191,7 @@ export class Race {
       tally: this.ranking(),
       members: [...this.members],
       pending: [...this.pending],
+      quizHeld: [...this.quizHeld],
       giftTotal: this.giftTotal,
     };
   }
@@ -179,10 +202,11 @@ export class Race {
     this.startedAt = Number(state.startedAt) || this.now();
     for (const row of state.tally ?? []) {
       if (!this.tally.has(row.id)) continue;
-      this.tally.set(row.id, { people: row.people | 0, gift: row.gift | 0, score: row.score | 0, at: Number(row.at) || 0 });
+      this.tally.set(row.id, { people: row.people | 0, gift: row.gift | 0, quiz: row.quiz | 0, score: row.score | 0, at: Number(row.at) || 0 });
     }
     for (const [userId, id] of state.members ?? []) if (BY_ID.has(id)) this.members.set(userId, id);
     for (const [userId, held] of state.pending ?? []) if (held?.points > 0) this.pending.set(userId, { points: held.points | 0, name: String(held.name ?? ''), at: Number(held.at) || 0 });
+    for (const [userId, points] of state.quizHeld ?? []) if (points > 0) this.quizHeld.set(userId, points | 0);
     this.giftTotal = state.giftTotal | 0;
     this.lastAt = Math.max(this.lastAt, ...[...this.tally.values()].map((t) => t.at));
     this.leader = this.ranking()[0]?.id ?? null;

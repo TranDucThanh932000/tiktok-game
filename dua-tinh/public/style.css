@@ -20,6 +20,15 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #04101f; }
   background: radial-gradient(110% 75% at 40% 48%, var(--sea-1), var(--sea-2) 55%, var(--sea-3));
   font-family: var(--font); color: var(--ink);
 }
+/* Hoa văn trống đồng làm nền, nằm dưới bản đồ, xoay chậm. */
+#stage::before {
+  content: ""; position: absolute; left: 50%; top: 48%; width: 1040px; height: 1040px; margin: -520px 0 0 -520px;
+  background: url("/img/trong-dong.png") center / contain no-repeat;
+  opacity: .22; pointer-events: none;
+  filter: drop-shadow(0 0 24px rgba(255, 190, 70, .35));
+  animation: drum-spin 240s linear infinite;
+}
+@keyframes drum-spin { to { transform: rotate(360deg); } }
 #stage > * { position: absolute; }
 #map, #fx { left: 0; top: 0; width: 1080px; height: 1920px; pointer-events: none; }
 
@@ -34,7 +43,7 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #04101f; }
 @keyframes crown-bob { to { transform: translateY(-8px); } }
 
 /* ---------- Tiêu đề ---------- */
-#title { left: 640px; top: 180px; width: 426px; text-align: center; }
+#title { left: 640px; top: 70px; width: 426px; text-align: center; }
 #title h1 {
   margin: 0; font: 700 50px/1.02 var(--font); letter-spacing: 1px; text-wrap: balance;
   background: linear-gradient(#fff6c2, var(--gold) 48%, var(--gold-2)); -webkit-background-clip: text; background-clip: text; color: transparent;
@@ -44,7 +53,7 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #04101f; }
 
 /* ---------- Bảng xếp hạng ---------- */
 #board {
-  left: 640px; top: 344px; width: 426px; padding: 12px 12px 12px; border-radius: 22px;
+  left: 640px; top: 234px; width: 426px; padding: 12px 12px 12px; border-radius: 22px;
   background: var(--card); border: 2px solid var(--card-line); box-shadow: 0 12px 30px rgba(0, 0, 0, .45);
 }
 .board-head { display: flex; justify-content: space-between; align-items: baseline; padding: 0 6px; font: 700 24px var(--font); color: var(--gold); letter-spacing: 1px; }
@@ -75,7 +84,7 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #04101f; }
 
 /* ---------- Cách chơi ---------- */
 #guide {
-  left: 14px; top: 772px; width: 316px; padding: 12px 14px 12px; border-radius: 20px;
+  left: 14px; top: 680px; width: 316px; padding: 12px 14px 12px; border-radius: 20px;
   background: var(--card); border: 2px solid var(--card-line); box-shadow: 0 10px 26px rgba(0, 0, 0, .4);
 }
 #guide h3 { margin: 0 0 6px; text-align: center; font: 700 22px var(--font); color: var(--gold); letter-spacing: 1px; }
@@ -90,9 +99,58 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #04101f; }
 #guide .line .icons img { width: 44px; height: 44px; }
 #guide .note { margin: 6px 0 0; text-align: center; font: 500 16px var(--font); color: var(--dim); }
 
+/* ---------- Có đố chữ: cách chơi (dạng dọc) chuyển sang cột phải ngay dưới bảng xếp hạng (main.js đặt `top`),
+   cột "vừa tiếp sức" sang chỗ trống bên trái, MC xuống dưới ô đố chữ. ---------- */
+.with-quiz #guide { left: 640px; width: 426px; }
+.with-quiz #feed { left: 14px; top: 700px; }
+.with-quiz #mc { top: 1300px; width: 500px; }
+
+/* ---------- Đố chữ ---------- */
+/* Trải hết chiều ngang, nằm giữa nhãn "QĐ. Hoàng Sa" (hết ở y ≈ 1122) và "QĐ. Trường Sa" (bắt đầu ở y ≈ 1420),
+   nên cao tối đa khoảng 286px: mọi dòng bên trong chỉ một hàng. */
+#quiz {
+  left: 14px; top: 1048px; width: 1052px; padding: 10px 18px 16px; border-radius: 22px; overflow: hidden;
+  background: linear-gradient(160deg, rgba(74, 48, 0, .95), rgba(28, 16, 0, .93));
+  border: 3px solid var(--gold); box-shadow: 0 0 0 4px rgba(255, 213, 74, .18), 0 12px 30px rgba(0, 0, 0, .5);
+}
+#quiz.in { animation: quiz-in .5s cubic-bezier(.2, .9, .3, 1.2); }
+#quiz.out { animation: quiz-out .4s ease-in forwards; }
+@keyframes quiz-in { from { opacity: 0; transform: translateY(60px) scale(.92); } }
+@keyframes quiz-out { to { opacity: 0; transform: translateY(40px) scale(.95); } }
+.quiz-head { display: flex; align-items: center; gap: 8px; }
+.quiz-label { flex: none; padding: 3px 10px; border-radius: 10px; background: var(--gold); color: #3a2600; font: 700 20px var(--font); letter-spacing: 1px; }
+#quiz-topic { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font: 700 21px var(--font); color: #ffe9a8; }
+#quiz-time {
+  flex: none; min-width: 52px; height: 40px; padding: 0 8px; display: grid; place-items: center; border-radius: 20px;
+  background: rgba(255, 255, 255, .14); font: 700 24px var(--font); font-variant-numeric: tabular-nums;
+}
+#quiz-time.low { background: #c8102e; animation: bump .6s ease-out infinite; }
+#quiz-hint { margin: 8px 0 10px; text-align: center; font: 700 30px/1.2 var(--font); color: #fff; text-shadow: 0 2px 3px rgba(0, 0, 0, .5); text-wrap: balance; }
+#quiz-tiles { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px 16px; }
+#quiz-tiles .word { display: flex; gap: 4px; }
+#quiz-tiles .tile {
+  width: var(--t, 42px); height: calc(var(--t, 42px) * 1.18); display: grid; place-items: center; border-radius: 8px;
+  background: #fff8e1; border-bottom: 4px solid #d9a520; color: #3a2600; font: 700 calc(var(--t, 42px) * .66) var(--font);
+}
+#quiz-tiles .tile:empty { background: rgba(255, 255, 255, .16); border-bottom-color: rgba(255, 255, 255, .28); }
+#quiz-tiles .tile.open { animation: tile-open .5s ease-out; }
+#quiz-tiles .tile.solved { background: #b2f7a1; border-bottom-color: #3f9b2f; color: #123b0c; }
+@keyframes tile-open { 0% { transform: rotateX(90deg); } 60% { transform: rotateX(-15deg) scale(1.12); } }
+#quiz-foot { margin-top: 10px; min-height: 40px; display: flex; align-items: center; justify-content: center; gap: 28px; font: 500 22px/1.2 var(--font); color: #ffe9a8; text-align: center; }
+#quiz-foot b { color: var(--gold); }
+#quiz-foot .who { display: flex; align-items: center; justify-content: center; gap: 8px; min-width: 0; font: 700 22px var(--font); color: #fff; }
+#quiz-foot .who .ava { flex: none; width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background: #2b4a6f; border: 2px solid var(--gold); display: grid; place-items: center; font: 700 20px var(--font); font-style: normal; }
+#quiz-foot .who span { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+#quiz-foot .who small { flex: none; font: 700 18px var(--font); color: var(--gold); }
+#quiz-foot .bump { animation: bump .6s ease-out; }
+#quiz-bar { position: absolute; left: 0; bottom: 0; height: 7px; width: 100%; background: linear-gradient(90deg, var(--gold-2), var(--gold)); transform-origin: 0 50%; }
+#quiz.reveal { border-color: #b2f7a1; box-shadow: 0 0 0 4px rgba(178, 247, 161, .25), 0 0 34px rgba(178, 247, 161, .35), 0 12px 30px rgba(0, 0, 0, .5); }
+#quiz.reveal .quiz-label { background: #b2f7a1; color: #123b0c; }
+.item.quiz { border-color: rgba(178, 247, 161, .7); background: rgba(14, 48, 20, .9); }
+
 /* ---------- MC ---------- */
 #mc {
-  left: 14px; top: 1092px; width: 520px; display: flex; align-items: flex-start; gap: 10px; padding: 12px 16px 12px 12px;
+  left: 14px; top: 1010px; width: 520px; display: flex; align-items: flex-start; gap: 10px; padding: 12px 16px 12px 12px;
   border-radius: 20px; background: rgba(255, 249, 230, .96); color: #2a1d05; box-shadow: 0 10px 26px rgba(0, 0, 0, .45);
   animation: mc-in .35s ease-out;
 }
@@ -102,7 +160,7 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #04101f; }
 
 /* ---------- Người tặng quà (hiện cạnh tỉnh lúc camera focus) ---------- */
 #giver {
-  left: 652px; top: 900px; width: 414px; display: flex; align-items: center; gap: 16px; padding: 16px 20px 16px 16px;
+  left: 652px; top: 790px; width: 414px; display: flex; align-items: center; gap: 16px; padding: 16px 20px 16px 16px;
   border-radius: 26px; background: linear-gradient(135deg, rgba(74, 48, 0, .96), rgba(28, 16, 0, .94));
   border: 3px solid var(--gold); box-shadow: 0 0 0 4px rgba(255, 213, 74, .22), 0 0 30px rgba(255, 213, 74, .45), 0 14px 34px rgba(0, 0, 0, .55);
 }
@@ -134,7 +192,7 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #04101f; }
 @keyframes giver-out { to { opacity: 0; transform: translateX(50px) scale(.9); } }
 
 /* ---------- Vừa điểm danh / tiếp sức ---------- */
-#feed { left: 778px; top: 1118px; width: 290px; display: flex; flex-direction: column; gap: 8px; }
+#feed { left: 778px; top: 1040px; width: 290px; display: flex; flex-direction: column; gap: 8px; }
 .item {
   display: flex; align-items: center; gap: 8px; height: 52px; padding: 0 10px 0 6px; border-radius: 26px;
   background: var(--card); border: 2px solid var(--card-line); animation: item-in .4s ease-out;
@@ -164,7 +222,7 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #04101f; }
 .heart { position: absolute; font-size: 24px; transform: translate(-50%, -50%); }
 
 #banner {
-  left: 20px; top: 560px; width: 606px; padding: 16px 18px; text-align: center; border-radius: 22px;
+  left: 20px; top: 470px; width: 606px; padding: 16px 18px; text-align: center; border-radius: 22px;
   background: linear-gradient(90deg, #b8860b, #ffd54a 30%, #fff3b0 50%, #ffd54a 70%, #b8860b); color: #3a2600;
   font: 700 50px/1.1 var(--font); letter-spacing: 1px; box-shadow: 0 14px 40px rgba(0, 0, 0, .55), 0 0 0 4px rgba(255, 255, 255, .7);
   animation: banner 3.2s ease-in-out forwards;

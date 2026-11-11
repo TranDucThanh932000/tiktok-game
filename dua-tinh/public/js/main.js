@@ -153,9 +153,16 @@ function renderGuide() {
   $('guide').replaceChildren(
     el('h3', '', 'CÁCH CHƠI'),
     line(el('i', 'icon', '💬'), 'Comment tên tỉnh', 'Mỗi người tính 1 lần', `+${guide.commentPoints}`),
+    ...(guide.quiz ? [line(el('i', 'icon', '✏️'), 'Đoán đúng ô chữ', 'Mỗi câu đố', `+${guide.quiz.points}`)] : []),
     ...[...byPoints].map(([points, gifts]) => giftLine(points, gifts)),
     el('p', 'note', 'Điểm cộng cho tỉnh của bạn'),
   );
+  // Có đố chữ: cách chơi nằm ở cột phải ngay dưới bảng xếp hạng (bảng dài ngắn theo boardSize).
+  if (guide.quiz) {
+    const board = $('board');
+    $('rows').style.setProperty('--rows', guide.boardSize);
+    $('guide').style.top = `${board.offsetTop + board.offsetHeight + 14}px`;
+  }
 }
 
 // Vị trí (theo tọa độ khung 1080x1920) của hình quà trong ô cách chơi, để quà bay ra từ đó.
@@ -179,8 +186,8 @@ function avatar(name, url, className) {
 let lastJoinFeed = 0;
 let lastGiftFeed = null;
 function addFeed({ kind, name, url, line, plus, icon, key, points }) {
-  // Đông người thì không hiện hết người điểm danh, để quà luôn có chỗ.
-  if (kind === 'join') {
+  // Đông người thì không hiện hết người điểm danh / trả lời đúng, để quà luôn có chỗ.
+  if (kind === 'join' || kind.startsWith('quiz')) {
     if (performance.now() - lastJoinFeed < 700) return;
     lastJoinFeed = performance.now();
   }
@@ -381,8 +388,9 @@ function drawGiver(province, sameGiver = false) {
   info.append(el('b', 'name', g.name), line, gift);
   box.replaceChildren(avatar(g.name, g.avatar, 'ava'), info);
   // Ngay dưới bảng xếp hạng (bảng dài ngắn theo boardSize), cạnh tỉnh đang được focus.
-  const board = $('board');
-  box.style.top = `${board.offsetTop + board.offsetHeight + 14}px`;
+  // Có đố chữ thì cách chơi nằm dưới bảng xếp hạng, thẻ xuống dưới cách chơi.
+  const above = guide.quiz ? $('guide') : $('board');
+  box.style.top = `${above.offsetTop + above.offsetHeight + 14}px`;
   box.classList.remove('bump');
   box.hidden = false;
   restart(box, 'in');
@@ -436,6 +444,174 @@ function say(msg) {
   });
 }
 
+// ---------- Đố chữ ----------
+// Màn hình chỉ biết các chữ đã mở; đáp án đầy đủ chỉ tới lúc công bố.
+const quiz = { no: 0, phase: 'idle', endsAt: 0, startedAt: 0, total: 1, count: 0, first: null, timer: 0 };
+const TILE_SIZES = [54, 50, 46, 42, 38, 34, 30];
+const TILE_ROW = 1000; // bề ngang dành cho ô chữ trong khung đố chữ
+
+// Số dòng khi xếp các tiếng với cỡ ô này (xuống dòng giữa các tiếng); Infinity nếu một tiếng dài quá một dòng.
+function tileRows(words, size) {
+  let rows = 1;
+  let used = 0;
+  for (const word of words) {
+    const width = word.length * (size + 4) - 4;
+    if (width > TILE_ROW) return Infinity;
+    if (used && used + 16 + width > TILE_ROW) {
+      rows++;
+      used = width;
+    } else used += (used ? 16 : 0) + width;
+  }
+  return rows;
+}
+
+// Ưu tiên cả từ nằm một dòng với ô vừa đủ to; không được thì hai dòng với ô to nhất có thể.
+function tileSize(words) {
+  return TILE_SIZES.find((size) => size >= 34 && tileRows(words, size) === 1) ?? TILE_SIZES.find((size) => tileRows(words, size) <= 2) ?? TILE_SIZES.at(-1);
+}
+
+// tiles: mỗi ô là '' (chưa mở), ' ' (cách giữa hai tiếng) hoặc chữ đã mở.
+function drawTiles(tiles, solved = false) {
+  const words = [[]];
+  tiles.forEach((ch, i) => (ch === ' ' ? words.push([]) : words.at(-1).push({ ch, i })));
+  const box = $('quiz-tiles');
+  box.style.setProperty('--t', `${tileSize(words.filter((w) => w.length))}px`);
+  box.replaceChildren(
+    ...words
+      .filter((w) => w.length)
+      .map((word) => {
+        const group = el('div', 'word');
+        for (const { ch, i } of word) {
+          const tile = el('div', solved ? 'tile solved' : 'tile', ch);
+          tile.dataset.i = i;
+          group.append(tile);
+        }
+        return group;
+      }),
+  );
+}
+
+function openTile(index, letter) {
+  const tile = [...$('quiz-tiles').querySelectorAll('.tile')].find((node) => node.dataset.i === String(index));
+  if (!tile) return;
+  tile.textContent = letter;
+  restart(tile, 'open');
+}
+
+function quizTimer() {
+  clearInterval(quiz.timer);
+  const tick = () => {
+    const left = Math.max(0, quiz.endsAt - Date.now());
+    const time = $('quiz-time');
+    time.textContent = `${Math.ceil(left / 1000)}`;
+    time.classList.toggle('low', quiz.phase === 'asking' && left <= 5000);
+    $('quiz-bar').style.transform = `scaleX(${Math.min(1, left / quiz.total)})`;
+    if (!left) clearInterval(quiz.timer);
+  };
+  tick();
+  quiz.timer = setInterval(tick, 250);
+}
+
+const quizWho = (name, url, extra) => {
+  const who = el('div', 'who');
+  who.append(avatar(name, url, 'ava'), el('span', '', name));
+  if (extra) who.append(el('small', '', extra));
+  return who;
+};
+
+function quizFoot() {
+  const foot = $('quiz-foot');
+  if (quiz.phase === 'reveal') return;
+  if (!quiz.count) {
+    const line = el('div', '', '💬 Comment đáp án, tỉnh bạn ');
+    line.append(el('b', '', `+${guide.quiz.points}`));
+    foot.replaceChildren(line);
+    return;
+  }
+  const rows = [el('div', '', `✅ ${fmt(quiz.count)} người đã trả lời đúng`)];
+  if (quiz.first) rows.unshift(quizWho(`⚡ ${quiz.first.name}`, quiz.first.avatar, quiz.first.province ? shortName(quiz.first.province) : ''));
+  foot.replaceChildren(...rows);
+}
+
+function showQuiz(word, { animate = true } = {}) {
+  Object.assign(quiz, { no: word.no, phase: 'asking', endsAt: word.endsAt, total: Math.max(1000, word.endsAt - Date.now()), count: 0, first: null });
+  const box = $('quiz');
+  box.classList.remove('reveal');
+  box.querySelector('.quiz-label').textContent = 'ĐỐ CHỮ';
+  $('quiz-topic').textContent = word.topic;
+  $('quiz-hint').textContent = word.hint;
+  drawTiles(word.tiles);
+  quizFoot();
+  clearTimeout(quiz.hideTimer);
+  box.classList.remove('out');
+  box.hidden = false;
+  if (animate) restart(box, 'in');
+  quizTimer();
+}
+
+// Công bố xong thì ẩn ô đố chữ vài giây cho bản đồ thoáng, rồi câu mới mới hiện lại.
+function hideQuiz({ animate = true } = {}) {
+  quiz.phase = 'break';
+  clearInterval(quiz.timer);
+  const box = $('quiz');
+  clearTimeout(quiz.hideTimer);
+  if (!animate || box.hidden) {
+    box.hidden = true;
+    return;
+  }
+  restart(box, 'out');
+  quiz.hideTimer = setTimeout(() => {
+    box.hidden = true;
+    box.classList.remove('out');
+  }, 400);
+}
+
+function quizCorrect(msg) {
+  if (msg.no !== quiz.no) return;
+  quiz.count = msg.count;
+  quiz.endsAt = msg.endsAt;
+  if (msg.first) {
+    quiz.first = { name: msg.name, avatar: msg.avatar, province: msg.province };
+    quiz.total = Math.max(1000, msg.endsAt - Date.now());
+  }
+  quizFoot();
+  if (msg.first) restart($('quiz-foot'), 'bump');
+}
+
+function revealQuiz(msg, { animate = true } = {}) {
+  Object.assign(quiz, { no: msg.no, phase: 'reveal', endsAt: msg.endsAt, total: Math.max(1000, msg.endsAt - Date.now()) });
+  const box = $('quiz');
+  clearTimeout(quiz.hideTimer);
+  box.classList.remove('out');
+  box.hidden = false;
+  box.classList.add('reveal');
+  box.querySelector('.quiz-label').textContent = 'ĐÁP ÁN';
+  drawTiles(Array.from(msg.answer), true);
+  if (animate) for (const tile of $('quiz-tiles').querySelectorAll('.tile')) restart(tile, 'open');
+  const rows = [];
+  if (msg.fastest) rows.push(quizWho(msg.fastest.name, msg.fastest.avatar, `${msg.fastest.province ? `${shortName(msg.fastest.province)} · ` : ''}⚡${msg.fastest.seconds}s`));
+  if (msg.best) {
+    const line = el('div', '', '🏆 ');
+    line.append(el('b', '', shortName(msg.best.province)), ` nhiều người đúng nhất (${fmt(msg.best.count)})`);
+    rows.push(line);
+  }
+  rows.push(el('div', '', msg.count ? `✅ ${fmt(msg.count)} người đúng` : 'Chưa ai trả lời đúng câu này'));
+  $('quiz-foot').replaceChildren(...rows);
+  quizTimer();
+}
+
+function applyQuiz(state) {
+  if (!state) return;
+  if (state.phase === 'break') hideQuiz({ animate: false });
+  else if (state.phase === 'reveal' && state.reveal) revealQuiz(state.reveal, { animate: false });
+  else if (state.word) {
+    showQuiz(state.word, { animate: false });
+    quiz.count = state.count;
+    quiz.first = state.first;
+    quizFoot();
+  }
+}
+
 // ---------- Nhận tin từ server ----------
 function applyRace(race) {
   for (const id of meta.keys()) tally.set(id, { people: 0, gift: 0, score: 0, at: 0 });
@@ -472,8 +648,48 @@ const handlers = {
       },
       options: guide.camera,
     });
+    stage.classList.toggle('with-quiz', Boolean(guide.quiz));
     renderGuide();
     applyRace(msg.race);
+    applyQuiz(msg.quiz);
+  },
+  'quiz-ask'(msg) {
+    showQuiz(msg);
+    sfx.quizAsk();
+  },
+  'quiz-letter'(msg) {
+    if (msg.no !== quiz.no) return;
+    openTile(msg.index, msg.letter);
+    sfx.quizLetter();
+  },
+  'quiz-correct'(msg) {
+    wake();
+    quizCorrect(msg);
+    sfx.quizCorrect(msg.first);
+    // Người đầu tiên luôn hiện trong cột bên phải; đông người thì bớt cho đỡ rối.
+    if (msg.first) lastJoinFeed = 0;
+    if (!msg.province) {
+      addFeed({ kind: 'quiz pending', name: msg.name, url: msg.avatar, line: 'Đúng! Comment tên tỉnh', plus: `+${fmt(msg.held)}` });
+      return;
+    }
+    update(msg);
+    const { x, y } = spot(msg.province);
+    map.flash(msg.province, msg.first);
+    floatText(x, y - 18, `+${fmt(msg.points)}`, msg.first);
+    nameTag(msg.province, msg.name, msg.avatar, { force: msg.first });
+    addFeed({ kind: 'quiz', name: msg.name, url: msg.avatar, line: `✏️ Đúng → ${shortName(msg.province)}`, plus: `+${fmt(msg.points)}` });
+  },
+  'quiz-break'() {
+    hideQuiz();
+  },
+  'quiz-reveal'(msg) {
+    revealQuiz(msg);
+    sfx.quizReveal();
+    if (msg.best) {
+      const { x, y } = spot(msg.best.province);
+      map.flash(msg.best.province, true);
+      sparks(x, y, 24);
+    }
   },
   reset(msg) {
     camera.reset();

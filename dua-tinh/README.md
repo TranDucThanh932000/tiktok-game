@@ -21,6 +21,7 @@ Bấm đúp `start.bat`. Nó mở cửa sổ server, cửa sổ game 9:16 (thêm
 | Người xem làm gì | Điểm cho tỉnh |
 |---|---|
 | Comment tên tỉnh, ví dụ `Nam Định` | +1. Mỗi người chỉ được tính một lần |
+| Comment đúng đáp án câu đố | +1 mỗi câu (xem phần Đố chữ) |
 | Hoa hồng, Tim cam (Heart Me) | +1 |
 | Bắn tim | +5 |
 | Heo may mắn | +10 |
@@ -33,11 +34,34 @@ Bấm đúp `start.bat`. Nó mở cửa sổ server, cửa sổ game 9:16 (thêm
 - **Cách viết tên được chấp nhận:** có dấu hay không dấu, viết hoa, viết liền, có kèm chữ khác (`nam dinh`, `NAMDINH`, `Nam Định đây cả nhà ơi`). Nếu comment nhắc nhiều tỉnh thì tính tỉnh được nhắc đầu tiên.
 - **Tên gọi khác cũng được tính:** `Sài Gòn`, `HCM`, `TPHCM`, `Huế`, `Vũng Tàu`, `Bà Rịa`, `BRVT`, `Đắc Lắc`, `Bắc Cạn`... Danh sách nằm ở `aliases` trong `src/provinces.js`. Game cố ý không nhận `HN` và `SG`, vì người xem hay viết `hn` với nghĩa "hôm nay".
 - **Tên một chữ phải đúng dấu.** Viết `Huế` hoặc `hue` thì được tính; tên người như `Huệ` thì không bị nhầm thành Huế.
-- **Bảng xếp hạng:** hiện 10 tỉnh (`boardSize`). Tỉnh bằng điểm thì tỉnh đạt mức điểm đó trước đứng trên. Mỗi dòng có biển số, điểm và số người (👥).
+- **Bảng xếp hạng:** màn hình hiện top 3 (`boardSize`), bảng điều khiển vẫn có đủ các tỉnh. Tỉnh bằng điểm thì tỉnh đạt mức điểm đó trước đứng trên. Mỗi dòng có biển số, điểm và số người (👥).
 - **Trên bản đồ:** tỉnh càng nhiều điểm so với tỉnh dẫn đầu thì khối đất càng cao. Tỉnh dẫn đầu cao nhất, có viền vàng và vương miện. Khi ngôi đầu đổi chủ thì hiện băng rôn.
 - **Phản hồi ngay cho người xem:** tỉnh vừa được cộng sáng lên, tên người xem hiện cạnh tỉnh, có chữ +1. Quà bay từ ô "Cách chơi" tới tỉnh. Cột "vừa tiếp sức" gộp cả combo của cùng một người thành một dòng.
 - **Camera focus khi có quà:** ai tặng quà thì camera bay tới tỉnh của người đó và nghiêng sâu hơn. Tỉnh đó sáng lên và nhô cao thêm, các tỉnh khác tối đi và tạm hạ thấp để không che. Combo quà làm camera ở lại lâu hơn. Khi MC đọc câu báo tiếp sức, camera quay lại tỉnh đó và giữ ở đó tới khi MC nói xong. Không có quà mới trong 6 giây (`holdSeconds`) thì camera lùi về toàn cảnh, các tỉnh trở lại độ cao theo điểm. Nhiều tỉnh cùng tặng thì mỗi tỉnh được xem ít nhất 2,5 giây (`minDwellSeconds`) rồi mới chuyển sang tỉnh tặng gần nhất.
 - **Thẻ người tặng:** trong lúc camera focus, cạnh tỉnh hiện thẻ to gồm ảnh đại diện, tên người tặng, tỉnh được tiếp sức, quà và số điểm. Cùng một người tặng liên tiếp thì điểm trên thẻ cộng dồn. Lúc MC đọc tên ai thì thẻ hiện đúng người đó. Camera lùi về toàn cảnh thì thẻ ẩn. Tắt camera (`camera.enabled: false`) thì không có thẻ, tên người tặng hiện nhỏ trên tỉnh như trước.
+
+## Đố chữ
+
+Ô đố chữ trải hết chiều ngang màn hình, đè lên phần giữa bản đồ, nằm giữa nhãn Hoàng Sa và nhãn Trường Sa nên không che hai quần đảo. Đố chữ chạy liên tục suốt buổi live. Bộ từ chép từ game Đoán Từ (`doan-tu/words.json`) sang `words.json` của game này.
+
+- **Mỗi câu:** ô đố hiện chủ đề, câu gợi ý và các ô chữ đóng. Chưa ai trả lời đúng thì cứ 6 giây (`hintEverySeconds`) mở thêm một chữ, mở nhiều nhất một nửa số chữ (`hints.max`). Mỗi câu tính cả lúc MC đọc câu hỏi lẫn lúc người xem trả lời là 30 giây (`wordSeconds`), hết giờ thì công bố đáp án.
+- **Trả lời đúng:** người xem comment đáp án. Viết có dấu hay không dấu, viết hoa hay viết liền đều được. Game cũng nhận `đáp án là ...` và `... nha`, và cho bỏ `con`, `quả`, `cái`. Tỉnh của người đó được `+1` (`points`), tỉnh sáng lên và tên người đó hiện cạnh tỉnh. Mỗi người chỉ được cộng một lần mỗi câu. Comment sai thì không mất gì.
+- **Chưa chọn tỉnh** mà trả lời đúng thì điểm được giữ lại, giống quà gửi trước khi chọn tỉnh. Comment tên tỉnh lúc nào thì điểm được cộng vào tỉnh lúc đó.
+- **Có người đúng đầu tiên:** tên và tỉnh của người đó hiện ⚡ trong ô đố. Đồng hồ rút xuống còn 10 giây (`afterFirstSeconds`) để người khác kịp trả lời. Sau đó game công bố đáp án trong 7 giây (`revealSeconds`). Rồi ô đố chữ ẩn đi 5 giây (`breakSeconds`) cho bản đồ thoáng, sau đó mới hiện câu mới. Lúc công bố, ô đố hiện người nhanh nhất và tỉnh có nhiều người trả lời đúng nhất (tỉnh đó sáng lên trên bản đồ).
+- **Tránh nhầm với điểm danh:** comment đúng đáp án thì không bị tính là comment tên tỉnh. Các từ có đáp án trùng tên tỉnh (`hà nội`, `đà nẵng`, `cố đô huế`...) bị bỏ ra khi bật server, nên còn 988 trên 1000 từ.
+- Màn hình game không bao giờ nhận đáp án trước lúc công bố. Chỉ bảng điều khiển mới thấy đáp án.
+- Có đố chữ thì ô "Cách chơi" (dạng dọc, có thêm dòng "✏️ Đoán đúng ô chữ +1") chuyển sang cột phải, ngay dưới bảng xếp hạng. Cột "vừa tiếp sức" chuyển sang chỗ trống bên trái bản đồ. Thẻ người tặng quà hiện dưới ô "Cách chơi". Lời MC hiện dưới ô đố chữ.
+- Tắt đố chữ: `quiz.enabled: false` trong `config.json`. Khi đó màn hình trở lại bố cục cũ.
+
+**Lời MC cho phần đố chữ** nằm trong `mc.json`, viết theo giọng MC đua tỉnh (không phải cô giáo như bên Đoán Từ):
+
+- `quizAsk`: mở đầu câu đố mới. Ngay sau đó MC đọc chủ đề và gợi ý theo `quizIntro`. Mỗi câu đố luôn dùng cùng một mẫu, để giọng tạo sẵn khớp với lúc đọc.
+- `quizFirst`: người trả lời đúng đầu tiên, kèm tỉnh được cộng điểm. `quizFirstPending` dùng khi người đó chưa chọn tỉnh; `quizFirstAnon` và `quizFirstPendingAnon` dùng khi tên không đọc được hoặc giọng tên chưa kịp tạo.
+- `quizAnswerIs` + đáp án, rồi `quizBest` (tỉnh nhiều người đúng nhất) hoặc `quizNobody` (không ai đúng).
+- `quizStuck`: giữa câu (nửa thời gian, giây 15) mà chưa ai đúng thì MC động viên một lần.
+- `invite` có thêm câu mời trả lời câu đố.
+
+Giọng gợi ý và đáp án được tạo trước 3 câu, nên chỉ tốn lượt Vbee cho câu thật sự được hỏi. Các câu có `{province}` cũng được tạo sẵn đủ 63 tỉnh như các lời khác, khoảng 315 mẩu thêm, chỉ tạo một lần.
 
 ## Giọng MC
 
@@ -63,7 +87,7 @@ Nút **MC bình luận ngay** trên bảng điều khiển dùng để nghe th�
 - Bản đồ dùng 63 tỉnh của giai đoạn trước sáp nhập tháng 7/2025, vì người xem vẫn quen với tên và biển số cũ. Biển số chỉ còn hiện ở bảng xếp hạng. Với tỉnh có nhiều đầu biển số, bảng in số đầu tiên trong `plates`: Hà Nội 29, TP.HCM 51, Hải Phòng 15, Đồng Nai 60.
 - Ranh giới tỉnh lấy từ [geoBoundaries VNM ADM1](https://www.geoboundaries.org) (Public Domain, dựng từ bản đồ Wikimedia Commons). Script ghim theo một commit cố định để kết quả không đổi giữa các lần dựng. Muốn dựng lại `public/map/vietnam.json`, ví dụ khi đổi khung bản đồ trong `scripts/build-map.mjs`, chạy `npm run map`. Lần đầu chạy cần mạng để tải dữ liệu.
 - Hai tỉnh kề nhau luôn khít nhau. Script đơn giản hóa từng đoạn ranh giới chung đúng một lần, nên ranh giới không bị hở cũng không chồng lên nhau. Mỗi tỉnh là một khối đất dựng từ ranh giới đó, có đường trắng chạy quanh mặt trên.
-- Góc nhìn toàn cảnh được tính để mép Bắc, mép Nam đất liền nằm đúng chỗ như bản đồ phẳng trước đây, nên bản đồ không đè lên bảng xếp hạng. Độ nghiêng, độ cao tối đa, màu đất chỉnh ở đầu file `public/js/map.js` (`TILT`, `MAX_H`, `LAND`...).
+- Góc nhìn toàn cảnh được tính để mép Bắc, mép Nam đất liền nằm đúng chỗ như bản đồ phẳng trước đây, nên bản đồ không đè lên bảng xếp hạng. Sau đó cả bản đồ được dời lên sát mép trên (`LIFT_N`, `LIFT_S` trong `public/js/map.js`), hai ô Hoàng Sa, Trường Sa (`PLACE`) dời lên theo, các khung khác trên màn hình cũng dời lên tương ứng. Độ nghiêng, độ cao tối đa, màu đất chỉnh ở đầu file `public/js/map.js` (`TILT`, `MAX_H`, `LAND`...).
 - Hoàng Sa được vẽ gần đúng vị trí thật. Trường Sa được thu nhỏ vào ô bên phải cho vừa màn hình dọc. Cả hai đều ghi rõ tỉnh quản lý.
 - Bản đồ chỉ vẽ lại khi có thay đổi (điểm, camera bay, hiệu ứng), lúc đứng yên không tốn card đồ họa.
 
@@ -72,13 +96,15 @@ Nút **MC bình luận ngay** trên bảng điều khiển dùng để nghe th�
 - `commentPoints`: điểm khi comment tên tỉnh.
 - `gifts`: các quà có điểm riêng. Game nhận quà theo tên TikTok trong `names`. `points` là số điểm cộng, `icon` là hình hiện trong ô "Cách chơi". Quà không có trong danh sách thì tính theo `pointsPerCoin`.
 - `boardSize`: số tỉnh trên bảng xếp hạng, từ 3 đến 12.
+- `quiz`: đố chữ. `enabled`, `points` và các mốc thời gian đã nói ở phần Đố chữ.
 - `camera`: `enabled: false` thì tắt camera focus. `onComment: true` thì camera cũng tới tỉnh của người vừa comment, nhưng chỉ khi đang không focus tỉnh nào. `holdSeconds` và `minDwellSeconds` là các mốc thời gian đã nói ở trên. `maxZoom` là mức zoom tối đa cho tỉnh nhỏ.
 - `voice`: các mốc thời gian của MC đã nói ở trên. `enabled: false` thì tắt hẳn MC.
 
 ## Mã nguồn
 
 - `src/provinces.js`: 63 tỉnh (tên, biển số, tên gọi khác) và phần nhận tên tỉnh trong comment.
-- `src/race.js`: luật đua, gồm điểm danh, quà, quà giữ chờ, xếp hạng, lưu và nạp lại.
+- `src/race.js`: luật đua, gồm điểm danh, quà, quà giữ chờ, điểm đố chữ, xếp hạng, lưu và nạp lại.
+- `src/quiz.js`: đố chữ, gồm hỏi, mở chữ, nhận đáp án, công bố. `src/words.js` (chép từ Đoán Từ) lo phần so đáp án và rút từ.
 - `src/commentator.js`: MC, quyết định nói gì và nói lúc nào, ghép câu từ các mẩu giọng có sẵn.
 - `src/voice.js`, `src/spoken.js`: thư viện mẩu giọng Vbee và phần đổi tên người xem thành chữ đọc được. Hai file này dùng chung với Lớp Học.
 - `public/js/map.js`: bản đồ 3D bằng three.js: khối đất từng tỉnh, độ cao theo điểm, ánh sáng, bóng đổ, Hoàng Sa, Trường Sa, vương miện tỉnh dẫn đầu, camera bay tới tỉnh và làm sáng tỉnh khi focus.

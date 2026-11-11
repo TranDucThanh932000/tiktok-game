@@ -6,7 +6,12 @@
 import { readableName, speakText } from './spoken.js';
 import { BY_ID, PROVINCES, spokenName } from './provinces.js';
 
-const PRIORITY = { thanks: 5, lead: 4, reset: 4, rising: 3, talk: 1 };
+const PRIORITY = { thanks: 5, lead: 4, reset: 4, quizAsk: 4, quizReveal: 4, quizFirst: 3, rising: 3, quizStuck: 2, talk: 1 };
+// Đố chữ: câu có tên người mà tên chưa có giọng sau ngần này thì đọc câu không tên.
+const ALT_MS = 4000;
+// Chưa ai trả lời được sau ngần này phần thời gian của câu đố thì MC động viên một lần.
+const QUIZ_STUCK_AT = 0.5;
+const QUIZ_PREPARE = 3;
 const GAP_MS = 1200;
 const RISING_GAP_MS = 30_000;
 const VOICE_BACKLOG_LIMIT = 12;
@@ -19,7 +24,17 @@ const SLOT = /(\{name\}|\{province2?\})/;
 const PROVINCE_SLOT = /\{province2?\}/g;
 const CLAUSE_BREAK = /(?<=[,.!?;:])\s+/;
 const LEAD_PUNCT = /^[\s,.!?;:]+/;
-const LINE_KEYS = ['thanks', 'thanksBig', 'thanksAnon', 'thanksPending', 'thanksPendingAnon', 'leadFirst', 'lead', 'leading', 'close', 'farAhead', 'chase', 'rising', 'invite', 'empty', 'reset'];
+const LINE_KEYS = [
+  'thanks', 'thanksBig', 'thanksAnon', 'thanksPending', 'thanksPendingAnon', 'leadFirst', 'lead', 'leading', 'close', 'farAhead', 'chase', 'rising', 'invite', 'empty', 'reset',
+  'quizAsk', 'quizFirst', 'quizFirstAnon', 'quizFirstPending', 'quizFirstPendingAnon', 'quizAnswerIs', 'quizBest', 'quizNobody', 'quizStuck',
+];
+
+// Mỗi câu đố luôn dùng cùng một mẫu giới thiệu, để mẩu giọng tạo sẵn khớp với lúc đọc.
+function hashOf(text) {
+  let h = 2166136261;
+  for (const ch of String(text)) h = Math.imul(h ^ ch.codePointAt(0), 16777619);
+  return h >>> 0;
+}
 
 const slotsIn = (text) => new Set(text.match(PROVINCE_SLOT) ?? []);
 
@@ -72,6 +87,9 @@ export class Commentator {
     Object.assign(this, { voice, lines, emit, now, rng, enabled, trimMs });
     this.opt = { enabled: true, bigGiftPoints: 50, thanksSettleMs: 2500, nameWaitMs: 8000, maxThanks: 4, talkEverySeconds: [40, 75], leadGapSeconds: 20, ...options };
     this.race = null;
+    this.quiz = null;
+    this.deck = null;
+    this.stuckFor = 0;
     this.queue = [];
     this.thanks = new Map(); // id người gửi -> quà đang gom (combo gửi liên tục chỉ cảm ơn một lần)
     this.busyUntil = 0;
@@ -87,6 +105,12 @@ export class Commentator {
     this.race = race;
     this.leadSaid = race.leader;
     this.top3 = new Set(race.ranking().slice(0, 3).map((row) => row.id));
+  }
+
+  // Đố chữ: MC đọc câu đố, báo người trả lời đúng đầu tiên, công bố đáp án.
+  attachQuiz(quiz, deck) {
+    this.quiz = quiz;
+    this.deck = deck;
   }
 
   get on() {
@@ -205,9 +229,9 @@ export class Commentator {
     return clips;
   }
 
-  enqueue(kind, filled, { ttlMs = 10_000, points = 0, province = null, giver = null } = {}) {
+  enqueue(kind, filled, { ttlMs = 10_000, points = 0, province = null, giver = null, quizNo = 0, alt = null } = {}) {
     if (!this.on || !filled) return false;
-    const urgent = kind === 'thanks';
+    const urgent = kind === 'thanks' || kind.startsWith('quiz');
     // Lúc Vbee còn đang tạo sẵn cả nghìn đoạn thì vẫn cho nói nếu ghép tạm được ngay.
     if (!urgent && this.voice.busy() > VOICE_BACKLOG_LIMIT && !this.resolve(filled.parts, true)) return false;
     // Câu đã nhận thì cần đọc ngay: đưa các đoạn của nó lên trước việc tạo sẵn.
@@ -217,7 +241,7 @@ export class Commentator {
     }
     const t = this.now();
     const expires = Math.max(t, this.busyUntil) + ttlMs;
-    this.queue.push({ kind, priority: PRIORITY[kind] ?? 1, parts: filled.parts, text: filled.text, expires, points, province, giver, at: t });
+    this.queue.push({ kind, priority: PRIORITY[kind] ?? 1, parts: filled.parts, text: filled.text, expires, points, province, giver, quizNo, alt, at: t });
     // Quà dồn dập thì bỏ bớt lời cảm ơn nhỏ nhất; màn hình vẫn hiện đủ.
     const thanks = this.queue.filter((entry) => entry.kind === 'thanks');
     if (thanks.length > this.opt.maxThanks) {
@@ -230,10 +254,15 @@ export class Commentator {
   pump() {
     const t = this.now();
     if (t < this.busyUntil) return;
-    this.queue = this.queue.filter((entry) => entry.expires > t && !this.staleLead(entry));
+    this.queue = this.queue.filter((entry) => entry.expires > t && !this.staleLead(entry) && !this.staleQuiz(entry));
     const order = [...this.queue].sort((a, b) => b.priority - a.priority);
     for (const entry of order) {
-      const clips = this.resolve(entry.parts, t - entry.at >= FULL_WAIT_MS);
+      let clips = this.resolve(entry.parts, t - entry.at >= FULL_WAIT_MS);
+      // Tên người trả lời chưa có giọng: đọc câu không tên cho kịp lúc.
+      if (!clips && entry.alt && t - entry.at >= ALT_MS) {
+        Object.assign(entry, entry.alt, { alt: null });
+        clips = this.resolve(entry.parts, true);
+      }
       if (!clips) continue;
       this.queue.splice(this.queue.indexOf(entry), 1);
       this.busyUntil = t + this.lengthOf(clips) + GAP_MS;
@@ -255,6 +284,13 @@ export class Commentator {
   // Câu báo ngôi đầu đang chờ mà ngôi đầu đã đổi chủ lần nữa thì không đọc thông tin cũ.
   staleLead(entry) {
     return entry.kind === 'lead' && entry.province !== this.race?.leader;
+  }
+
+  // Câu nói về một câu đố đã qua thì bỏ; lời khen và động viên chỉ hợp lúc câu đố còn đang hỏi.
+  staleQuiz(entry) {
+    if (!entry.quizNo || !this.quiz) return false;
+    if (entry.quizNo !== this.quiz.no) return true;
+    return (entry.kind === 'quizFirst' || entry.kind === 'quizStuck') && this.quiz.phase !== 'asking';
   }
 
   stop() {
@@ -279,6 +315,11 @@ export class Commentator {
         this.noteRank();
         break;
       }
+      case 'quiz-ask':
+      case 'quiz-correct':
+      case 'quiz-reveal':
+        this.onQuiz(msg);
+        break;
       case 'reset':
         this.queue = [];
         this.thanks.clear();
@@ -330,6 +371,63 @@ export class Commentator {
       const giver = { name: entry.name, avatar: entry.avatar, icon: entry.icon, points: entry.points };
       this.enqueue('thanks', filled, { ttlMs: 45_000, points: entry.points, province: entry.province, giver });
     }
+  }
+
+  // ---------- Đố chữ ----------
+  // Lời đọc chủ đề và gợi ý của một câu đố (một mẩu giọng riêng, tạo sẵn trước vài câu).
+  quizIntro({ topic, hint }) {
+    const plainTopic = String(topic).replace(/[^\p{L}\p{N}\s,]/gu, '').trim();
+    const plainHint = String(hint).replace(/[.!?\s]+$/, '');
+    const templates = [].concat(this.lines.quizIntro ?? ['Chủ đề {topic}. Gợi ý: {hint}.']);
+    const template = templates[hashOf(plainHint) % templates.length];
+    return this.say(template.replace('{topic}', () => plainTopic).replace('{hint}', () => plainHint));
+  }
+
+  // Tạo sẵn giọng gợi ý và đáp án của vài câu đố sắp hỏi.
+  prepareQuiz() {
+    if (!this.voice.enabled || !this.deck || this.opt.enabled === false) return;
+    for (const word of this.deck.peek(QUIZ_PREPARE)) {
+      this.voice.clip(this.quizIntro(word), { background: true });
+      this.voice.clip(this.say(word.text), { background: true });
+    }
+  }
+
+  onQuiz(msg) {
+    if (msg.type === 'quiz-ask') {
+      this.prepareQuiz();
+      const puzzle = this.quiz?.puzzle;
+      const line = this.pick('quizAsk');
+      if (!puzzle || !line) return;
+      const topic = puzzle.topic.replace(/^[^\p{L}]+/u, '');
+      const filled = { parts: [{ text: this.say(line), gap: PAUSE }, { text: this.quizIntro(puzzle), gap: PAUSE }], text: `${line} ${topic}: ${puzzle.hint}` };
+      this.enqueue('quizAsk', filled, { ttlMs: 15_000, quizNo: msg.no });
+    } else if (msg.type === 'quiz-correct' && msg.first) {
+      const province = msg.province;
+      const anon = province ? this.fill(this.pick('quizFirstAnon'), { province }) : this.fill(this.pick('quizFirstPendingAnon'));
+      const named = readableName(msg.name ?? '') ? this.fill(this.pick(province ? 'quizFirst' : 'quizFirstPending'), { name: msg.name, province }) : null;
+      this.enqueue('quizFirst', named ?? anon, { ttlMs: 8000, quizNo: msg.no, province, alt: named ? anon : null });
+    } else if (msg.type === 'quiz-reveal') {
+      const answerIs = this.pick('quizAnswerIs');
+      const filled = {
+        parts: [{ text: this.say(answerIs), gap: JOIN }, { text: this.say(this.quiz?.puzzle?.answer ?? msg.answer), gap: PAUSE }],
+        text: `${answerIs} ${msg.answer}!`,
+      };
+      const tail = msg.best ? this.fill(this.pick('quizBest'), { province: msg.best.province }) : msg.count ? null : this.fill(this.pick('quizNobody'));
+      if (tail) {
+        filled.parts.push(...tail.parts);
+        filled.text += ` ${tail.text}`;
+      }
+      this.enqueue('quizReveal', filled, { ttlMs: 6000, quizNo: msg.no });
+    }
+  }
+
+  // Giữa câu đố mà chưa ai trả lời được thì động viên một lần.
+  quizStuck() {
+    const quiz = this.quiz;
+    if (!quiz || quiz.phase !== 'asking' || quiz.solvers.size || this.stuckFor === quiz.no) return;
+    if (this.now() - quiz.askedAt < quiz.ms.word * QUIZ_STUCK_AT) return;
+    this.stuckFor = quiz.no;
+    this.enqueue('quizStuck', this.fill(this.pick('quizStuck')), { ttlMs: 6000, quizNo: quiz.no });
   }
 
   // Một tỉnh mới chen vào top 3 (đẩy tỉnh khác ra) thì thỉnh thoảng MC nhắc tới.
@@ -392,6 +490,7 @@ export class Commentator {
   tick() {
     if (!this.on) return;
     this.settleThanks();
+    this.quizStuck();
     this.liven();
     this.pump();
   }

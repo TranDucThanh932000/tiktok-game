@@ -1,0 +1,20 @@
+{
+  "name": "sut-penalty",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Sút Penalty cho TikTok LIVE: comment tên đội để vào đội, tặng quà để cầu thủ đội mình sút, thủ môn bắt 50%",
+  "type": "module",
+  "scripts": {
+    "start": "node --env-file-if-exists=.env server.js",
+    "test": "node --test tests/*.test.js",
+    "cat-anh": "node scripts/cat-anh.mjs",
+    "window": "start \"\" msedge --app=http://127.0.0.1:3017/ --window-size=456,820 --window-position=0,0 --user-data-dir=D:\\tiktok-cache\\sut-penalty-window --disable-component-update --no-first-run --no-default-browser-check --autoplay-policy=no-user-gesture-required --disable-backgrounding-occluded-windows --disable-renderer-backgrounding --disable-background-timer-throttling --disable-features=CalculateNativeWinOcclusion"
+  },
+  "engines": {
+    "node": ">=22.9"
+  },
+  "dependencies": {
+    "express": "^5.3.0",
+    "tiktok-live-connector": "^2.5.0"
+  }
+}

@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bảng điều khiển · Sút Penalty</title>
+  <link rel="stylesheet" href="/fonts/fonts.css">
+  <style>
+    body { margin: 0; padding: 18px; background: #0c1322; color: #e8edf7; font: 15px/1.45 system-ui, sans-serif; }
+    h1 { margin: 0 0 4px; font: 700 26px "Be Vietnam Pro", sans-serif; color: #ffd23f; }
+    section { background: #16203a; border-radius: 14px; padding: 14px 16px; margin: 14px 0; max-width: 860px; }
+    h2 { margin: 0 0 10px; font-size: 16px; color: #ffd23f; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { padding: 6px 8px; text-align: right; border-bottom: 1px solid #263252; }
+    th:first-child, td:first-child { text-align: left; }
+    button { font: inherit; padding: 7px 14px; border-radius: 9px; border: 0; background: #2d3d66; color: #fff; cursor: pointer; margin: 3px 4px 3px 0; }
+    button:hover { background: #3c5190; }
+    button.warn { background: #7a2b2b; }
+    input { font: inherit; padding: 6px 10px; border-radius: 8px; border: 1px solid #34436b; background: #0f1830; color: #fff; }
+    .row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 6px 0; }
+    #status.on { color: #6ee7a0; } #status { color: #ff9b9b; }
+    #log { max-height: 260px; overflow: auto; font-size: 13px; color: #b8c2d8; white-space: pre-wrap; }
+    .hint { color: #8d98b3; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <h1>⚽ Sút Penalty · bảng điều khiển</h1>
+  <div id="status">Đang kết nối server...</div>
+  <div class="hint" id="session"></div>
+
+  <section>
+    <h2>Tỉ số</h2>
+    <table>
+      <thead><tr><th>Đội</th><th>Fan</th><th>Bàn</th><th>Bị cản</th><th>Lượt chờ</th></tr></thead>
+      <tbody id="score"></tbody>
+    </table>
+    <div class="row">
+      <button id="pause">Tạm dừng</button>
+      <button class="warn" data-control="reset" data-ask="Bắt đầu trận mới? Tỉ số về 0, lượt sút đã tặng vẫn giữ.">Trận mới</button>
+      <button class="warn" data-control="clear" data-ask="Xóa hết lượt sút đang chờ?">Xóa hàng chờ</button>
+    </div>
+    <div class="hint">Trước buổi live nên bấm <b>Trận mới</b> và <b>Xóa hàng chờ</b> để bỏ các lượt thử.</div>
+  </section>
+
+  <section>
+    <h2>Chạy thử</h2>
+    <div class="row">Tên người xem <input id="name" value="Bạn thử" maxlength="24"> <button id="random">Tên ngẫu nhiên</button></div>
+    <div class="row" id="join"></div>
+    <div class="row" id="gift"></div>
+    <div class="row" id="like"></div>
+    <div class="row">Số lượng <input id="count" type="number" min="1" max="999" value="1" style="width:80px"> <span class="hint">Chưa chọn đội mà tặng quà thì được xếp vào đội ít fan nhất.</span></div>
+  </section>
+
+  <section>
+    <h2>Nhật ký</h2>
+    <div id="log"></div>
+  </section>
+
+  <script type="module">
+    const $ = (id) => document.getElementById(id);
+    let teams = [];
+    let guide = { gifts: [] };
+    let paused = false;
+    const nameOf = (id) => teams.find((t) => t.id === id)?.name ?? id;
+
+    const post = (url, body) => fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then((r) => r.json());
+    const simulate = (body) => post('/api/simulate', { name: $('name').value, ...body });
+
+    function log(text) {
+      const line = `${new Date().toLocaleTimeString('vi-VN')}  ${text}\n`;
+      $('log').textContent = (line + $('log').textContent).slice(0, 8000);
+    }
+
+    function renderBoard(board) {
+      paused = board.paused;
+      $('pause').textContent = paused ? 'Tiếp tục sút' : 'Tạm dừng';
+      $('score').replaceChildren(...teams.map((t) => {
+        const tr = document.createElement('tr');
+        for (const v of [t.name, board.fans[t.id], board.stats[t.id].goals, board.stats[t.id].saved, board.pending[t.id]]) {
+          const td = document.createElement('td');
+          td.textContent = typeof v === 'number' ? v.toLocaleString('vi-VN') : v;
+          tr.append(td);
+        }
+        return tr;
+      }));
+    }
+
+    function buildButtons() {
+      $('join').replaceChildren('Comment:', ...teams.map((t) => {
+        const b = document.createElement('button');
+        b.textContent = t.name;
+        b.onclick = () => simulate({ kind: 'chat', text: t.name });
+        return b;
+      }));
+      $('gift').replaceChildren('Tặng:', ...guide.gifts.map((g) => {
+        const b = document.createElement('button');
+        b.textContent = `${g.giftLabel || `${g.coins} xu`} (${g.shots} lượt)`;
+        b.onclick = () => simulate({ kind: 'gift', coins: g.coins, count: Number($('count').value) || 1 });
+        return b;
+      }));
+      const per = guide.likesPerShot;
+      $('like').replaceChildren(...(per > 0 ? ['Thả tim:', ...[10, per, per * 5].map((n) => {
+        const b = document.createElement('button');
+        b.textContent = `❤️ ${n} tim`;
+        b.onclick = () => simulate({ kind: 'like', count: n });
+        return b;
+      }), Object.assign(document.createElement('span'), { className: 'hint', textContent: `${per} tim = 1 lượt sút, tim lẻ cộng dồn cho lần sau.` })] : []));
+    }
+
+    const NAMES = ['Lan', 'Tuấn', 'Minh Anh', 'Hùng', 'Thảo', 'Quân', 'Vy', 'Long', 'Ngọc', 'Phúc', 'Trang', 'Đức'];
+    $('random').onclick = () => ($('name').value = `${NAMES[Math.floor(Math.random() * NAMES.length)]} ${Math.floor(Math.random() * 90 + 10)}`);
+    $('pause').onclick = () => post('/api/control', { action: paused ? 'resume' : 'pause' });
+    for (const b of document.querySelectorAll('[data-control]')) {
+      b.onclick = () => confirm(b.dataset.ask) && post('/api/control', { action: b.dataset.control });
+    }
+
+    const handlers = {
+      snapshot(msg) {
+        teams = msg.game.teams;
+        guide = msg.guide;
+        buildButtons();
+        renderBoard(msg.game.board);
+        handlers.status(msg.status);
+        handlers.session(msg.session);
+      },
+      status(s) {
+        $('status').textContent = s.text;
+        $('status').className = s.connected ? 'on' : '';
+      },
+      session(s) {
+        $('session').textContent = s.roomId ? `Phiên live: ${s.diamonds.toLocaleString('vi-VN')} kim cương · ${s.gifts} quà` : '';
+      },
+      join(msg) {
+        log(`${msg.fan.name} ${msg.auto ? 'được xếp vào' : msg.from ? 'chuyển sang' : 'vào'} ${nameOf(msg.team)}`);
+        renderBoard(msg.board);
+      },
+      gift(msg) {
+        log(`${msg.fan.name} tặng ${msg.giftName || 'quà'} x${msg.count} → ${nameOf(msg.team)} +${msg.shots} lượt`);
+        renderBoard(msg.board);
+      },
+      likes(msg) {
+        log(`${msg.fan.name} thả ${msg.likes} tim → ${nameOf(msg.team)} +${msg.shots} lượt`);
+        renderBoard(msg.board);
+      },
+      shot(msg) { renderBoard(msg.board); },
+      board(msg) { renderBoard(msg.board); },
+      reset(msg) { log('Trận mới'); renderBoard(msg.board); },
+    };
+    const events = new EventSource('/events');
+    events.onmessage = (e) => {
+      const msg = JSON.parse(e.data);
+      handlers[msg.type]?.(msg);
+    };
+    events.onerror = () => handlers.status({ connected: false, text: 'Mất kết nối server, đang thử lại...' });
+  </script>
+</body>
+</html>

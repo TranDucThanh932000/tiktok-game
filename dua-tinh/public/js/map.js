@@ -27,7 +27,11 @@ const TILT = 40;
 const FOCUS_TILT = 52;
 const FLY_MS = 1200;
 // Mặt trên của tỉnh được focus nằm ở chỗ trống giữa ô "Cách chơi" và bảng xếp hạng, zoom tới khi to cỡ FIT_PX.
-const FOCAL = { x: 490, y: 900 };
+const FOCAL = { x: 490, y: 820 };
+// Dời bản đồ lên sát mép trên: mép Bắc đất liền lên LIFT_N px, mép Nam lên LIFT_S px so với khung bản đồ phẳng
+// (MAP trong scripts/build-map.mjs). Mép Bắc lên nhiều hơn nên bản đồ cũng cao thêm một chút.
+const LIFT_N = 110;
+const LIFT_S = 70;
 const FIT_PX = 330;
 const MIN_ZOOM = 1.5;
 // Vương miện, chữ và quà bay to nhỏ theo khoảng cách tới camera, trong giới hạn này.
@@ -42,8 +46,9 @@ const FOCAL_PX = H / 2 / Math.tan(rad(FOV / 2));
 // Hai quần đảo đặt vào khung biển bên phải, theo vị trí trên màn hình lúc nhìn toàn cảnh:
 // Hoàng Sa gần đúng vị trí thật, Trường Sa thu nhỏ vào ô riêng.
 const PLACE = {
-  'hoang-sa': { shift: [-46, 34], scale: 1, label: 'below' },
-  'truong-sa': { center: [962, 1586], scale: 0.48, label: 'above' },
+  // Tọa độ màn hình: khi dời bản đồ lên (LIFT_N, LIFT_S) thì dời hai ô này lên theo, khoảng 90px ở vĩ độ của chúng.
+  'hoang-sa': { shift: [-46, -56], scale: 1, label: 'below' },
+  'truong-sa': { center: [962, 1500], scale: 0.48, label: 'above' },
 };
 
 const SEA_LABELS = [
@@ -87,8 +92,8 @@ export function buildMap({ canvas, crown, data, meta, maxZoom = 4 }) {
   const tilt = rad(TILT);
   // Điểm trên mặt đất cách tâm bao nhiêu đơn vị (theo chiều Bắc-Nam) thì hiện lệch `px` px so với giữa màn hình.
   const groundOffset = (px) => px / (Math.cos(tilt) - (px * Math.sin(tilt)) / FOCAL_PX);
-  const reachNorth = groundOffset(H / 2 - (north + 24));
-  const reachSouth = groundOffset(H / 2 - south);
+  const reachNorth = groundOffset(H / 2 - (north + 24 - LIFT_N));
+  const reachSouth = groundOffset(H / 2 - (south - LIFT_S));
   const stretch = (reachNorth - reachSouth) / (south - north);
   const CX = W / 2;
   const CY = north + reachNorth / stretch;

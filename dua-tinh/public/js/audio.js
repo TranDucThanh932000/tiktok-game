@@ -51,6 +51,16 @@ export const sfx = {
   lead: () => notes([523, 659, 784, 1047, 784, 1047, 1319], 0.1, 0.42, 0.17, 'triangle'),
   // vòng mới
   reset: () => notes([392, 523, 659, 784], 0.12, 0.4, 0.14, 'triangle'),
+  // đố chữ: câu mới, mở thêm chữ, trả lời đúng (người đầu tiên thì vang hơn), công bố đáp án
+  quizAsk: () => notes([659, 880, 1175], 0.09, 0.3, 0.1, 'triangle'),
+  quizLetter: () => notes([1568], 0.05, 0.12, 0.05, 'sine'),
+  quizCorrect(first) {
+    if (first) return notes([784, 1047, 1319, 1568], 0.07, 0.34, 0.13, 'triangle');
+    if (ctx.currentTime - lastJoin < 0.12) return;
+    lastJoin = ctx.currentTime;
+    notes([1175, 1568], 0.06, 0.16, 0.07, 'triangle');
+  },
+  quizReveal: () => notes([523, 784, 1047], 0.11, 0.42, 0.12, 'triangle'),
 };
 
 // ---------- Giọng MC: các mẩu /tts/:id phát nối nhau ----------

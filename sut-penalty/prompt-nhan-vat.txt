@@ -1,0 +1,109 @@
+PROMPT TẠO NHÂN VẬT CHIBI · SÚT PENALTY
+
+5 prompt = 5 ảnh: 4 cầu thủ (MU, Real, Barça, PSG) và 1 thủ môn. Mỗi ảnh có 6 động tác của cùng một nhân vật.
+Game tự cắt từng động tác ra, tự xóa nền xanh. Thiếu ảnh nào game vẫn chạy, nhân vật đó được vẽ bằng hình khối như hiện tại.
+
+CÁCH LÀM
+1. Làm PROMPT 1 trước (MU). Dán nguyên khối prompt vào ChatGPT hoặc Gemini, chọn ảnh ngang 3:2.
+2. Tải ảnh về, đặt đúng TÊN FILE ghi ở đầu mỗi prompt, bỏ vào thư mục sut-penalty/anh-goc/.
+3. PROMPT 2 đến 5: đính kèm ảnh mu.png đã làm ở bước 1 để các nhân vật cùng một kiểu vẽ.
+4. Đủ ảnh (hoặc mới có vài ảnh cũng được) thì chạy: npm run cat-anh  (trong thư mục sut-penalty).
+   Script báo "Xong: ... hình" là được, bấm F5 ở cửa sổ game. Script báo LỖI (thiếu hình, hai hình dính nhau)
+   thì tạo lại ảnh đó; các hình phải đứng tách rời nhau, đủ 6 hình.
+5. Công cụ cho nền trong suốt (ChatGPT) thì có thể thay câu "Background: ..." bằng "Transparent background (PNG with alpha)."
+
+Thứ tự 6 động tác trong mỗi ảnh (lưới 3 cột x 2 hàng, đọc từ trái sang phải, trên xuống dưới):
+  Cầu thủ: đứng chờ (sau lưng) · chạy đà (sau lưng) · sút (sau lưng) · ăn mừng · tiếc nuối · vẫy tay chào
+  Thủ môn: đứng thủ thành · bay người sang trái · bay người sang phải · ôm bóng · ăn mừng · ngồi bệt thua bàn
+
+Không ghi logo câu lạc bộ, tên nhà tài trợ hay mặt cầu thủ thật: các công cụ AI hay từ chối, và livestream dùng logo thật
+dễ bị báo bản quyền. Màu áo đủ để người xem nhận ra đội.
+
+
+======================================================================
+PROMPT 1 · TÊN FILE: mu.png · ĐÍNH KÈM: không
+----------------------------------------------------------------------
+Character sprite sheet for a 2D mobile football penalty game. Cute 3D chibi style: big round head (about 40% of the body height), small body, short limbs, big friendly eyes. Soft vinyl toy / clay 3D render, smooth soft shading, gentle studio light from the top left, bright saturated colors, clean simple shapes, no outlines.
+The character: a fictional young football striker (not resembling any real person) with short dark brown hair and warm tan skin. Kit: bright red short-sleeve football shirt with a white collar, white shorts, black socks, black boots with white soles. A big white number 7 on the back of the shirt; the front of the shirt is plain. No crest, no logo, no sponsor text, no brand marks.
+Layout: a grid of 3 columns and 2 rows, 6 full-body figures of the SAME character, all at exactly the same scale. Every figure stands alone in its own cell with wide empty space around it; figures never touch or overlap. No grid lines, no frames, no labels, no text other than the shirt number. No ball anywhere.
+Row 1, seen from BEHIND (back of the shirt and number 7 visible, face not visible), as if the player faces a goal far away:
+(1) standing ready, feet apart, arms relaxed at the sides;
+(2) running forward away from the viewer, leaning forward, one leg lifted behind, arms swinging;
+(3) kicking: standing on the left foot, right leg swung forward and high after striking, arms spread wide for balance.
+Row 2, seen from the FRONT, facing the viewer:
+(4) celebrating a goal: jumping with both fists raised high, mouth wide open shouting with joy;
+(5) disappointed: both hands on top of the head, sad face, shoulders dropped;
+(6) smiling and waving one hand high to the viewer, the other hand giving a thumbs up.
+Background: perfectly flat solid pure green #00FF00 everywhere, no gradient, no floor, no grass, no shadows. Do not use any green color on the character. Landscape image, 3:2 aspect ratio.
+
+
+======================================================================
+PROMPT 2 · TÊN FILE: real.png · ĐÍNH KÈM: mu.png
+----------------------------------------------------------------------
+Use exactly the same art style, rendering, proportions and character scale as the attached image, but draw a DIFFERENT player in a different kit.
+Character sprite sheet for a 2D mobile football penalty game. Cute 3D chibi style: big round head (about 40% of the body height), small body, short limbs, big friendly eyes. Soft vinyl toy / clay 3D render, smooth soft shading, gentle studio light from the top left, bright saturated colors, clean simple shapes, no outlines.
+The character: a fictional young football striker (not resembling any real person) with medium-length light brown hair and fair skin. Kit: all-white short-sleeve football shirt with thin gold trim on the collar and sleeves, white shorts, white socks, white boots. A big navy blue number 9 on the back of the shirt; the front of the shirt is plain. No crest, no logo, no sponsor text, no brand marks.
+Layout: a grid of 3 columns and 2 rows, 6 full-body figures of the SAME character, all at exactly the same scale. Every figure stands alone in its own cell with wide empty space around it; figures never touch or overlap. No grid lines, no frames, no labels, no text other than the shirt number. No ball anywhere.
+Row 1, seen from BEHIND (back of the shirt and number 9 visible, face not visible), as if the player faces a goal far away:
+(1) standing ready, feet apart, arms relaxed at the sides;
+(2) running forward away from the viewer, leaning forward, one leg lifted behind, arms swinging;
+(3) kicking: standing on the left foot, right leg swung forward and high after striking, arms spread wide for balance.
+Row 2, seen from the FRONT, facing the viewer:
+(4) celebrating a goal: jumping with both fists raised high, mouth wide open shouting with joy;
+(5) disappointed: both hands on top of the head, sad face, shoulders dropped;
+(6) smiling and waving one hand high to the viewer, the other hand giving a thumbs up.
+Background: perfectly flat solid pure green #00FF00 everywhere, no gradient, no floor, no grass, no shadows. Do not use any green color on the character. Landscape image, 3:2 aspect ratio.
+
+
+======================================================================
+PROMPT 3 · TÊN FILE: barca.png · ĐÍNH KÈM: mu.png
+----------------------------------------------------------------------
+Use exactly the same art style, rendering, proportions and character scale as the attached image, but draw a DIFFERENT player in a different kit.
+Character sprite sheet for a 2D mobile football penalty game. Cute 3D chibi style: big round head (about 40% of the body height), small body, short limbs, big friendly eyes. Soft vinyl toy / clay 3D render, smooth soft shading, gentle studio light from the top left, bright saturated colors, clean simple shapes, no outlines.
+The character: a fictional young football playmaker (not resembling any real person) with short black curly hair and brown skin. Kit: short-sleeve football shirt with bold vertical stripes of deep blue and dark garnet red, dark blue shorts, garnet red socks, black boots. A big yellow number 10 on the back of the shirt; the front of the shirt has the same stripes and nothing else. No crest, no logo, no sponsor text, no brand marks.
+Layout: a grid of 3 columns and 2 rows, 6 full-body figures of the SAME character, all at exactly the same scale. Every figure stands alone in its own cell with wide empty space around it; figures never touch or overlap. No grid lines, no frames, no labels, no text other than the shirt number. No ball anywhere.
+Row 1, seen from BEHIND (back of the shirt and number 10 visible, face not visible), as if the player faces a goal far away:
+(1) standing ready, feet apart, arms relaxed at the sides;
+(2) running forward away from the viewer, leaning forward, one leg lifted behind, arms swinging;
+(3) kicking: standing on the left foot, right leg swung forward and high after striking, arms spread wide for balance.
+Row 2, seen from the FRONT, facing the viewer:
+(4) celebrating a goal: jumping with both fists raised high, mouth wide open shouting with joy;
+(5) disappointed: both hands on top of the head, sad face, shoulders dropped;
+(6) smiling and waving one hand high to the viewer, the other hand giving a thumbs up.
+Background: perfectly flat solid pure green #00FF00 everywhere, no gradient, no floor, no grass, no shadows. Do not use any green color on the character. Landscape image, 3:2 aspect ratio.
+
+
+======================================================================
+PROMPT 4 · TÊN FILE: psg.png · ĐÍNH KÈM: mu.png
+----------------------------------------------------------------------
+Use exactly the same art style, rendering, proportions and character scale as the attached image, but draw a DIFFERENT player in a different kit.
+Character sprite sheet for a 2D mobile football penalty game. Cute 3D chibi style: big round head (about 40% of the body height), small body, short limbs, big friendly eyes. Soft vinyl toy / clay 3D render, smooth soft shading, gentle studio light from the top left, bright saturated colors, clean simple shapes, no outlines.
+The character: a fictional young football winger (not resembling any real person) with a short dark brown fade haircut and light brown skin. Kit: dark navy blue short-sleeve football shirt with one wide vertical red stripe down the center, bordered by thin white lines, navy shorts, navy socks, white boots. A big white number 11 on the back of the shirt; the front of the shirt has the same stripe and nothing else. No crest, no logo, no sponsor text, no brand marks.
+Layout: a grid of 3 columns and 2 rows, 6 full-body figures of the SAME character, all at exactly the same scale. Every figure stands alone in its own cell with wide empty space around it; figures never touch or overlap. No grid lines, no frames, no labels, no text other than the shirt number. No ball anywhere.
+Row 1, seen from BEHIND (back of the shirt and number 11 visible, face not visible), as if the player faces a goal far away:
+(1) standing ready, feet apart, arms relaxed at the sides;
+(2) running forward away from the viewer, leaning forward, one leg lifted behind, arms swinging;
+(3) kicking: standing on the left foot, right leg swung forward and high after striking, arms spread wide for balance.
+Row 2, seen from the FRONT, facing the viewer:
+(4) celebrating a goal: jumping with both fists raised high, mouth wide open shouting with joy;
+(5) disappointed: both hands on top of the head, sad face, shoulders dropped;
+(6) smiling and waving one hand high to the viewer, the other hand giving a thumbs up.
+Background: perfectly flat solid pure green #00FF00 everywhere, no gradient, no floor, no grass, no shadows. Do not use any green color on the character. Landscape image, 3:2 aspect ratio.
+
+
+======================================================================
+PROMPT 5 · TÊN FILE: thu-mon.png · ĐÍNH KÈM: mu.png
+----------------------------------------------------------------------
+Use exactly the same art style, rendering, proportions and character scale as the attached image, but draw a GOALKEEPER.
+Character sprite sheet for a 2D mobile football penalty game. Cute 3D chibi style: big round head (about 40% of the body height), small body, short limbs, big friendly eyes. Soft vinyl toy / clay 3D render, smooth soft shading, gentle studio light from the top left, bright saturated colors, clean simple shapes, no outlines.
+The character: a fictional tall young goalkeeper (not resembling any real person) with short dark brown hair, tan skin and a confident face. Kit: long-sleeve bright orange-yellow goalkeeper jersey, black shorts, orange-yellow socks, black boots, big puffy white goalkeeper gloves. A big black number 1 on the chest. No crest, no logo, no sponsor text, no brand marks.
+Layout: a grid of 3 columns and 2 rows, 6 full-body figures of the SAME goalkeeper, all at exactly the same scale. Every figure stays alone in its own cell with wide empty space around it; figures never touch or overlap. No grid lines, no frames, no labels, no text other than the shirt number. Every figure is seen from the FRONT, facing the viewer, as if the viewer is the penalty taker.
+Row 1:
+(1) ready stance on the goal line: knees slightly bent, both arms raised wide to the sides with open gloved hands, focused face;
+(2) full-stretch dive toward the LEFT side of the image: body almost horizontal in the air, both arms stretched to the left, legs trailing to the right, determined face;
+(3) full-stretch dive toward the RIGHT side of the image: body almost horizontal in the air, both arms stretched to the right, legs trailing to the left, determined face.
+Row 2:
+(4) standing and hugging a classic white football with black pentagons tightly against the chest with both gloves, proud smile (the only figure with a ball);
+(5) celebrating a save: jumping, one fist pumping in the air, shouting with joy;
+(6) sitting on the ground after conceding a goal, legs stretched out in front, one glove slapping the ground, frustrated face.
+Background: perfectly flat solid pure green #00FF00 everywhere, no gradient, no floor, no grass, no shadows. Do not use any green color on the character. Landscape image, 3:2 aspect ratio.

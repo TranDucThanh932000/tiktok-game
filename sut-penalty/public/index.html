@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Penalty Shootout</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚽</text></svg>">
+  <link rel="stylesheet" href="/fonts/fonts.css">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div id="stage">
+    <canvas id="pitch" width="1080" height="1920"></canvas>
+
+    <header id="head">
+      <h1 id="title">PENALTY SHOOTOUT</h1>
+      <p id="subtitle">Comment a team name to join</p>
+      <div id="gifts"></div>
+      <div id="board"></div>
+    </header>
+
+    <div id="leaders" hidden></div>
+    <div id="turbo" hidden></div>
+    <div id="toasts"></div>
+    <div id="squad"></div>
+    <div id="paused" hidden>PAUSED</div>
+    <p id="status" hidden></p>
+    <div id="sound-hint" hidden>Click the screen to turn on sound</div>
+  </div>
+  <script type="module" src="/js/main.js"></script>
+</body>
+</html>

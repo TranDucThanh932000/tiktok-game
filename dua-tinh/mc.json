@@ -1,6 +1,24 @@
 {
   "fixes": {
-    "TP.": "Thành phố"
+    "TP.": "Thành phố",
+    "SEA Games": "xi ghêm",
+    "TikTok": "tích tóc",
+    "wifi": "oai phai",
+    "livestream": "lai trim",
+    "flycam": "phờ lai cam",
+    "rubik": "ru bích",
+    "lego": "le gô",
+    "yoga": "dô ga",
+    "email": "i meo",
+    "karaoke": "ka ra ô kê",
+    "vitamin": "vi ta min",
+    "internet": "in tơ nét",
+    "F1": "ép một",
+    "GPS": "gi pi ét",
+    "AI": "ây ai",
+    "QR": "quy rờ",
+    "UNESCO": "giu nét cô",
+    "K-pop": "kê póp"
   },
 
   "thanks": [
@@ -55,7 +73,8 @@
   "invite": [
     "Bà con tỉnh nào chưa điểm danh thì bình luận tên tỉnh mình ngay nhé!",
     "Bình luận tên tỉnh của bạn để góp một điểm cho quê hương nào!",
-    "Tỉnh của bạn đang đứng thứ mấy? Bình luận tên tỉnh để cùng đua nhé!"
+    "Tỉnh của bạn đang đứng thứ mấy? Bình luận tên tỉnh để cùng đua nhé!",
+    "Trả lời đúng câu đố trên màn hình để ghi thêm điểm cho tỉnh nhà nhé!"
   ],
   "empty": [
     "Cuộc đua sắp bắt đầu! Bình luận tên tỉnh của bạn để điểm danh nào!",
@@ -63,5 +82,50 @@
   ],
   "reset": [
     "Vòng đua mới bắt đầu! Bình luận tên tỉnh của bạn để điểm danh nào!"
+  ],
+
+  "quizAsk": [
+    "Câu đố mới đây! Trả lời đúng là ghi điểm cho tỉnh nhà!",
+    "Bà con các tỉnh chú ý, câu đố tiếp theo!",
+    "Câu đố mới! Tỉnh nào sẽ có đáp án đầu tiên đây?",
+    "Tiếp tục cuộc đua với một câu đố nữa!",
+    "Ghi điểm cho quê hương nào! Câu đố tiếp theo đây!",
+    "Các tỉnh sẵn sàng chưa? Câu đố mới tới rồi!"
+  ],
+  "quizIntro": [
+    "Chủ đề {topic}. Gợi ý: {hint}.",
+    "Chủ đề lần này là {topic}. {hint}.",
+    "Thuộc chủ đề {topic}. Gợi ý cho cả nhà: {hint}."
+  ],
+  "quizFirst": [
+    "Chính xác! {name} trả lời đúng đầu tiên, ghi điểm cho {province}!",
+    "Quá nhanh! {name} đã có đáp án, {province} được cộng điểm!"
+  ],
+  "quizFirstAnon": [
+    "Đã có người trả lời đúng! {province} được cộng điểm!"
+  ],
+  "quizFirstPending": [
+    "Chính xác! {name} trả lời đúng rồi! Bình luận tên tỉnh để điểm được cộng cho tỉnh nhà nhé!"
+  ],
+  "quizFirstPendingAnon": [
+    "Đã có người trả lời đúng! Nhớ bình luận tên tỉnh để điểm được cộng cho tỉnh nhà nhé!"
+  ],
+  "quizAnswerIs": [
+    "Đáp án là",
+    "Đáp án chính xác là",
+    "Câu trả lời đúng là"
+  ],
+  "quizBest": [
+    "{province} có nhiều người trả lời đúng nhất!",
+    "Câu này {province} giành được nhiều điểm nhất!"
+  ],
+  "quizNobody": [
+    "Câu này chưa tỉnh nào giải được, câu sau cố lên nhé!",
+    "Câu này khó quá, chưa có tỉnh nào ghi điểm!"
+  ],
+  "quizStuck": [
+    "Câu này hơi khó, tỉnh nào sẽ giải được đây?",
+    "Chưa ai có đáp án, nhìn kỹ các chữ đã mở nhé!",
+    "Cơ hội ghi điểm cho tỉnh nhà vẫn còn đó, đoán ngay nào!"
   ]
 }

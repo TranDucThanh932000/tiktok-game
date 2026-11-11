@@ -1,0 +1,29 @@
+{
+  "tiktokUsername": "c.hoi.thanh021",
+  "port": 3017,
+  "title": "PENALTY SHOOTOUT",
+  "subtitle": "Comment a team name to join",
+
+  "saveChance": 0.5,
+
+  "teams": [
+    { "id": "mu", "name": "MU", "number": 7, "aliases": ["mu", "manu", "man u", "man utd", "man united", "united", "mufc", "manchester united", "manchester utd", "quy do"] },
+    { "id": "real", "name": "REAL", "number": 9, "aliases": ["real", "real madrid", "madrid", "rm", "ken ken", "ken ken trang"] },
+    { "id": "barca", "name": "BARÇA", "number": 10, "aliases": ["barca", "barcelona", "fcb", "fc barcelona", "barsa"] },
+    { "id": "psg", "name": "PSG", "number": 11, "aliases": ["psg", "paris", "paris saint germain", "paris sg"] }
+  ],
+
+  "gifts": [
+    { "coins": 1, "shots": 1, "giftLabel": "Rose", "icon": "/gifts/rose.webp" },
+    { "coins": 30, "shots": 50, "giftLabel": "Doughnut", "icon": "/gifts/doughnut.webp" },
+    { "coins": 100, "shots": 200, "giftLabel": "Gift Box", "icon": "/gifts/gift-box.webp" }
+  ],
+  "otherGiftShotsPerCoin": 1,
+  "likesPerShot": 50,
+
+  "timing": {
+    "shotMs": 1600,
+    "fastestShotMs": 140,
+    "speedupEvery": 6
+  }
+}

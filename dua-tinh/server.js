@@ -4,8 +4,10 @@ import { setTimeout as sleep } from 'node:timers/promises';
 import { parseEnv } from 'node:util';
 import express from 'express';
 import { TikTokLiveConnection, WebcastEvent, ControlEvent } from 'tiktok-live-connector';
-import { BY_ID, publicProvinces } from './src/provinces.js';
+import { BY_ID, findProvince, publicProvinces } from './src/provinces.js';
 import { Race } from './src/race.js';
+import { Quiz, QUIZ_DEFAULTS } from './src/quiz.js';
+import { bankSize, createDeck, validateBank } from './src/words.js';
 import { Commentator } from './src/commentator.js';
 import { createVoice } from './src/voice.js';
 
@@ -27,12 +29,39 @@ const problems = [
 ].filter(([ok]) => !ok);
 if (problems.length) throw new Error(`config.json: ${problems.map(([, text]) => text).join('; ')}`);
 
+// ---------- Đố chữ: bộ từ lấy từ game Đoán Từ ----------
+const quizOptions = { ...QUIZ_DEFAULTS, ...config.quiz, hints: { ...QUIZ_DEFAULTS.hints, ...config.quiz?.hints } };
+const quizOn = quizOptions.enabled !== false;
+const quizProblems = [
+  [Number.isInteger(quizOptions.points) && quizOptions.points >= 1, 'quiz.points là số điểm cho mỗi lần trả lời đúng, từ 1 trở lên'],
+  [quizOptions.wordSeconds >= 10, 'quiz.wordSeconds là số giây mỗi câu đố, từ 10 trở lên'],
+  [quizOptions.afterFirstSeconds > 0 && quizOptions.revealSeconds > 0 && quizOptions.breakSeconds >= 0 && quizOptions.hintEverySeconds >= 0 && quizOptions.graceSeconds >= 0, 'quiz: các mốc thời gian phải là số dương'],
+].filter(([ok]) => !ok);
+if (quizProblems.length) throw new Error(`config.json: ${quizProblems.map(([, text]) => text).join('; ')}`);
+let quizBank = {};
+if (quizOn) {
+  const raw = JSON.parse(readFileSync(path.join(root, 'words.json'), 'utf8'));
+  const wrong = validateBank(raw);
+  if (wrong.length) throw new Error(`words.json có ${wrong.length} chỗ sai:\n- ${wrong.slice(0, 20).join('\n- ')}`);
+  // Đáp án có tên tỉnh (Hà Nội, Đà Nẵng, cố đô Huế...) dễ lẫn với comment điểm danh tên tỉnh nên không hỏi.
+  let dropped = 0;
+  for (const [topic, rows] of Object.entries(raw)) {
+    const kept = rows.filter(([text]) => !findProvince(text));
+    dropped += rows.length - kept.length;
+    if (kept.length) quizBank[topic] = kept;
+  }
+  console.log(`Đố chữ: ${bankSize(quizBank)} từ trong ${Object.keys(quizBank).length} chủ đề (bỏ ${dropped} từ trùng tên tỉnh)`);
+}
+// Không có đố chữ thì MC không mời trả lời câu đố.
+if (!quizOn) mcLines.invite = (mcLines.invite ?? []).filter((line) => !/câu đố/i.test(line));
+
 const guide = {
   title: config.title,
   subtitle: config.subtitle,
   commentPoints: config.commentPoints,
   gifts: config.gifts.map(({ label, points, icon, names }) => ({ label, points, icon, name: names[0] })),
   boardSize: config.boardSize,
+  quiz: quizOn ? { points: quizOptions.points } : null,
   camera: {
     enabled: config.camera?.enabled !== false,
     onComment: config.camera?.onComment === true,
@@ -147,6 +176,32 @@ try {
   // Chưa có cuộc đua cũ.
 }
 mc.attach(race);
+
+const deck = quizOn ? createDeck(quizBank) : null;
+const quiz = quizOn
+  ? new Quiz(quizOptions, {
+      deck,
+      race,
+      emit(msg) {
+        const { userId, ...shown } = msg;
+        broadcast(shown);
+        mc.onEvent(msg);
+        if (msg.type === 'quiz-ask') console.log(`[Đố chữ ${msg.no}] ${quiz.puzzle.answer} · ${msg.topic}: ${msg.hint}`);
+        if (msg.type === 'quiz-correct') console.log(`[Đố chữ] ${msg.name} trả lời đúng${msg.province ? ` → ${nameOf(msg.province)} +${msg.points} · ${nameOf(msg.province)} ${msg.score} điểm` : ` (chưa chọn tỉnh, đang giữ ${msg.held} điểm)`}`);
+        if (msg.type === 'quiz-reveal') console.log(`[Đố chữ ${msg.no}] Đáp án ${msg.answer} · ${msg.count} người đúng${msg.best ? ` · nhiều nhất ${nameOf(msg.best.province)}` : ''}`);
+      },
+    })
+  : null;
+if (quiz) {
+  mc.attachQuiz(quiz, deck);
+  setInterval(() => quiz.tick(), 200);
+}
+
+// Comment đúng đáp án câu đố thì không xét tên tỉnh nữa; còn lại là comment điểm danh tên tỉnh.
+function onChat(who, text) {
+  if (quiz?.comment(who, text)) return;
+  race.comment(who, text);
+}
 function saveState() {
   if (!race.stateDirty) return;
   race.stateDirty = false;
@@ -320,7 +375,7 @@ function connectTikTok() {
     const warning = type === 'WebcastControlMessage' ? [data.punishInfo, data.perceptionDialog] : MODERATION_TYPES.has(type) ? [fields, common?.displayText] : [];
     if (hasContent(warning)) reportModeration(type, data);
   });
-  conn.on(WebcastEvent.CHAT, (e) => race.comment(viewer(e.user), String(e.comment ?? e.content ?? '').slice(0, 200)));
+  conn.on(WebcastEvent.CHAT, (e) => onChat(viewer(e.user), String(e.comment ?? e.content ?? '').slice(0, 200)));
   conn.on(WebcastEvent.LIKE, (e) => race.like(viewer(e.user), Math.max(1, Number(e.likeCount ?? e.count) || 1)));
   conn.on(WebcastEvent.GIFT, (e) => {
     if (!e.gift && !e.giftDetails) return;
@@ -399,6 +454,7 @@ app.get('/events', (req, res) => {
     guide,
     provinces: publicProvinces(),
     race: race.snapshot(),
+    quiz: quiz?.snapshot() ?? null,
     alerts,
     session,
     safeMode,
@@ -423,11 +479,30 @@ app.post('/api/simulate', (req, res) => {
   const { kind, name, text, count, coins, gift } = req.body ?? {};
   const nickname = typeof name === 'string' && name.trim() ? name : 'Bạn thử';
   const who = viewer({ id: `sim:${nickname}`, nickname });
-  if (kind === 'chat') race.comment(who, String(text ?? '').slice(0, 200));
-  else if (kind === 'gift') race.gift(who, { name: String(gift ?? '').slice(0, 40), coins: clampInt(coins, 1, 100_000) }, clampInt(count, 1, 999));
+  if (kind === 'chat') onChat(who, String(text ?? '').slice(0, 200));
+  else if (kind === 'answer') {
+    if (!quiz) return res.json({ message: 'Đố chữ đang tắt.' });
+    if (quiz.phase !== 'asking') return res.json({ message: 'Đang công bố đáp án, chờ câu đố mới.' });
+    onChat(who, quiz.puzzle.answer);
+  } else if (kind === 'gift') race.gift(who, { name: String(gift ?? '').slice(0, 40), coins: clampInt(coins, 1, 100_000) }, clampInt(count, 1, 999));
   else if (kind === 'like') race.like(who, clampInt(count, 1, 99));
   else return res.status(400).json({ error: 'kind không hợp lệ' });
   res.status(204).end();
+});
+
+// Đáp án câu đố đang hỏi: chỉ bảng điều khiển của chủ kênh gọi, màn hình game không bao giờ nhận đáp án trước khi công bố.
+app.get('/api/quiz', (req, res) => res.json(quiz ? { on: true, no: quiz.no, phase: quiz.phase, answer: quiz.puzzle?.display ?? '', count: quiz.solvers.size } : { on: false }));
+
+app.post('/api/quiz', (req, res) => {
+  if (!req.is('application/json')) return res.status(415).end();
+  if (!quiz) return res.json({ message: 'Đố chữ đang tắt (quiz.enabled = false trong config.json).' });
+  const { action } = req.body ?? {};
+  if (action === 'letter') return res.json({ message: quiz.openLetter() ? 'Đã mở thêm một chữ.' : 'Không mở thêm được (đã mở tối đa hoặc đang công bố).' });
+  if (action === 'skip') {
+    quiz.skip();
+    return res.json({ message: quiz.phase === 'reveal' ? 'Đã công bố đáp án.' : 'Đã sang câu đố mới.' });
+  }
+  res.status(400).json({ error: 'action không hợp lệ' });
 });
 
 app.post('/api/reset', (req, res) => {
