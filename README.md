@@ -35,3 +35,14 @@ Chạy [start.bat của game](sut-penalty/start.bat). Nó mở game tại <http:
 - Ảnh chibi nhân vật: làm theo [prompt-nhan-vat.txt](sut-penalty/prompt-nhan-vat.txt) rồi `npm run cat-anh`.
 
 Xem [luật chơi, ảnh nhân vật và cấu hình](sut-penalty/README.md).
+
+## Đám Cưới Online — game cưới 3D, cướp vai chú rể/cô dâu
+
+Chạy [start.bat của game](dam-cuoi/start.bat). Nó mở game tại <http://127.0.0.1:3018> và [bảng điều khiển](http://127.0.0.1:3018/panel.html).
+
+- Làm theo [GAME_PLAN.md](GAME_PLAN.md) nhưng bằng Node + Three.js thay cho Unity, nên không phải cài thêm gì.
+- Hoa hồng = đăng ký chú rể, TikTok = đăng ký cô dâu (vai có người thì vào hàng chờ). Kem (5 xu) = đổi vai chú rể, Bắn tim = đổi vai cô dâu (đá văng người cũ). Bánh vòng = hủy hôn, Kem ốc quế (1 xu) = mừng 1 chỉ vàng.
+- Đủ đôi thì tự làm 8 nghi lễ cưới Việt Nam, từ rước dâu, gia tiên, lên đèn, trao nhẫn đến cảm ơn hai họ. Có người đổi vai giữa chừng thì lễ làm lại từ đầu. Xong lễ thì cặp sau trong hàng chờ lên thay.
+- Quà dồn dập được xếp hàng và diễn lần lượt, hàng dài thì diễn nhanh hơn. `npm run test-mode` sinh quà giả không cần live.
+
+Xem [cách chơi, cách lấy tên quà thật và cấu hình](dam-cuoi/README.md).

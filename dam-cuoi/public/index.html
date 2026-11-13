@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Đám Cưới Online</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💍</text></svg>">
+  <link rel="stylesheet" href="/fonts/fonts.css">
+  <link rel="stylesheet" href="/style.css">
+  <script type="importmap">
+    { "imports": { "three": "/vendor/three/build/three.module.js", "three/addons/": "/vendor/three/examples/jsm/" } }
+  </script>
+</head>
+<body>
+  <div id="stage">
+    <canvas id="game"></canvas>
+    <div id="tags"></div>
+    <div id="fx"></div>
+
+    <header id="top">
+      <h1 id="title"><span>💍</span> ĐÁM CƯỚI ONLINE <span>💍</span></h1>
+      <div id="couple">
+        <div class="card" id="card-groom" data-role="groom">
+          <div class="label">CHÚ RỂ</div>
+          <div class="frame"><img class="avatar" alt=""><span class="initial"></span><div class="empty"><img class="gift" alt=""></div></div>
+          <div class="name"></div>
+          <div class="wait" hidden></div>
+        </div>
+        <div id="heart">
+          <div class="big">💞</div>
+          <div id="together"></div>
+        </div>
+        <div class="card" id="card-bride" data-role="bride">
+          <div class="label">CÔ DÂU</div>
+          <div class="frame"><img class="avatar" alt=""><span class="initial"></span><div class="empty"><img class="gift" alt=""></div></div>
+          <div class="name"></div>
+          <div class="wait" hidden></div>
+        </div>
+      </div>
+      <div id="gold">
+        <img id="gold-icon" alt="">
+        <div class="bar"><div class="fill"></div><span class="text"></span></div>
+        <div class="goal">🎆</div>
+      </div>
+      <div id="record"></div>
+      <div id="ritual" hidden><span class="title"></span><span class="dots"></span></div>
+    </header>
+
+    <div id="gold-feed"></div>
+    <div id="mc-sub"></div>
+    <div id="ticker"></div>
+    <div id="queue" hidden></div>
+
+    <section id="howto">
+      <h2>CÁCH CHƠI</h2>
+      <div class="film-window"><div id="cells"></div></div>
+      <p class="note">Vai có người: <b>Đăng ký</b> thì xếp hàng · <b>Đổi vai</b> thì đá văng</p>
+    </section>
+
+    <div id="banner"></div>
+    <div id="status" hidden></div>
+    <div id="loading" hidden>Đang tải nhân vật…</div>
+    <div id="sound-hint" hidden>🔊 Bấm vào đây để bật tiếng</div>
+  </div>
+  <script type="module" src="/js/main.js"></script>
+</body>
+</html>

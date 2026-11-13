@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bảng điều khiển · Đám Cưới Online</title>
+  <link rel="stylesheet" href="/fonts/fonts.css">
+  <style>
+    body { margin: 0; padding: 18px; background: #1c0610; color: #fbe9ee; font: 15px/1.45 system-ui, sans-serif; }
+    h1 { margin: 0 0 4px; font: 700 26px "Be Vietnam Pro", sans-serif; color: #f6d36b; }
+    section { background: #2e0c19; border-radius: 14px; padding: 14px 16px; margin: 14px 0; max-width: 900px; }
+    h2 { margin: 0 0 10px; font-size: 16px; color: #f6d36b; }
+    button { font: inherit; padding: 7px 14px; border-radius: 9px; border: 0; background: #6b1f3a; color: #fff; cursor: pointer; margin: 3px 4px 3px 0; }
+    button:hover { background: #8e2a4e; }
+    button.warn { background: #5a2b2b; }
+    button.on { background: #2f7d4f; }
+    button img { width: 22px; height: 22px; vertical-align: -5px; margin-right: 4px; }
+    input { font: inherit; padding: 6px 10px; border-radius: 8px; border: 1px solid #6b2a40; background: #1c0610; color: #fff; }
+    .row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 6px 0; }
+    #status.on { color: #6ee7a0; } #status { color: #ff9b9b; }
+    #log { max-height: 300px; overflow: auto; font-size: 13px; color: #e2c2cc; white-space: pre-wrap; }
+    .hint { color: #c08a9b; font-size: 13px; }
+    .state { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    .state div { background: #1c0610; border-radius: 10px; padding: 8px 10px; }
+    .state b { display: block; font-size: 18px; color: #fff; }
+    iframe { border: 0; width: 270px; height: 480px; border-radius: 10px; background: #000; }
+    .wrap { display: flex; gap: 18px; align-items: flex-start; flex-wrap: wrap; }
+  </style>
+</head>
+<body>
+  <h1>💍 Đám Cưới Online · bảng điều khiển</h1>
+  <div id="status">Đang kết nối server...</div>
+  <div class="hint" id="session"></div>
+
+  <div class="wrap">
+    <div style="flex:1;min-width:420px">
+      <section>
+        <h2>Trạng thái</h2>
+        <div class="state">
+          <div>Chú rể<b id="s-groom">—</b></div>
+          <div>Cô dâu<b id="s-bride">—</b></div>
+          <div>Chỉ vàng<b id="s-gold">0</b></div>
+          <div>Lượt chờ<b id="s-wait">0</b></div>
+        </div>
+        <div class="row" style="margin-top:10px">
+          <button id="pause">Tạm dừng</button>
+          <button id="mc">🎤 MC</button>
+          <button class="warn" data-control="clear" data-ask="Xóa hết kịch bản đang chờ?">Xóa hàng chờ</button>
+          <button class="warn" data-control="reset" data-ask="Đám cưới mới? Xóa chú rể, cô dâu, chỉ vàng và kỷ lục.">Đám cưới mới</button>
+        </div>
+        <div class="hint">Trước buổi live nên bấm <b>Đám cưới mới</b> để bỏ các lượt chạy thử.</div>
+      </section>
+
+      <section>
+        <h2>Chạy thử</h2>
+        <div class="row">Tên người xem <input id="name" value="Bạn thử" maxlength="24"> <button id="random">Tên ngẫu nhiên</button></div>
+        <div class="row">Link ảnh đại diện (tùy chọn) <input id="avatar" placeholder="https://..." style="flex:1"></div>
+        <div class="row" id="gifts"></div>
+        <div class="row">Số lượng <input id="count" type="number" min="1" max="999" value="1" style="width:80px">
+          <button id="gold">💰 Quà khác: <input id="coins" type="number" min="1" value="10" style="width:70px" onclick="event.stopPropagation()"> xu</button>
+          <button id="like">❤️ 30 tim</button>
+        </div>
+        <div class="row">
+          <button id="burst">Bắn liên tiếp 10 hành động</button>
+          <button id="auto">Tự chạy quà giả (2 giây/lần)</button>
+        </div>
+        <div class="hint">Mỗi tên là một người xem. Cùng tên tặng tiếp thì người đó giữ vai (không có màn đá). Lệnh chat thử: <span id="cmds"></span></div>
+      </section>
+
+      <section>
+        <h2>Nhật ký</h2>
+        <div id="log"></div>
+      </section>
+    </div>
+    <iframe src="/?mute" title="Xem trước"></iframe>
+  </div>
+
+  <script type="module">
+    const $ = (id) => document.getElementById(id);
+    let guide = { gifts: [] };
+    let paused = false;
+    const post = (url, body) => fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then((r) => r.json());
+    const simulate = (body) => post('/api/simulate', { name: $('name').value, avatar: $('avatar').value, ...body });
+    const NAMES = ['Lan', 'Tuấn', 'Minh Anh', 'Hùng', 'Thảo', 'Quân', 'Vy', 'Long', 'Ngọc', 'Phúc', 'Trang', 'Đức', 'Nam', 'Huy'];
+    const randomName = () => `${NAMES[Math.floor(Math.random() * NAMES.length)]} ${Math.floor(Math.random() * 90 + 10)}`;
+
+    function log(text) {
+      const line = `${new Date().toLocaleTimeString('vi-VN')}  ${text}\n`;
+      $('log').textContent = (line + $('log').textContent).slice(0, 10000);
+    }
+
+    function render(g) {
+      $('s-groom').textContent = g.groom?.name ?? '—';
+      $('s-bride').textContent = g.bride?.name ?? '—';
+      $('s-gold').textContent = `${g.progress.gold.toLocaleString('vi-VN')} / ${g.progress.goal.toLocaleString('vi-VN')}`;
+      $('s-wait').textContent = g.waiting;
+      paused = g.paused;
+      $('pause').textContent = paused ? 'Tiếp tục' : 'Tạm dừng';
+    }
+
+    function buildButtons() {
+      $('gifts').replaceChildren('Tặng:', ...guide.gifts.map((g) => {
+        const b = document.createElement('button');
+        b.innerHTML = `<img src="${g.icon}" alt="">`;
+        b.append(`${g.giftLabel} → ${g.label}`);
+        b.onclick = () => simulate({ kind: 'gift', action: g.action, coins: g.coins, count: Number($('count').value) || 1 });
+        return b;
+      }));
+      $('cmds').textContent = Object.keys(guide.chatCommands).join(' · ');
+    }
+
+    $('random').onclick = () => ($('name').value = randomName());
+    $('gold').onclick = () => simulate({ kind: 'gift', action: 'gold', coins: Number($('coins').value) || 1, count: Number($('count').value) || 1 });
+    $('like').onclick = () => simulate({ kind: 'like', count: 30 });
+    $('burst').onclick = async () => {
+      const acts = guide.gifts.map((g) => g.action).filter((a) => a !== 'cancel_wedding');
+      for (let i = 0; i < 10; i++) {
+        const g = guide.gifts.find((x) => x.action === acts[i % acts.length]);
+        await post('/api/simulate', { name: randomName(), kind: 'gift', action: g.action, coins: g.coins, count: 1 });
+      }
+    };
+    $('auto').onclick = () => post('/api/control', { action: 'autotest' });
+    $('mc').onclick = () => post('/api/control', { action: 'mc' });
+    function renderMc(m) {
+      $('mc').textContent = !m.enabled ? '🎤 MC: chưa có Vbee' : m.on ? '🎤 MC đang nói · Tắt' : '🔇 MC đang tắt · Bật';
+      $('mc').classList.toggle('on', !!m.on);
+      $('mc').disabled = !m.enabled;
+    }
+    $('pause').onclick = () => post('/api/control', { action: paused ? 'resume' : 'pause' });
+    for (const b of document.querySelectorAll('[data-control]')) b.onclick = () => confirm(b.dataset.ask) && post('/api/control', { action: b.dataset.control });
+
+    let game = null;
+    const handlers = {
+      snapshot(msg) {
+        guide = msg.guide;
+        game = msg.game;
+        buildButtons();
+        render(game);
+        handlers.status(msg.status);
+        handlers.session(msg.session);
+        renderMc(msg.mc);
+      },
+      mc(msg) { renderMc(msg); },
+      say(msg) { for (const l of msg.lines ?? []) log(`🎤 ${l.speaker === 'nu' ? 'MC nữ' : 'MC nam'}: ${l.text}`); },
+      status(s) {
+        $('status').textContent = s.text;
+        $('status').className = s.connected ? 'on' : '';
+      },
+      session(s) {
+        $('session').textContent = s.roomId ? `Phiên live: ${s.diamonds.toLocaleString('vi-VN')} kim cương · ${s.gifts} quà` : '';
+      },
+      scene(msg) {
+        log(msg.text);
+        Object.assign(game, { groom: msg.groom, bride: msg.bride, waiting: msg.waiting });
+        render(game);
+      },
+      cheer(msg) { log(msg.text); },
+      gold(msg) {
+        log(msg.text);
+        game.progress = msg.progress;
+        render(game);
+      },
+      goal(msg) { log(msg.text); },
+      queued(msg) {
+        game.waiting = msg.size;
+        render(game);
+      },
+      dropped(msg) { log(`Hàng chờ đầy, bỏ qua lượt của ${msg.who.name}`); },
+      paused(msg) {
+        game.paused = msg.paused;
+        render(game);
+      },
+      autotest(msg) {
+        $('auto').classList.toggle('on', msg.on);
+        $('auto').textContent = msg.on ? 'Dừng quà giả' : 'Tự chạy quà giả (2 giây/lần)';
+      },
+      reset(msg) {
+        log('Đám cưới mới');
+        game = msg.snapshot;
+        render(game);
+      },
+    };
+    const events = new EventSource('/events');
+    events.onmessage = (e) => {
+      const msg = JSON.parse(e.data);
+      handlers[msg.type]?.(msg);
+    };
+    events.onerror = () => handlers.status({ connected: false, text: 'Mất kết nối server, đang thử lại...' });
+  </script>
+</body>
+</html>

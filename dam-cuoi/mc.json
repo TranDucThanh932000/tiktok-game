@@ -1,0 +1,190 @@
+{
+  "_ghichu": "Lời hai MC. Mỗi mục là danh sách cách nói; mỗi cách nói là một câu hoặc một đoạn đối đáp (danh sách câu). 'nam:' là MC nam, 'nu:' là MC nữ. Chỗ {ten}, {cu}, {chure}, {codau}, {moc}, {so} được thay bằng tên người chơi hoặc con số. MC chọn ngẫu nhiên và tránh lặp lại những cách nói vừa dùng.",
+
+  "claim_groom": [
+    "nam: Xin chúc mừng {ten} đã trở thành chú rể của buổi tiệc hôm nay!",
+    "nu: Chú rể đã xuất hiện! Xin chào mừng {ten}, trông bảnh bao quá!",
+    "nam: Một tràng pháo tay thật lớn chào đón chú rể {ten} nào cả nhà ơi!",
+    ["nu: Ơ kìa, ai mà đẹp trai thế kia?", "nam: Xin giới thiệu, chú rể {ten} đã có mặt!"],
+    "nu: Chú rể {ten} đã vào vị trí, giờ chỉ còn chờ cô dâu thôi!",
+    "nam: Vest chỉnh tề, nụ cười rạng rỡ, chú rể {ten} đã sẵn sàng!",
+    ["nam: Hai họ ơi, chú rể đã tới rồi!", "nu: Chào mừng {ten}, chúc anh có một ngày cưới thật trọn vẹn!"],
+    "nu: Chú rể {ten} lên sân khấu rồi, các cô gái đừng tiếc nhé!"
+  ],
+  "claim_bride": [
+    "nu: Xin chúc mừng {ten} đã trở thành cô dâu xinh đẹp của buổi tiệc!",
+    "nam: Cô dâu đã xuất hiện! Xin chào mừng {ten}, rạng rỡ như một bông hoa!",
+    ["nam: Cả hội trường ơi, nhìn kìa!", "nu: Cô dâu {ten} đã bước vào lễ đường!"],
+    "nu: Một tràng pháo tay thật lớn dành cho cô dâu {ten} nào!",
+    "nam: Cô dâu {ten} đã vào vị trí, chú rể ơi chuẩn bị tinh thần nhé!",
+    ["nu: Váy cưới lộng lẫy, nụ cười tỏa nắng.", "nam: Xin giới thiệu cô dâu {ten}!"],
+    "nu: Cô dâu {ten} đẹp quá, cả hội trường như sáng bừng lên!",
+    "nam: Chào mừng cô dâu {ten}, chúc em mãi xinh đẹp và hạnh phúc!"
+  ],
+
+  "steal_groom": [
+    "nam: Ối giời ơi! {ten} vừa hất cẳng {cu} để giành vai chú rể!",
+    ["nu: Khoan đã, ai kia?", "nam: {ten} lao lên sân khấu, cho {cu} bay ra ngoài luôn rồi!"],
+    "nu: Có biến rồi cả nhà ơi! {ten} vừa giành vai chú rể từ tay {cu}!",
+    "nam: Tạm biệt {cu}, chú rể mới của chúng ta là {ten}!",
+    ["nam: Đám cưới này đúng là không bình yên!", "nu: {ten} đã đổi vai chú rể, {cu} bay mất tiêu rồi!"],
+    "nu: Cú đá thần sầu! Chú rể {cu} đã phải nhường chỗ cho {ten}!",
+    "nam: Kịch tính quá! {ten} chính thức thay {cu} làm chú rể!",
+    ["nu: {cu} ơi, anh đi đâu thế?", "nam: Bay xa lắm rồi! Giờ {ten} mới là chú rể!"]
+  ],
+  "steal_bride": [
+    "nu: Ối giời ơi! {ten} vừa giành vai cô dâu từ tay {cu}!",
+    ["nam: Cả nhà nhìn kìa!", "nu: {ten} lên sân khấu, cô dâu {cu} bay ra ngoài luôn rồi!"],
+    "nam: Có biến rồi! Cô dâu mới của chúng ta là {ten}!",
+    "nu: Tạm biệt {cu}, chào mừng cô dâu mới {ten}!",
+    ["nu: Đám cưới gì mà sóng gió thế này!", "nam: {ten} đã đổi vai cô dâu, {cu} bay mất tiêu rồi!"],
+    "nam: Màn giành vai ngoạn mục! {cu} phải nhường chỗ cho {ten}!",
+    "nu: Kịch tính quá! {ten} chính thức thay {cu} làm cô dâu!",
+    ["nam: {cu} ơi, sao lại bay đi thế kia?", "nu: Vì giờ {ten} mới là cô dâu rồi!"]
+  ],
+
+  "register_groom": [
+    "nam: {ten} đã đăng ký làm chú rể, đang xếp hàng thứ {so}.",
+    "nu: Thêm một ứng viên chú rể! {ten} đứng thứ {so} trong hàng chờ.",
+    "nam: Chú rể đang có người rồi, {ten} chịu khó chờ lượt thứ {so} nhé!",
+    "nu: Cảm ơn {ten}, anh đã có tên trong hàng chờ chú rể, vị trí thứ {so}.",
+    "nam: {ten} xếp hàng chờ làm chú rể, sắp tới lượt rồi đấy!"
+  ],
+  "register_bride": [
+    "nu: {ten} đã đăng ký làm cô dâu, đang xếp hàng thứ {so}.",
+    "nam: Thêm một nàng dâu tương lai! {ten} đứng thứ {so} trong hàng chờ.",
+    "nu: Cô dâu đang có người rồi, {ten} chờ lượt thứ {so} nhé!",
+    "nam: Cảm ơn {ten}, em đã có tên trong hàng chờ cô dâu, vị trí thứ {so}.",
+    "nu: {ten} xếp hàng chờ làm cô dâu, sắp tới lượt rồi đấy!"
+  ],
+
+  "cheer": [
+    "nam: {ten} quyết giữ chặt vai, không ai lay chuyển được!",
+    "nu: {ten} lại thêm một lần khẳng định, vị trí này là của mình!",
+    "nam: Quyết tâm quá {ten} ơi! Cả hội trường cổ vũ nào!",
+    "nu: {ten} vẫy tay chào cả nhà kìa, dễ thương quá!",
+    "nam: Vững như kiềng ba chân, {ten} vẫn đứng đó!"
+  ],
+
+  "cancel": [
+    ["nam: Ôi không! {ten} vừa hủy hôn!", "nu: Cả cô dâu lẫn chú rể đều bay khỏi sân khấu rồi!"],
+    "nu: Bùm! Đám cưới tan tành rồi cả nhà ơi, {ten} đã hủy hôn!",
+    ["nu: Chuyện gì thế này?", "nam: {ten} hủy hôn, sân khấu trống trơn rồi!"],
+    "nam: Một pha hủy hôn không ai ngờ tới từ {ten}! Ta lại chờ cặp đôi mới nhé!",
+    "nu: Tiếc quá, đám cưới đã bị {ten} hủy. Nhưng đừng buồn, cặp mới sẽ lên ngay thôi!",
+    ["nam: Trái tim vỡ rồi!", "nu: {ten} đã hủy hôn, xin mời cô dâu chú rể mới!"]
+  ],
+
+  "ceremony_start": [
+    ["nam: Kính thưa hai họ, cô dâu {codau} và chú rể {chure} đã sẵn sàng.", "nu: Xin mời cả nhà cùng hướng lên sân khấu, lễ cưới sắp bắt đầu!"],
+    ["nu: Đã đủ đôi rồi! Chú rể {chure}, cô dâu {codau}.", "nam: Mời hai bạn chuẩn bị, chúng ta bắt đầu làm lễ!"],
+    ["nam: Giờ lành đã đến!", "nu: Xin mời chú rể {chure} và cô dâu {codau} chuẩn bị làm lễ thành hôn!"],
+    ["nu: Trai tài gái sắc, đẹp đôi quá cả nhà ơi!", "nam: Chú rể {chure} và cô dâu {codau}, lễ cưới xin được bắt đầu!"]
+  ],
+  "restart": [
+    ["nam: Đổi vai rồi, vậy là lễ cưới phải làm lại từ đầu!", "nu: Xin mời chú rể {chure} và cô dâu {codau} chuẩn bị lại nhé!"],
+    ["nu: Cặp đôi đã thay người!", "nam: Lễ cưới tổ chức lại từ đầu cho {chure} và {codau}!"],
+    ["nam: Ối, lễ đang dở mà!", "nu: Không sao, mình làm lại từ đầu cho chú rể {chure} và cô dâu {codau}!"],
+    "nu: Đám cưới mới, cặp đôi mới! Lễ cưới của {chure} và {codau} bắt đầu lại từ đầu nhé!"
+  ],
+
+  "step_ruoc_dau": [
+    ["nam: Nghi thức đầu tiên, lễ rước dâu!", "nu: Đoàn nhà trai bưng tráp sang, chú rể {chure} đến đón cô dâu {codau}!"],
+    ["nu: Pháo hồng rộn rã, đoàn rước dâu đã tới!", "nam: Chú rể {chure} trao hoa cưới, xin cô dâu {codau} về làm vợ!"],
+    ["nam: Mâm quả đỏ thắm, lễ vật đủ đầy.", "nu: Nhà trai xin phép được rước cô dâu {codau} về dinh!"],
+    ["nu: Lễ rước dâu bắt đầu!", "nam: Chú rể {chure} ơi, nhanh chân sang đón người thương đi nào!"]
+  ],
+  "step_gia_tien": [
+    ["nam: Tiếp theo là lễ gia tiên.", "nu: Cô dâu chú rể thắp nén hương, vái lạy tổ tiên hai họ."],
+    ["nu: Uống nước nhớ nguồn.", "nam: Xin mời đôi trẻ kính cáo tổ tiên, xin phép nên duyên vợ chồng."],
+    ["nam: Trước bàn thờ gia tiên khói hương nghi ngút.", "nu: {chure} và {codau} cúi đầu vái lạy, xin ông bà chứng giám."],
+    ["nu: Lễ gia tiên, nghi thức thiêng liêng nhất.", "nam: Cầu mong tổ tiên phù hộ cho đôi trẻ trăm năm hạnh phúc."]
+  ],
+  "step_len_den": [
+    ["nam: Bây giờ là lễ lên đèn.", "nu: Hai ngọn nến của hai gia đình cùng thắp sáng ngọn nến hạnh phúc."],
+    ["nu: Ánh nến lung linh.", "nam: Từ hôm nay, hai gia đình về chung một nhà!"],
+    ["nam: Ngọn lửa nhỏ, tình yêu lớn.", "nu: Mong ngọn lửa ấy cháy mãi trong tổ ấm của {chure} và {codau}."],
+    ["nu: Xin mời cô dâu chú rể làm lễ lên đèn.", "nam: Thắp sáng tương lai, sưởi ấm cả cuộc đời!"]
+  ],
+  "step_trao_nhan": [
+    ["nam: Giây phút thiêng liêng nhất đã tới, lễ trao nhẫn cưới!", "nu: Chú rể {chure} đeo nhẫn cho cô dâu {codau}. Ôi, xúc động quá!"],
+    ["nu: Chiếc nhẫn nhỏ nhưng là lời hứa lớn.", "nam: Nguyện bên nhau trọn đời, dù nắng hay mưa!"],
+    ["nam: Xin mời đôi uyên ương trao nhẫn.", "nu: Vòng tròn không có điểm đầu, cũng chẳng có điểm cuối, như tình yêu của hai bạn."],
+    ["nu: Nhẫn cưới đã được trao!", "nam: Từ giây phút này, {chure} và {codau} đã thuộc về nhau!"]
+  ],
+  "step_rot_ruou": [
+    ["nam: Tiếp theo, rót rượu tháp ly!", "nu: Rượu chảy tràn từng tầng ly, như hạnh phúc tràn đầy."],
+    ["nu: Tháp ly lấp lánh.", "nam: Cô dâu chú rể cùng nhau rót, chúc cho cuộc sống luôn sung túc!"],
+    ["nam: Cùng nhìn dòng rượu vàng óng ả kìa cả nhà!", "nu: Chúc cho tổ ấm của {chure} và {codau} luôn đong đầy yêu thương."],
+    ["nu: Xin mời cô dâu chú rể rót rượu.", "nam: Một ly mừng hai họ, một ly mừng trăm năm!"]
+  ],
+  "step_cat_banh": [
+    ["nam: Bây giờ là phần cắt bánh cưới.", "nu: Bánh ngọt ba tầng, chúc cho cuộc sống của đôi trẻ ngọt ngào mãi mãi!"],
+    ["nu: Cô dâu chú rể cùng cầm dao.", "nam: Một nhát cắt chung, chia ngọt sẻ bùi suốt cuộc đời!"],
+    ["nam: Bánh cưới thơm ngon quá!", "nu: Chúc {chure} và {codau} sớm có tin vui nhé!"],
+    ["nu: Ngọt như bánh cưới, ấm như tình yêu.", "nam: Một tràng pháo tay cho đôi uyên ương nào!"]
+  ],
+  "step_giao_boi": [
+    ["nam: Xin mời cô dâu chú rể uống rượu giao bôi!", "nu: Hai cánh tay đan vào nhau, hai trái tim chung một nhịp."],
+    ["nu: Ly rượu giao bôi.", "nam: Vợ chồng đồng lòng, tát cạn biển Đông!"],
+    ["nam: Nâng ly nào {chure} và {codau}!", "nu: Chúc cho tình yêu của hai bạn nồng nàn như ly rượu đỏ!"],
+    ["nu: Cạn ly hạnh phúc!", "nam: Từ nay chung một mái nhà, chung một con đường!"]
+  ],
+  "step_cam_on": [
+    ["nam: Cuối cùng, cô dâu chú rể xin cúi chào cảm ơn quan khách.", "nu: Trăm năm hạnh phúc, đầu bạc răng long!"],
+    ["nu: Xin cảm ơn hai họ và cả nhà đã đến chung vui!", "nam: Chúc {chure} và {codau} sắt son trọn đời!"],
+    ["nam: Cô dâu chú rể cúi đầu cảm ơn.", "nu: Pháo hoa đâu, bắn lên mừng đôi uyên ương nào!"],
+    ["nu: Lễ thành hôn đã viên mãn!", "nam: Một tràng pháo tay thật lớn cho {chure} và {codau}!"]
+  ],
+
+  "farewell": [
+    ["nam: Xin chúc mừng {chure} và {codau} đã chính thức nên vợ nên chồng!", "nu: Đôi uyên ương lên đường hưởng tuần trăng mật, chúc hai bạn hạnh phúc!"],
+    ["nu: Trăm năm hạnh phúc!", "nam: Tạm biệt {chure} và {codau}, mời cặp đôi tiếp theo lên sân khấu!"],
+    ["nam: Đám cưới đã thành công tốt đẹp!", "nu: Chúc {chure} và {codau} sớm sinh quý tử nhé!"],
+    ["nu: Vậy là thêm một cặp đôi về chung một nhà.", "nam: Xin chúc mừng {chure} và {codau}! Sân khấu xin chờ đón cặp đôi mới!"]
+  ],
+
+  "gold_big": [
+    "nu: Cảm ơn {ten} đã mừng cưới thật hậu hĩnh!",
+    "nam: {ten} mừng vàng cho đôi trẻ, cảm ơn bạn nhiều nhé!",
+    "nu: Phong bì dày quá {ten} ơi, cảm ơn bạn!",
+    "nam: Xin cảm ơn tấm lòng của {ten} dành cho cô dâu chú rể!",
+    "nu: {ten} góp thêm vàng mừng cưới, hai họ vui lắm!",
+    "nam: Cảm ơn {ten}, chúc bạn cũng sớm tìm được một nửa của mình!"
+  ],
+  "gold_huge": [
+    ["nam: Trời ơi, {ten} mừng cưới quá lớn!", "nu: Cả hội trường cảm ơn {ten}! Chúc bạn phát tài phát lộc!"],
+    ["nu: Ôi, của hồi môn khủng quá!", "nam: Xin cảm ơn {ten}, đại gia của đám cưới hôm nay!"],
+    "nam: Một món mừng cưới cực lớn từ {ten}! Hai họ xin cảm ơn!",
+    "nu: {ten} chơi lớn quá! Cô dâu chú rể cảm ơn bạn nhiều lắm!"
+  ],
+  "goal": [
+    ["nam: Tuyệt vời! Hộp mừng cưới đã đủ {moc} chỉ vàng!", "nu: Bắn pháo hoa thôi cả nhà ơi!"],
+    ["nu: Đủ {moc} chỉ vàng rồi!", "nam: Pháo hoa rực rỡ mừng đôi uyên ương!"],
+    "nam: Chúc mừng! Hai họ đã cùng nhau góp đủ {moc} chỉ vàng, pháo hoa lên nào!",
+    ["nu: Cảm ơn tấm lòng của cả nhà!", "nam: Đã đủ {moc} chỉ vàng, xin mời bắn pháo hoa!"]
+  ],
+
+  "idle_empty": [
+    "nam: Sân khấu đang chờ cô dâu và chú rể đây! Ai muốn lên xe hoa thì xem bảng cách chơi bên dưới nhé.",
+    "nu: Lễ đường đã trang hoàng xong, chỉ còn thiếu cô dâu chú rể thôi!",
+    ["nam: Hôm nay ai sẽ là người may mắn nhỉ?", "nu: Chú rể đâu, cô dâu đâu, lên sân khấu đi nào!"],
+    "nu: Hoa đã nở, nhạc đã vang, đám cưới chỉ còn chờ đôi uyên ương!",
+    "nam: Cả nhà ơi, ai muốn làm cô dâu chú rể hôm nay thì xem cách chơi ngay bên dưới nhé!"
+  ],
+  "idle_groom": [
+    "nu: Chú rể {chure} đang đứng chờ cô dâu kìa! Cô dâu ơi, em ở đâu?",
+    "nam: {chure} đã sẵn sàng, chỉ thiếu một nàng dâu thôi cả nhà ơi!",
+    ["nu: Chú rể đứng một mình tội quá.", "nam: Cô dâu ơi, mau lên sân khấu với {chure} đi nào!"]
+  ],
+  "idle_bride": [
+    "nam: Cô dâu {codau} đang chờ chú rể kìa! Chàng trai nào sẽ lên đây?",
+    "nu: {codau} xinh đẹp thế này, chú rể còn chần chừ gì nữa!",
+    ["nam: Cô dâu đã có, chú rể đâu rồi?", "nu: Mau lên sân khấu với {codau} đi nào!"]
+  ],
+  "idle_couple": [
+    "nu: Cô dâu chú rể đẹp đôi quá cả nhà ơi!",
+    "nam: Trai tài gái sắc, đúng là trời sinh một cặp!",
+    ["nam: Nhìn hai bạn kìa, tình tứ quá!", "nu: Chúc {chure} và {codau} mãi hạnh phúc!"]
+  ]
+}

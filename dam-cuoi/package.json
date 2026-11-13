@@ -1,0 +1,21 @@
+{
+  "name": "dam-cuoi",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Đám Cưới Online cho TikTok LIVE: người xem tặng quà để làm chú rể, cô dâu, cướp vai, hủy hôn và mừng chỉ vàng",
+  "type": "module",
+  "scripts": {
+    "start": "node --env-file-if-exists=.env server.js",
+    "test-mode": "node --env-file-if-exists=.env server.js --test",
+    "test": "node --test tests/*.test.js",
+    "window": "start \"\" msedge --app=http://127.0.0.1:3018/ --window-size=456,820 --window-position=0,0 --user-data-dir=D:\\tiktok-cache\\dam-cuoi-window --disable-component-update --no-first-run --no-default-browser-check --autoplay-policy=no-user-gesture-required --disable-backgrounding-occluded-windows --disable-renderer-backgrounding --disable-background-timer-throttling --disable-features=CalculateNativeWinOcclusion"
+  },
+  "engines": {
+    "node": ">=22.9"
+  },
+  "dependencies": {
+    "express": "5.3.0",
+    "three": "0.187.0",
+    "tiktok-live-connector": "2.5.0"
+  }
+}

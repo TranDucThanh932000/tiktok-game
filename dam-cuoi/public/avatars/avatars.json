@@ -1,0 +1,141 @@
+{
+ "avatars": [
+  {
+   "name": "Business_Male_01",
+   "gender": "m",
+   "role": "groom",
+   "hair": true
+  },
+  {
+   "name": "Business_Male_02",
+   "gender": "m",
+   "role": "groom",
+   "hair": true
+  },
+  {
+   "name": "Business_Male_03",
+   "gender": "m",
+   "role": "mc",
+   "hair": true
+  },
+  {
+   "name": "Business_Male_05",
+   "gender": "m",
+   "role": "groom",
+   "hair": false
+  },
+  {
+   "name": "Female_Adult_02",
+   "gender": "f",
+   "role": "bride",
+   "hair": true
+  },
+  {
+   "name": "Female_Adult_03",
+   "gender": "f",
+   "role": "bride",
+   "recolor": {
+    "hue": [
+     255,
+     335
+    ],
+    "minSat": 0.18
+   },
+   "hair": true
+  },
+  {
+   "name": "Female_Adult_01",
+   "gender": "f",
+   "role": "guest",
+   "hair": true
+  },
+  {
+   "name": "Female_Adult_07",
+   "gender": "f",
+   "role": "guest",
+   "hair": true
+  },
+  {
+   "name": "Female_Adult_11",
+   "gender": "f",
+   "role": "guest",
+   "hair": true
+  },
+  {
+   "name": "Business_Female_02",
+   "gender": "f",
+   "role": "guest",
+   "hair": true
+  },
+  {
+   "name": "Business_Male_04",
+   "gender": "m",
+   "role": "guest",
+   "hair": false
+  },
+  {
+   "name": "Business_Male_06",
+   "gender": "m",
+   "role": "guest",
+   "hair": false
+  },
+  {
+   "name": "Business_Male_07",
+   "gender": "m",
+   "role": "guest",
+   "hair": false
+  },
+  {
+   "name": "Female_Adult_05",
+   "gender": "f",
+   "role": "guest",
+   "hair": true
+  },
+  {
+   "name": "Business_Female_01",
+   "gender": "f",
+   "role": "mc",
+   "hair": true
+  }
+ ],
+ "clips": {
+  "m": [
+   "idle",
+   "idle2",
+   "walk",
+   "cheer",
+   "clap",
+   "wave",
+   "drink",
+   "laugh",
+   "talk1",
+   "talk2",
+   "talk3",
+   "moderate",
+   "presentL",
+   "presentR",
+   "sit",
+   "sit2",
+   "sit3"
+  ],
+  "f": [
+   "idle",
+   "idle2",
+   "walk",
+   "cheer",
+   "clap",
+   "wave",
+   "drink",
+   "laugh",
+   "talk1",
+   "talk2",
+   "talk3",
+   "moderate",
+   "presentL",
+   "presentR",
+   "sit",
+   "sit2",
+   "sit3"
+  ]
+ }
+}

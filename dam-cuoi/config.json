@@ -1,0 +1,57 @@
+{
+  "tiktokUsername": "agencyonline0",
+  "port": 3018,
+  "title": "ĐÁM CƯỚI ONLINE",
+
+  "gifts": [
+    { "action": "become_groom", "label": "Đăng ký chú rể", "giftLabel": "Hoa hồng", "names": ["Rose", "Hoa hồng"], "ids": [], "coins": 1, "icon": "/gifts/rose.webp" },
+    { "action": "become_bride", "label": "Đăng ký cô dâu", "giftLabel": "TikTok", "names": ["TikTok"], "ids": [], "coins": 1, "icon": "/gifts/tiktok.webp" },
+    { "action": "steal_groom", "label": "Đổi vai chú rể", "giftLabel": "Kem", "names": ["Bing Chilling", "Ice cream", "Kem"], "ids": ["7412"], "coins": 5, "icon": "/gifts/kem.webp" },
+    { "action": "steal_bride", "label": "Đổi vai cô dâu", "giftLabel": "Bắn tim", "names": ["Finger Heart", "Bắn tim", "Tim tay"], "ids": [], "coins": 5, "icon": "/gifts/finger-heart.webp" },
+    { "action": "cancel_wedding", "label": "Hủy hôn", "giftLabel": "Bánh vòng", "names": ["Doughnut", "Bánh vòng", "Bánh donut"], "ids": [], "coins": 30, "icon": "/gifts/doughnut.webp" },
+    { "action": "gold", "label": "Mừng 1 chỉ vàng", "giftLabel": "Kem ốc quế", "names": ["Ice Cream Cone", "Kem ốc quế"], "ids": [], "coins": 1, "icon": "/gifts/kem-oc-que.webp" }
+  ],
+  "goldPerCoin": 1,
+  "goldIcon": "/gifts/kem-oc-que.webp",
+  "waitlistLimit": 30,
+
+  "goals": [300, 1000, 3000, 6000, 10000],
+  "goalStepAfter": 5000,
+
+  "chatCommands": {
+    "!chure": "become_groom",
+    "!codau": "become_bride",
+    "!doichure": "steal_groom",
+    "!doicodau": "steal_bride",
+    "!huyhon": "cancel_wedding",
+    "!vang": "gold"
+  },
+  "chatCommandsLive": false,
+
+  "ceremony": {
+    "startDelayMs": 5000,
+    "farewellMs": 6500,
+    "steps": [
+      { "id": "ruoc_dau", "title": "Lễ rước dâu", "ms": 12000, "line": "Nhà trai sang rước dâu! Chú rể trao hoa cưới cho cô dâu" },
+      { "id": "gia_tien", "title": "Lễ gia tiên", "ms": 12000, "line": "Cô dâu chú rể thắp hương, vái lạy tổ tiên hai họ" },
+      { "id": "len_den", "title": "Lễ lên đèn", "ms": 11000, "line": "Thắp sáng ngọn nến hạnh phúc, nối kết hai gia đình" },
+      { "id": "trao_nhan", "title": "Trao nhẫn cưới", "ms": 11000, "line": "Trao nhau nhẫn cưới, nguyện bên nhau trọn đời" },
+      { "id": "rot_ruou", "title": "Rót rượu tháp ly", "ms": 11000, "line": "Cùng rót rượu tháp ly, hạnh phúc tràn đầy" },
+      { "id": "cat_banh", "title": "Cắt bánh cưới", "ms": 11000, "line": "Cùng cắt bánh cưới, ngọt ngào trăm năm" },
+      { "id": "giao_boi", "title": "Uống rượu giao bôi", "ms": 10000, "line": "Nâng ly giao bôi, vợ chồng đồng lòng" },
+      { "id": "cam_on", "title": "Cảm ơn hai họ", "ms": 10000, "line": "Cô dâu chú rể cúi chào cảm ơn quan khách. Trăm năm hạnh phúc!" }
+    ]
+  },
+
+  "queueLimit": 50,
+  "timing": {
+    "claimMs": 2600,
+    "stealMs": 4800,
+    "cancelMs": 4800,
+    "speedupAt": 3,
+    "maxSpeed": 2
+  },
+  "testIntervalMs": 2000,
+  "mc": { "idleSeconds": 40 },
+  "renderScale": 1
+}
