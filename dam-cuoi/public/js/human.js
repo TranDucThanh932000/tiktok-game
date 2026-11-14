@@ -10,8 +10,32 @@ import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 import { Character, hashSeed } from './character.js';
 
 const MOCAP = Object.fromEntries(
-  ['idle', 'idle2', 'walk', 'cheer', 'clap', 'wave', 'drink', 'laugh', 'talk1', 'talk2', 'talk3', 'moderate', 'presentL', 'presentR', 'sit', 'sit2', 'sit3'].map((k) => [k, k]),
+  ['idle', 'idle2', 'walk', 'cheer', 'clap', 'wave', 'drink', 'laugh', 'talk1', 'talk2', 'talk3', 'moderate', 'presentL', 'presentR', 'sit', 'sit2', 'sit3', 'sitClap', 'sitCheer'].map((k) => [k, k]),
 );
+const ARM_TRACK = /^Bip01_[LR]_(Clavicle|UpperArm|Forearm|Hand|Finger)/;
+
+// Rocketbox không có động tác ngồi vỗ tay / ngồi reo hò, nên ghép: thân và chân lấy từ động tác ngồi bàn tiệc,
+// hai tay lấy từ động tác vỗ tay (hoặc reo hò) quay thật. Tay được lặp lại cho đủ dài bằng động tác ngồi.
+function seatedArms(sit, arms, name) {
+  const dur = sit.duration;
+  const tracks = sit.tracks.filter((t) => !ARM_TRACK.test(t.name));
+  for (const t of arms.tracks) {
+    if (!ARM_TRACK.test(t.name)) continue;
+    const stride = t.values.length / t.times.length;
+    const times = [];
+    const values = [];
+    for (let rep = 0; rep * arms.duration < dur; rep++) {
+      t.times.forEach((time, i) => {
+        const at = time + rep * arms.duration;
+        if (at > dur || (rep > 0 && i === 0 && time === 0)) return;
+        times.push(at);
+        for (let k = 0; k < stride; k++) values.push(t.values[i * stride + k]);
+      });
+    }
+    tracks.push({ ...t, times, values });
+  }
+  return { ...sit, name, tracks };
+}
 const lib = { ready: false, byRole: { groom: [], bride: [], guest: [], mc: [] }, templates: new Map() };
 const BLANK_PIXEL = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
 
@@ -126,6 +150,11 @@ export async function loadHumans(onProgress = () => {}) {
       keys.map((key) => fetch(`/anims/${gender}_${key}.json`).then((r) => r.json()).then((j) => (clipJson[gender][key] = j))),
     ),
   );
+  for (const clips of Object.values(clipJson)) {
+    if (!clips.sit) continue;
+    if (clips.clap) clips.sitClap = seatedArms(clips.sit, clips.clap, 'sitClap');
+    if (clips.cheer) clips.sitCheer = seatedArms(clips.sit, clips.cheer, 'sitCheer');
+  }
   let done = 0;
   await Promise.all(
     manifest.avatars.map(async (info) => {
@@ -145,6 +174,12 @@ export async function loadHumans(onProgress = () => {}) {
 }
 
 export const humansReady = () => lib.ready;
+
+// Nhân vật cho khách ngồi kín sảnh: khách mời, kiểu chú rể (áo vest) và cô dâu không đổi màu áo.
+// Không dùng nhân vật của hai MC để khách không trùng mặt MC.
+export function crowdTemplates() {
+  return [...lib.byRole.guest, ...lib.byRole.groom, ...lib.byRole.bride.filter((t) => !t.info.recolor)];
+}
 
 // ---------------------------------------------------------------- Đồ cưới thêm cho cô dâu
 

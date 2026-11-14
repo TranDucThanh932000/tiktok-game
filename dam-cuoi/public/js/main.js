@@ -11,7 +11,8 @@ import { Hall, SLOT, ENTRY, MC_SPOT } from './world.js';
 import { Effects, comicBurst, floatHearts } from './fx.js';
 import { sfx, audioReady, unlockAudio, speak } from './audio.js';
 import { Props, RITUALS } from './ritual.js';
-import { loadHumans, humansReady, HumanCharacter } from './human.js';
+import { loadHumans, humansReady, HumanCharacter, crowdTemplates } from './human.js';
+import { Crowd } from './crowd.js';
 
 const W = 1080;
 const H = 1920;
@@ -45,7 +46,7 @@ renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFShadowMap;
 
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(34, W / H, 0.1, 60);
+const camera = new THREE.PerspectiveCamera(34, W / H, 0.1, 90);
 const hall = new Hall(scene);
 hall.loadEnvironment(renderer);
 const fx = new Effects(scene);
@@ -92,24 +93,42 @@ function cameraTo(target, dur, then = null) {
 const shot = (px, py, pz, lx, ly, lz, fov) => ({ pos: new THREE.Vector3(px, py, pz), look: new THREE.Vector3(lx, ly, lz), fov });
 const director = { until: 0, last: '', lock: 0 };
 
+// hall: góc bao quát cả nhà hàng (trong lúc làm lễ thì ít dùng hơn để còn thấy rõ cô dâu chú rể).
+// crowd: góc quay quan khách, chỉ dùng lúc không làm lễ.
 function shotList(ceremony) {
   const g = SLOT.groom;
   const b = SLOT.bride;
   const list = [
     { name: 'wide', a: CAM_MAIN, b: shot(0.9, 2.4, 13.3, 0.15, 0.8, 0.9, 31), hold: 8, w: 3 },
     { name: 'couple', a: shot(-0.5, 1.6, 8.6, 0, 1.12, 0.3, 30), b: shot(0.5, 1.55, 7.9, 0, 1.15, 0.3, 30), hold: 7, w: 3 },
-    { name: 'audience', a: shot(-1.35, 0.85, 6.6, 0, 1.15, 0.3, 34), b: shot(-0.9, 0.95, 5.9, 0.1, 1.15, 0.3, 33), hold: 7, w: 2 },
-    { name: 'sideL', a: shot(-4.6, 1.8, 6.6, 0.3, 1.0, 0.3, 28), b: shot(-3.9, 1.95, 6.1, 0.3, 1.05, 0.3, 28), hold: 7, w: 2 },
-    { name: 'sideR', a: shot(4.6, 1.8, 6.6, -0.3, 1.0, 0.3, 28), b: shot(3.9, 1.95, 6.1, -0.3, 1.05, 0.3, 28), hold: 7, w: 2 },
+    { name: 'audience', a: shot(-0.45, 0.85, 6.9, 0, 1.15, 0.3, 34), b: shot(-0.3, 0.95, 6.1, 0.1, 1.15, 0.3, 33), hold: 7, w: 2 },
+    { name: 'sideL', a: shot(-4.3, 2.1, 7.9, 0.3, 1.0, 0.3, 28), b: shot(-3.7, 2.2, 7.2, 0.3, 1.05, 0.3, 28), hold: 7, w: 1.5 },
+    { name: 'sideR', a: shot(4.3, 2.1, 7.9, -0.3, 1.0, 0.3, 28), b: shot(3.7, 2.2, 7.2, -0.3, 1.05, 0.3, 28), hold: 7, w: 1.5 },
     { name: 'crane', a: shot(-1.2, 6.6, 12.2, 0, 0.5, 0.9, 33), b: shot(1.4, 5.7, 11.0, 0, 0.6, 0.6, 32), hold: 7, w: 1.5 },
     { name: 'groom', a: shot(g.x - 0.6, 1.55, 4.9, g.x, 1.32, g.z, 26), b: shot(g.x - 0.2, 1.6, 4.4, g.x, 1.36, g.z, 26), hold: 6, w: 1.5 },
     { name: 'bride', a: shot(b.x + 0.6, 1.55, 4.9, b.x, 1.3, b.z, 26), b: shot(b.x + 0.2, 1.6, 4.4, b.x, 1.34, b.z, 26), hold: 6, w: 1.5 },
+    // Toàn cảnh nhà hàng: từ cửa chính nhìn lên sân khấu, từ hai góc trần, bay dọc lối đi, lia ngang qua sảnh.
+    { name: 'hallWide', a: shot(0, 4.5, 29.3, 0, 0.9, 3, 44), b: shot(0, 3.9, 26.2, 0, 1.0, 2, 40), hold: 9, w: 2.5, hall: true },
+    { name: 'cornerL', a: shot(-13.6, 7.6, 28.8, -1.5, 0.2, 7, 48), b: shot(-12.4, 6.9, 26.4, -0.6, 0.5, 5, 44), hold: 8, w: 2, hall: true },
+    { name: 'cornerR', a: shot(13.6, 7.6, 28.8, 1.5, 0.2, 7, 48), b: shot(12.4, 6.9, 26.4, 0.6, 0.5, 5, 44), hold: 8, w: 2, hall: true },
+    { name: 'drone', a: shot(0, 4.6, 27, 0, 0.9, 1, 40), b: shot(0, 3.0, 11.5, 0, 1.0, 0.4, 34), hold: 10, w: 2, hall: true },
+    { name: 'sweep', a: shot(-11.5, 4.8, 17, 0, 0.3, 6.5, 46), b: shot(11.5, 4.8, 17, 0, 0.3, 6.5, 46), hold: 12, w: 1.5, hall: true },
+    // Từ sân khấu nhìn xuống: thấy cả sảnh khách đang cổ vũ.
+    { name: 'reverse', a: shot(0, 3.5, -2.3, 0, 0.3, 12, 54), b: shot(1.3, 3.7, -2.1, -0.4, 0.2, 14, 52), hold: 7, w: 2, hall: true },
+    { name: 'crowdL', a: shot(-10.2, 2.9, 17.5, -5.5, 0.3, 9, 42), b: shot(-9.2, 2.5, 13.8, -5, 0.3, 7, 40), hold: 7, w: 1.5, crowd: true },
+    { name: 'crowdR', a: shot(10.2, 2.9, 17.5, 5.5, 0.3, 9, 42), b: shot(9.2, 2.5, 13.8, 5, 0.3, 7, 40), hold: 7, w: 1.5, crowd: true },
   ];
-  if (!ceremony) {
-    list.push({ name: 'tablesL', a: shot(-4.2, 1.5, 7.4, -2.3, 0.55, 3.1, 30), b: shot(-3.6, 1.6, 6.9, -2.1, 0.6, 3.0, 30), hold: 5, w: 1 });
-    list.push({ name: 'tablesR', a: shot(4.2, 1.5, 7.4, 2.3, 0.55, 3.1, 30), b: shot(3.6, 1.6, 6.9, 2.1, 0.6, 3.0, 30), hold: 5, w: 1 });
-  }
-  return list;
+  return list.filter((s) => !(ceremony && s.crowd)).map((s) => (ceremony && s.hall ? { ...s, w: s.w * 0.45 } : s));
+}
+
+// Có sự kiện lớn (mừng vàng nhiều, đạt mốc pháo hoa): cắt sang góc thấy cả sảnh khách đang reo hò.
+function crowdShot() {
+  if (running || clockTime < director.lock) return;
+  const picks = shotList(false).filter((s) => ['reverse', 'crowdL', 'crowdR', 'hallWide'].includes(s.name) && s.name !== director.last);
+  const s = picks[Math.floor(Math.random() * picks.length)];
+  cameraTo(s.a, 0, { target: s.b, dur: s.hold });
+  director.last = s.name;
+  director.until = clockTime + s.hold;
 }
 
 function nextShot() {
@@ -289,6 +308,7 @@ function renderTogether() {
   const both = couple.groom && couple.bride && couple.coupleSince;
   $('heart').classList.toggle('broken', !both);
   $('together').innerHTML = both ? `Bên nhau<b>${fmtTime(serverNow() - couple.coupleSince)}</b>` : 'Chờ đủ<br>cô dâu chú rể';
+  hall.setCoupleNames(couple.groom?.name, couple.bride?.name);
   const r = couple.record;
   const married = couple.married ? `💒 Đã cưới ${couple.married} cặp` : '';
   const rec = r ? `🏆 Kỷ lục bên nhau: ${r.groom} ♥ ${r.bride} · ${fmtTime(r.ms)}` : '';
@@ -853,6 +873,11 @@ function applySnapshot(game) {
 const handlers = {
   snapshot(msg) {
     guide = msg.guide;
+    // Quan khách ngồi kín sảnh: dựng một lần, khi đã có nhân vật người thật và biết số khách mỗi bàn.
+    if (humansReady() && !hall.crowd) {
+      const perTable = Number(params.get('guests') ?? guide.guestsPerTable ?? 6);
+      hall.setCrowd(new Crowd(scene, crowdTemplates(), hall.occupiedSeats(perTable)));
+    }
     renderScale = Number(params.get('scale')) || guide.renderScale || 1;
     resizeRenderer();
     renderGuide();
@@ -912,7 +937,11 @@ const handlers = {
     flashCell('gold');
     if (msg.withAction) return;
     if (msg.amount >= 10) announce(msg.text, 'gold');
-    if (msg.amount >= 30) fx.confetti(new THREE.Vector3(0, 1.2, 0.4), Math.min(220, 40 + msg.amount), { spread: 2.2, up: 3.8 });
+    if (msg.amount >= 30) {
+      fx.confetti(new THREE.Vector3(0, 1.2, 0.4), Math.min(220, 40 + msg.amount), { spread: 2.2, up: 3.8 });
+      hall.react('cheer', 2.5);
+      crowdShot();
+    } else if (msg.amount >= 10) hall.crowd?.react('clap', 2.5, 0.5);
   },
   goal(msg) {
     renderGold(msg.progress, true);
@@ -922,6 +951,7 @@ const handlers = {
     sfx.launch();
     setTimeout(() => sfx.cheer(), 900);
     hall.react('cheer', 3.5);
+    crowdShot();
     for (const role of ROLES) {
       const c = slots[role].char;
       if (c && !c.flight && slots[role].owner) {
@@ -1023,7 +1053,7 @@ function frame() {
   composer.render();
 }
 
-if (params.has('dev')) window.__dbg = { THREE, scene, renderer, hall, bloom, mcTalk, mcs, director };
+if (params.has('dev')) window.__dbg = { THREE, scene, renderer, hall, bloom, mcTalk, mcs, director, view: (...a) => cameraTo(shot(...a), 0), shotList, cameraTo };
 fit();
 trySound();
 frame();
@@ -1032,7 +1062,7 @@ $('loading').hidden = false;
 loadHumans((done, total) => ($('loading').textContent = `Đang tải nhân vật… ${done}/${total}`))
   .then((ok) => {
     if (!ok) return;
-    hall.setGuests((kind, opts) => new HumanCharacter(kind, opts), { diners: true });
+    hall.setGuests((kind, opts) => new HumanCharacter(kind, opts));
     spawnMCs();
   })
   .catch((err) => console.error('Không tải được nhân vật người thật', err))

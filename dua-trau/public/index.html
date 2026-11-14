@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Buffalo Race</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🐃</text></svg>">
+  <link rel="stylesheet" href="/fonts/fonts.css">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div id="stage">
+    <canvas id="field" width="1080" height="1920"></canvas>
+
+    <div id="title-card"><h1 id="title">BUFFALO RACE</h1></div>
+    <div id="wins" class="card"><div class="cap">🏆</div><ol id="wins-list"></ol></div>
+    <div id="clock" class="card"><div id="time">1:00</div><div id="round">ROUND 1</div></div>
+
+    <div id="ticker"></div>
+    <div id="lanes"></div>
+    <div id="fx"></div>
+
+    <div id="panel">
+      <div id="how"><span class="bubble">💬</span> <b>VIETNAM</b> <em>+0.1m</em></div>
+      <div id="cards"></div>
+    </div>
+
+    <div id="banner" hidden></div>
+    <div id="result" hidden></div>
+    <div id="paused" hidden>PAUSED</div>
+    <p id="status" hidden></p>
+    <div id="sound-hint" hidden>Click to enable sound</div>
+  </div>
+  <script type="module" src="/js/main.js"></script>
+</body>
+</html>

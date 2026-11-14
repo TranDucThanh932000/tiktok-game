@@ -4,8 +4,8 @@ Game đám cưới 3D cho TikTok LIVE, làm theo [GAME_PLAN.md](../GAME_PLAN.md)
 
 Bản kế hoạch chọn Unity, nhưng game này làm bằng Node + Three.js trên trình duyệt như các game khác trong thư mục. Không cần cài Unity hay đăng nhập Mixamo.
 
-- **Nhân vật người thật** lấy từ bộ [Microsoft Rocketbox](https://github.com/microsoft/Microsoft-Rocketbox) (giấy phép MIT, xem `public/avatars/LICENSE-Rocketbox.txt`): 3 chú rể mặc vest, 2 cô dâu (thêm váy cưới, khăn voan, vương miện, bó hoa bằng code), 2 MC (nam, nữ, cầm micro), 8 mẫu khách mời. Phù dâu phù rể đứng sau trên sân khấu, khách ngồi quanh 6 bàn tròn dưới sân khấu. Động tác đứng, đi, vỗ tay, reo hò, vẫy tay, uống là động tác quay từ người thật của bộ này. Động tác đá, bị đá văng, vái lạy, trao nhẫn, rót rượu, cắt bánh là động tác tự viết, áp lên bộ xương người thật.
-- **Sảnh cưới** dựng bằng code với vật liệu thật (PBR): sân khấu tròn mặt đá bóng viền đèn vàng, phông vải xếp ly có đèn hắt hồng, rèm nhung vén, cổng hoa hồng, chữ Hỷ mạ vàng, cột trụ, đèn chùm pha lê, bàn tiệc phủ khăn satin với ghế bọc nơ, trụ hoa nến dọc thảm đỏ, đèn sân khấu đổ bóng. Ánh sáng và phản chiếu lấy từ ảnh HDRI một sảnh tiệc thật. Ảnh HDRI và texture (đá, satin, nhung) lấy từ Poly Haven, giấy phép CC0, nằm trong `public/hall` (tải lại bằng `node scripts/build-hall.mjs`).
+- **Nhân vật người thật** lấy từ bộ [Microsoft Rocketbox](https://github.com/microsoft/Microsoft-Rocketbox) (giấy phép MIT, xem `public/avatars/LICENSE-Rocketbox.txt`): 3 chú rể mặc vest, 2 cô dâu (thêm váy cưới, khăn voan, vương miện, bó hoa bằng code), 2 MC (nam, nữ, cầm micro), 8 mẫu khách mời. Phù dâu phù rể đứng sau trên sân khấu. Dưới sảnh có 56 bàn tiệc, mặc định 6 khách mỗi bàn (336 khách), ngồi hơi xoay về phía sân khấu; lúc nào cũng có vài bàn vỗ tay, và cả sảnh vỗ tay / giơ tay reo hò lan từ bàn đầu ra cuối sảnh mỗi khi có người lên vai, đổi vai, mừng vàng nhiều, xong một nghi lễ. Động tác ngồi vỗ tay, ngồi reo hò ghép thân ngồi bàn tiệc với hai tay vỗ tay / reo hò quay thật (`public/js/crowd.js`); cả sảnh khách vẽ bằng instancing nên vài trăm người vẫn nhẹ máy. Động tác đứng, đi, vỗ tay, reo hò, vẫy tay, uống là động tác quay từ người thật của bộ này. Động tác đá, bị đá văng, vái lạy, trao nhẫn, rót rượu, cắt bánh là động tác tự viết, áp lên bộ xương người thật.
+- **Sảnh cưới** là một nhà hàng tiệc cưới lớn (rộng khoảng 29 m, sâu 34 m, trần 8,6 m) dựng bằng code với vật liệu thật (PBR): tường ốp phào có cột và rèm nhung, trần ô kẻ có dải đèn hắt, 11 đèn chùm pha lê, hai màn hình LED hai bên sân khấu hiện chữ Lễ Thành Hôn và tên cô dâu chú rể đang giữ vai, cửa chính có cổng hoa, thảm đỏ chạy từ cửa tới sân khấu; sân khấu tròn mặt đá bóng viền đèn vàng, phông vải xếp ly có đèn hắt hồng, rèm nhung vén, cổng hoa hồng, chữ Hỷ mạ vàng, cột trụ, đèn chùm pha lê, bàn tiệc phủ khăn satin với ghế bọc nơ, trụ hoa nến dọc thảm đỏ, đèn sân khấu đổ bóng. Ánh sáng và phản chiếu lấy từ ảnh HDRI một sảnh tiệc thật. Ảnh HDRI và texture (đá, satin, nhung) lấy từ Poly Haven, giấy phép CC0, nằm trong `public/hall` (tải lại bằng `node scripts/build-hall.mjs`).
 - Tiếng hiệu ứng do code tạo ra. Không có nhạc nền.
 - Hai MC (nam và nữ) đọc bằng Vbee, xem mục **MC** bên dưới.
 
@@ -78,7 +78,7 @@ Hai MC đám cưới, giọng nam và giọng nữ, đọc bằng Vbee. Cần 4 
 
 ## Camera
 
-Camera tự đổi góc mỗi 6–9 giây, lúc cắt cảnh, lúc lia mượt, và trôi chậm trong mỗi góc nên hình không đứng yên. Các góc: toàn cảnh, cận cô dâu chú rể, từ hàng ghế khách nhìn lên, hai góc chéo, góc cao, cận riêng chú rể, cận riêng cô dâu, cận khách ngồi bàn. MC nào đang nói thì camera hay quay sang MC đó. Màn đá văng, hủy hôn, trao nhẫn, uống giao bôi có góc máy riêng; xong màn thì camera tự đổi góc tiếp.
+Camera tự đổi góc mỗi 6–9 giây, lúc cắt cảnh, lúc lia mượt, và trôi chậm trong mỗi góc nên hình không đứng yên. Các góc: toàn cảnh, cận cô dâu chú rể, từ hàng ghế khách nhìn lên, hai góc chéo, góc cao, cận riêng chú rể, cận riêng cô dâu. Góc bao quát cả nhà hàng: từ cửa chính nhìn lên sân khấu, hai góc trần cuối sảnh, bay dọc lối đi về sân khấu, lia ngang qua sảnh, từ sân khấu nhìn xuống cả sảnh khách, cận hai dãy bàn khách. Trong lúc làm lễ, góc bao quát ít xuất hiện hơn và không quay riêng khách. Khi có người mừng nhiều vàng hoặc đạt mốc pháo hoa, camera cắt sang góc thấy cả sảnh đang reo hò. MC nào đang nói thì camera hay quay sang MC đó. Màn đá văng, hủy hôn, trao nhẫn, uống giao bôi có góc máy riêng; xong màn thì camera tự đổi góc tiếp.
 
 Hai MC đứng hai góc sân khấu, tay phải cầm micro (đầu micro luôn hướng vào miệng). Lúc nói, tay kia và cả người làm động tác quay từ người thật, đổi kiểu theo tình huống: nói bình thường, dẫn chương trình, giơ tay giới thiệu về phía cô dâu chú rể, nói hào hứng hoặc cười lớn khi có đổi vai, hủy hôn. MC còn lại đứng nghe, có khi cười theo.
 
@@ -113,6 +113,7 @@ Muốn đổi quà nào làm việc gì thì sửa `action` trong mục `gifts`:
 | `chatCommands` | Lệnh chat để thử (`!chure`, `!codau`, `!doichure`, `!doicodau`, `!huyhon`, `!vang`) |
 | `chatCommandsLive` | `false`: lệnh chat chỉ chạy từ bảng điều khiển. Bật `true` thì người xem gõ lệnh cũng được, tức là chơi không cần quà. |
 | `renderScale` | Giảm xuống 0,6–0,8 nếu máy giật khi vừa chạy game vừa phát live |
+| `guestsPerTable` | Số khách ngồi mỗi bàn (0–8, mặc định 6). Giảm xuống 3–4 nếu máy yếu; thử nhanh bằng `?guests=4` trên địa chỉ trang game |
 
 Thêm `?mute` vào địa chỉ trang game để tắt tiếng (cả giọng MC), `?dev` để hiện trạng thái kết nối ở góc dưới.
 

@@ -23,19 +23,10 @@
 html, body { margin: 0; height: 100%; overflow: hidden; background: #2b1d12; }
 [hidden] { display: none !important; }
 
-#stage { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; transform-origin: 0 0; overflow: hidden; background: var(--wall); font-family: var(--hand); }
+/* Nền lớp: ảnh public/chibi/lop-nen.webp (tường xanh bạc hà, cửa lớp, bàn cô, cây, bục giảng, sàn gỗ). */
+#stage { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; transform-origin: 0 0; overflow: hidden; background: #a4d0c9 url(/chibi/lop-nen.webp) 0 0 / 1080px 1920px no-repeat; font-family: var(--hand); }
 #stage > * { position: absolute; }
 
-.wall-top { left: 0; top: 0; width: 100%; height: 92px; background: var(--wall-top); background-image: radial-gradient(circle, rgba(255, 255, 255, .45) 3px, transparent 4px); background-size: 36px 36px; }
-#bunting { left: 0; top: 0; width: 1080px; height: 50px; z-index: 1; }
-#bunting svg { display: block; width: 100%; height: 100%; }
-.wall-low { left: 0; top: 930px; width: 100%; height: 64px; background: var(--wall-low); border-top: 4px solid #f2c97a; }
-.platform { left: 0; top: 990px; width: 100%; height: 44px; background: linear-gradient(var(--wood-light) 0 12px, var(--wood) 12px 40px, var(--wood-dark) 40px); }
-.floor {
-  left: 0; top: 1034px; width: 100%; height: 886px; background-color: var(--floor);
-  background-image: linear-gradient(var(--floor-line) 2px, transparent 2px), linear-gradient(90deg, var(--floor-line) 2px, transparent 2px);
-  background-size: 120px 120px;
-}
 
 #banner {
   left: 50%; top: 18px; z-index: 2; width: 640px; height: 62px; transform: translateX(-50%);
@@ -47,9 +38,11 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #2b1d12; }
 /* ---------- Bảng ---------- */
 #board {
   left: 12px; top: 92px; width: 1056px; height: 730px;
-  padding: 22px 30px 26px; display: flex; flex-direction: column;
-  background: var(--board); border: 18px solid var(--wood); border-radius: 26px;
-  box-shadow: 0 8px 0 rgba(120, 70, 30, .3), inset 0 0 40px rgba(0, 0, 0, .2);
+  padding: 4px 14px 0; display: flex; flex-direction: column;
+  /* Khung gỗ và khay phấn cắt từ ảnh lớp, kéo giãn theo chiều dọc cho vừa chữ. */
+  border-style: solid; border-width: 38px 40px 68px;
+  border-image: url(/chibi/bang.webp) 30 32 54 32 fill / 38px 40px 68px stretch;
+  filter: drop-shadow(0 6px 4px rgba(40, 70, 60, .3));
   color: var(--chalk);
 }
 .board-head { display: flex; align-items: center; gap: 16px; font-size: 32px; min-height: 52px; }
@@ -96,22 +89,16 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #2b1d12; }
 .timebar i.urgent { background: #ff7a7a; }
 
 .doodle { position: absolute; width: 50px; height: 50px; opacity: .8; }
-.doodle.star1 { left: 4px; bottom: 6px; animation: spin 6s linear infinite; }
-.doodle.smile { right: 4px; bottom: 6px; animation: bob 1.4s ease-in-out infinite alternate; }
+.doodle.star1 { left: -6px; bottom: 2px; animation: spin 6s linear infinite; }
+.doodle.smile { right: -6px; bottom: 2px; animation: bob 1.4s ease-in-out infinite alternate; }
 
-.tray { position: absolute; left: -18px; right: -18px; bottom: -18px; height: 18px; pointer-events: none; }
-.chalk { position: absolute; top: 3px; height: 11px; width: 58px; border-radius: 6px; }
-.chalk.white { left: 52px; background: #fbf8ea; }
-.chalk.yellow { left: 122px; width: 46px; background: #f2d04f; }
-.chalk.pink { left: 180px; width: 40px; background: #f2a6bd; }
-.eraser { position: absolute; right: 54px; top: -3px; width: 96px; height: 21px; border-radius: 4px; background: linear-gradient(#d9d2c0 0 5px, #4a6fd0 5px); }
 
 /* ---------- Dưới bảng: đồng hồ, bảng x2, cô giáo ---------- */
-#clock { left: 978px; top: 6px; z-index: 2; width: 80px; height: 80px; }
+#clock { left: 976px; top: 4px; z-index: 2; width: 84px; height: 84px; background: url(/chibi/dong-ho.webp) center / contain no-repeat; filter: drop-shadow(0 3px 2px rgba(40, 70, 60, .35)); }
 #clock svg { display: block; width: 100%; height: 100%; }
 
 #guide {
-  left: 50%; top: 830px; z-index: 4; transform: translateX(-50%); width: max-content; height: 124px;
+  left: 34px; top: 840px; z-index: 4; transform: scale(.84); transform-origin: 0 0; width: max-content; height: 124px;
   display: flex; align-items: center; gap: 16px; padding: 4px 22px;
   border: 5px solid #f0b43a; border-radius: 24px; background: linear-gradient(#fffcef, #ffeeb3); color: #5a3519;
   box-shadow: 0 5px 0 rgba(90, 50, 20, .3); animation: guide-glow 1.4s ease-in-out infinite alternate;
@@ -123,55 +110,37 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #2b1d12; }
 #guide div:nth-of-type(3) img { animation-delay: .6s; }
 #guide .social small { font-size: 24px; }
 
-#teacher { left: 980px; top: 826px; width: 86px; height: 172px; z-index: 3; transform-origin: 50% 100%; }
-#teacher svg { display: block; width: 100%; height: 100%; overflow: visible; }
-#teacher .pointer { transform-origin: 30px 160px; animation: point 2.6s ease-in-out infinite alternate; }
-#teacher.happy { animation: hop .45s ease-out 2; }
-#teacher .mouth { display: none; transform-origin: 75px 96px; }
-#teacher.talking .mouth { display: block; animation: talk .24s ease-in-out infinite alternate; }
-#teacher.talking .smile { display: none; }
+/* Cô giáo: kích thước, vị trí và khung hình do main.js đặt (ảnh public/chibi/co-giao.webp). */
+#teacher { z-index: 6; transform-origin: 50% 100%; filter: drop-shadow(0 4px 3px rgba(60, 40, 20, .28)); }
+#teacher.hop { animation: hop .45s ease-out 2; }
+.tch { position: absolute; inset: 0; background: url(/chibi/co-giao.webp) 0 0 / 600% 200% no-repeat; }
 
 #bubble {
-  right: 120px; top: 966px; z-index: 140; max-width: 860px; padding: 8px 24px; border: 4px solid #59a8ea; border-radius: 26px;
+  right: 120px; top: 958px; z-index: 140; max-width: 860px; padding: 8px 24px; border: 4px solid #59a8ea; border-radius: 26px;
   background: #fffdf3; color: #2a211c; font-size: 36px; line-height: 1.1; box-shadow: 0 4px 12px rgba(0, 0, 0, .25);
   animation: tile-pop .35s cubic-bezier(.2, 1.6, .4, 1);
 }
 #bubble::after { content: ""; position: absolute; right: -18px; top: 16px; border: 10px solid transparent; border-left: 18px solid #59a8ea; border-right: 0; }
 #toast:not([hidden]) ~ #bubble { visibility: hidden; }
 
-#desk { left: 24px; top: 942px; width: 230px; height: 48px; }
-#desk .top { position: absolute; left: 0; bottom: 30px; width: 100%; height: 12px; border-radius: 4px; background: var(--wood-light); }
-#desk .body { position: absolute; left: 12px; bottom: 0; width: 206px; height: 30px; background: var(--wood); border: 4px solid var(--wood-dark); }
-.book { position: absolute; left: 22px; height: 7px; border-radius: 2px; }
-.book.b1 { bottom: 42px; width: 84px; background: #e23a4c; }
-.book.b2 { bottom: 49px; left: 28px; width: 72px; background: #4a7fd0; }
-.book.b3 { bottom: 56px; left: 32px; width: 60px; background: #46b06a; }
-.apple { position: absolute; left: 186px; bottom: 42px; width: 28px; height: 26px; border-radius: 50% 50% 46% 46%; background: #e23a4c; box-shadow: inset -5px -3px 0 rgba(0, 0, 0, .12); }
-.apple::after { content: ""; position: absolute; left: 12px; top: -8px; width: 10px; height: 8px; border-radius: 10px 0; background: #46b06a; }
-
-#plant { left: 900px; top: 890px; width: 60px; height: 100px; z-index: 2; }
-#plant .pot { position: absolute; left: 10px; bottom: 0; width: 40px; height: 36px; border-radius: 0 0 10px 10px; background: #e07a4f; box-shadow: inset 0 6px 0 #c9603a; }
-#plant .leaf { position: absolute; width: 22px; height: 44px; border-radius: 50%; background: #46b06a; transform-origin: 50% 100%; animation: sway 2.4s ease-in-out infinite alternate; }
-#plant .l1 { left: 19px; bottom: 32px; }
-#plant .l2 { left: 6px; bottom: 28px; transform: rotate(-35deg); animation-delay: .4s; }
-#plant .l3 { left: 32px; bottom: 28px; transform: rotate(35deg); animation-delay: .8s; }
 
 /* ---------- Lớp học: top bảng điểm ngồi theo thứ hạng ---------- */
 #class { left: 0; top: 0; width: 1080px; height: 1920px; pointer-events: none; }
-.desk, .bench { position: absolute; border-radius: 6px; }
-.desk { background: linear-gradient(#e0a978 0 22%, var(--wood-light) 22%); box-shadow: 0 3px 0 rgba(120, 70, 30, .3); }
-.bench { background: var(--wood); box-shadow: 0 3px 0 rgba(90, 50, 20, .35); }
-/* Bàn đầu: khăn đỏ viền vàng cho 8 bạn điểm cao nhất. */
-.desk.front { background: linear-gradient(#ffd84d 0 22%, #e23a4c 22%); box-shadow: 0 0 0 2px #ffd84d; }
-.bench.front { background: #a3283a; }
+/* Bàn gỗ mật ong chân xanh bạc hà, cùng tông với ảnh nền. */
+.desk, .bench { position: absolute; border-radius: 8px; }
+.desk { background: linear-gradient(#ffe2b4 0 24%, #eeac68 24% 80%, #86cbbd 80%); box-shadow: 0 3px 0 rgba(120, 80, 40, .25); }
+.bench { background: linear-gradient(#f3b673 0 45%, #dc914c 45%); border-bottom: 4px solid #7cc4b6; box-shadow: 0 3px 0 rgba(90, 60, 30, .25); }
+/* Bàn đầu cho 8 bạn điểm cao nhất: khăn hồng viền vàng. */
+.desk.front { background: linear-gradient(#fff2bd 0 24%, #ff9fb6 24% 80%, #86cbbd 80%); box-shadow: 0 0 0 3px #ffd84d; }
+.bench.front { background: linear-gradient(#ffa6bb 0 45%, #ec7f9b 45%); }
 
 .seat { position: absolute; }
 .sprite { position: absolute; left: 50%; transform: translateX(-50%); transform-origin: 50% 100%; }
-.sprite svg { display: block; width: 100%; height: 100%; overflow: visible; }
-.sprite .arm, .sprite .front { visibility: hidden; }
-.seat.up .sprite .back { visibility: hidden; }
-.seat.up .sprite .front { visibility: visible; }
-.seat.up .sprite .arm { visibility: visible; animation: wave-arm .6s ease-in-out infinite alternate; transform-origin: 86px 118px; }
+/* Một khung trong ảnh public/chibi/hoc-sinh.webp (6 bạn × 8 khung), main.js chọn khung bằng background-position. */
+.kid { position: absolute; inset: 0; background: url(/chibi/hoc-sinh.webp) 0 0 / 800% 600% no-repeat; }
+.seat.up .sprite .kid { animation: wave-arm .5s ease-in-out infinite alternate; transform-origin: 50% 90%; }
+.seat.arriving .sprite { visibility: hidden; }
+.walker { position: absolute; pointer-events: none; filter: drop-shadow(0 3px 2px rgba(60, 40, 20, .25)); }
 
 .seat.ghost .sprite { opacity: .3; filter: saturate(.2) brightness(1.15); }
 .seat.ghost .plate, .seat.ghost .score { display: none; }
@@ -190,7 +159,7 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #2b1d12; }
 .seat.top-1 .name, .seat.top-2 .name, .seat.top-3 .name { color: #fffde0; text-shadow: 0 0 6px var(--glow), 0 0 14px #ffb700; }
 .seat.top-1 .score, .seat.top-2 .score, .seat.top-3 .score { background: var(--glow); box-shadow: 0 0 10px var(--glow); }
 .seat.top-1 .sprite::before, .seat.top-2 .sprite::before, .seat.top-3 .sprite::before {
-  content: ""; position: absolute; z-index: -1; left: 50%; top: 36%; width: 160%; aspect-ratio: 1; transform: translate(-50%, -50%);
+  content: ""; position: absolute; z-index: -1; left: 50%; top: 52%; width: 125%; aspect-ratio: 1; transform: translate(-50%, -50%);
   background: radial-gradient(circle, rgba(255, 224, 102, .95), rgba(255, 224, 102, 0) 68%);
   animation: halo 1.6s ease-in-out infinite alternate;
 }
@@ -257,8 +226,8 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #2b1d12; }
   border: 10px solid var(--gold); background: #fff6d6; box-shadow: 0 0 0 6px #fff, 0 0 30px 10px rgba(255, 214, 60, .9);
 }
 #spot-face { overflow: hidden; }
-#spot-face svg { position: absolute; left: 50%; top: 14%; width: 92%; height: auto; transform: translateX(-50%); overflow: visible; }
-#spot-face .back, #spot-face .arm { display: none; }
+/* Phóng to khung "quay lại cười" cho đầu vừa khung tròn. */
+#spot-face .kid { inset: auto; left: 50%; top: -58px; width: 300px; height: 441px; margin-left: -150px; }
 .spot-crown { position: absolute; left: 50%; top: -54px; transform: translateX(-50%) rotate(-8deg); font-size: 72px; line-height: 1; filter: drop-shadow(0 4px 2px rgba(90, 50, 20, .4)); }
 #spot-name { margin-top: 16px; max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font: 700 58px var(--bold); color: #8e1d33; line-height: 1.15; }
 #spot-info { margin-top: 2px; font-size: 36px; color: #6b3a14; }

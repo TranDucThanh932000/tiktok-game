@@ -1,5 +1,5 @@
 {
-  "tiktokUsername": "agencyonline0",
+  "tiktokUsername": "vui.v5796",
   "port": 3018,
   "title": "ĐÁM CƯỚI ONLINE",
 
@@ -53,5 +53,6 @@
   },
   "testIntervalMs": 2000,
   "mc": { "idleSeconds": 40 },
-  "renderScale": 1
+  "renderScale": 1,
+  "guestsPerTable": 6
 }

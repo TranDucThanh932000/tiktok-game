@@ -1,4 +1,4 @@
-import { buntingSvg, studentSvg, teacherSvg } from './art.js';
+import { KID, KF, TF, TEACHER, kidLook, kidFrame, teacherFrame } from './art.js';
 import { sfx, wake, onAudioState, speak, stopSpeech } from './audio.js';
 
 const W = 1080;
@@ -23,9 +23,6 @@ onAudioState((running) => {
   $('sound-hint').hidden = running;
 });
 
-$('teacher').innerHTML = teacherSvg();
-$('bunting').innerHTML = buntingSvg(W);
-
 // ---------- Lớp học: top bảng điểm ngồi theo thứ hạng, hàng đầu (sát bảng) là 8 bạn cao điểm nhất ----------
 // Trong một hàng, hạng cao ngồi giữa, thấp dần ra hai bên.
 const PER_ROW = 8;
@@ -33,16 +30,26 @@ const PER_BLOCK = PER_ROW / 2;
 const COL_ORDER = [3, 4, 2, 5, 1, 6, 0, 7];
 const SCALE_BACK = 0.8;
 const SCALE_FRONT = 1.05;
-const ROWS_TOP = 1040;
+const ROWS_TOP = 1080; // sàn gỗ của ảnh nền bắt đầu ở đây
 const ROWS_BOTTOM = 1912;
 const AISLE = 40;
 const TITLES = ['Lớp trưởng', 'Lớp phó', 'Lớp phó'];
+const GUIDE_SCALE = 0.84; // khớp #guide trong style.css
+// Cỡ hình học sinh: hệ số so với ảnh gốc ở hàng có scale = 1.
+const KID_SIZE = 0.8;
+// Cửa lớp ở mép trái bục giảng; học sinh đi trên bục ở độ cao này rồi xuống lối giữa (x = 540).
+const DOOR = { x: 34, y: 1052, s: 0.74 };
+const AISLE_X = W / 2;
 
 const seats = [];
+const rows = [];
 function buildClass(total) {
   const root = $('class');
   root.replaceChildren();
   seats.length = 0;
+  rows.length = 0;
+  for (const w of walkers.values()) w.node.remove();
+  walkers.clear();
   const ROWS = Math.ceil(total / PER_ROW);
   const scales = Array.from({ length: ROWS }, (_, row) => SCALE_BACK + ((SCALE_FRONT - SCALE_BACK) * row) / Math.max(1, ROWS - 1));
   const baseH = (ROWS_BOTTOM - ROWS_TOP) / scales.reduce((sum, s) => sum + s, 0);
@@ -73,11 +80,14 @@ function buildClass(total) {
       Object.assign(seat.style, { left: `${x}px`, top: `${y}px`, width: `${cell}px`, height: `${rowH}px` });
 
       const look = (seats.length * 37 + 11) % 360;
-      const spriteW = Math.min(cell * 0.95, 112 * s);
-      const spriteH = (spriteW * 142) / 120;
+      const d = KID_SIZE * s;
+      const spriteW = KID.FW * d;
+      const spriteH = KID.FH * d;
+      const spriteBottom = plateH * 0.45;
       const sprite = el('div', 'sprite');
-      Object.assign(sprite.style, { width: `${spriteW}px`, height: `${spriteH}px`, bottom: `${plateH - 10}px`, zIndex: z + 1 });
-      sprite.innerHTML = studentSvg(look);
+      Object.assign(sprite.style, { width: `${spriteW}px`, height: `${spriteH}px`, bottom: `${spriteBottom}px`, zIndex: z + 1 });
+      const kid = el('i', 'kid');
+      sprite.append(kid);
 
       const plate = el('div', 'plate');
       Object.assign(plate.style, { height: `${plateH}px`, fontSize: '20px', zIndex: z + 3 });
@@ -87,9 +97,10 @@ function buildClass(total) {
       const score = el('div', 'score');
       Object.assign(score.style, { right: '2px', bottom: `${plateH + 2}px`, fontSize: `${Math.round(22 * s)}px`, zIndex: z + 4 });
 
-      const spriteTop = rowH - plateH + 10 - spriteH;
+      // Đỉnh đầu lúc ngồi: hình ngồi cao khoảng 160/216 khung.
+      const spriteTop = rowH - spriteBottom - 165 * d;
       const size = Math.round(46 * s);
-      const cardCenter = Math.min(x + cell / 2 + spriteW * 0.46, W - size / 2 - 4) - x;
+      const cardCenter = Math.min(x + cell / 2 + spriteW * 0.42, W - size / 2 - 4) - x;
       const card = el('div', 'card');
       Object.assign(card.style, { width: `${size}px`, height: `${size}px`, left: `${cardCenter}px`, top: `${spriteTop}px`, fontSize: `${size * 0.5}px`, zIndex: 100 });
 
@@ -103,10 +114,115 @@ function buildClass(total) {
 
       seat.append(sprite, plate, score, card, badge, turns, gift);
       root.append(seat);
-      seats.push({ root: seat, sprite, rank, name, score, card, badge, turns, gift, data: null, ghostLook: look, center: { x: x + cell / 2, y: y + rowH * 0.35 } });
+      const entry = { root: seat, sprite, kid, rank, name, score, card, badge, turns, gift, data: null, ghostLook: look, center: { x: x + cell / 2, y: y + rowH * 0.35 }, foot: { x: x + cell / 2, y: y + rowH - spriteBottom } };
+      paintKid(entry, look);
+      seats.push(entry);
     }
+    rows.push({ top: y, foot: y + rowH - plateH * 0.45, s, z });
     y += rowH;
   }
+}
+
+function paintKid(seat, look) {
+  const { variant, flip } = kidLook(look);
+  seat.look = look;
+  kidFrame(seat.kid, variant, seat.root.classList.contains('up') ? KF.wave : KF.sit, flip);
+}
+
+// ---------- Học sinh đi lại: vào lớp từ cửa, đổi chỗ khi đổi hạng ----------
+// Đường đi: theo hàng ngang tới lối giữa, đi dọc lối giữa, rẽ ngang vào chỗ. Đi đâu thì dùng đúng dáng đi hướng đó.
+const walkers = new Map(); // key -> { node, kid, variant, path, seg, x, y, t, seatIndex }
+const MAX_WALKERS = 8;
+
+// Cỡ và lớp vẽ theo độ sâu: xa bảng (dưới màn hình) to hơn, đứng sau bàn ghế của hàng mình.
+function depthAt(y) {
+  if (!rows.length || y < rows[0].top) return { s: DOOR.s + ((rows[0]?.s ?? 0.8) - DOOR.s) * Math.max(0, Math.min(1, (y - DOOR.y) / Math.max(1, (rows[0]?.foot ?? y) - DOOR.y))), z: 7 };
+  let r = 0;
+  while (r + 1 < rows.length && rows[r + 1].top <= y - 8) r++;
+  const a = rows[r];
+  const b = rows[r + 1];
+  const s = b ? a.s + ((b.s - a.s) * Math.max(0, Math.min(1, (y - a.foot) / (b.foot - a.foot)))) : a.s;
+  return { s, z: a.z + 1 };
+}
+
+function walkTo(key, look, index, from) {
+  const seat = seats[index];
+  const old = walkers.get(key);
+  const start = old ? { x: old.x, y: old.y } : from ?? { x: DOOR.x, y: DOOR.y };
+  const end = seat.foot;
+  const path = [start, { x: AISLE_X, y: start.y }, { x: AISLE_X, y: end.y }, end].filter((p, i, list) => i === 0 || Math.hypot(p.x - list[i - 1].x, p.y - list[i - 1].y) > 1);
+  let w = old;
+  if (!w) {
+    const node = el('div', 'walker');
+    const kid = el('i', 'kid');
+    node.append(kid);
+    $('class').append(node);
+    w = { node, kid, t: 0 };
+    if (!from) node.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 350 });
+    walkers.set(key, w);
+  }
+  Object.assign(w, { variant: kidLook(look).variant, path, seg: 1, x: start.x, y: start.y, seatIndex: index, key });
+  seat.root.classList.add('arriving');
+  placeWalker(w, 0, 1);
+  ensureLoop();
+}
+
+function placeWalker(w, dx, dy) {
+  const { s, z } = depthAt(w.y);
+  const d = KID_SIZE * s;
+  const width = KID.FW * d;
+  const height = KID.FH * d;
+  Object.assign(w.node.style, { left: `${w.x - width / 2}px`, top: `${w.y - height}px`, width: `${width}px`, height: `${height}px`, zIndex: z });
+  const step = Math.floor(w.t / 0.15) % 2;
+  const horizontal = Math.abs(dx) > Math.abs(dy);
+  const frames = horizontal ? KF.left : dy < 0 ? KF.up : KF.down;
+  kidFrame(w.kid, w.variant, frames[step], horizontal && dx > 0);
+  return s;
+}
+
+function arrive(w) {
+  walkers.delete(w.key);
+  w.node.remove();
+  const seat = seats[w.seatIndex];
+  if (seat?.data?.key === w.key) {
+    seat.root.classList.remove('arriving');
+    restart(seat.root, 'popin');
+  }
+}
+
+function walkersTick(dt) {
+  for (const w of [...walkers.values()]) {
+    w.t += dt;
+    const { s } = depthAt(w.y);
+    let budget = 330 * s * dt;
+    let dx = 0;
+    let dy = 0;
+    while (budget > 0 && w.seg < w.path.length) {
+      const p = w.path[w.seg];
+      dx = p.x - w.x;
+      dy = p.y - w.y;
+      const len = Math.hypot(dx, dy);
+      if (len <= budget) {
+        w.x = p.x;
+        w.y = p.y;
+        budget -= len;
+        w.seg++;
+      } else {
+        w.x += (dx / len) * budget;
+        w.y += (dy / len) * budget;
+        budget = 0;
+      }
+    }
+    if (w.seg >= w.path.length) arrive(w);
+    else placeWalker(w, dx, dy);
+  }
+}
+
+function stopWalker(key) {
+  const w = walkers.get(key);
+  if (!w) return;
+  walkers.delete(key);
+  w.node.remove();
 }
 
 function restart(node, className) {
@@ -133,15 +249,33 @@ function markSolved(seat, key) {
   seat.root.classList.toggle('up', delta !== undefined);
   seat.card.textContent = delta > 1 ? `x${delta}` : '✓';
   seat.card.classList.toggle('x2', delta > 1);
+  paintKid(seat, seat.look);
 }
 
-function renderBoard(list) {
+function setUp(seat, up) {
+  seat.root.classList.toggle('up', up);
+  paintKid(seat, seat.look);
+}
+
+// walk: bạn mới vào bảng điểm thì đi từ cửa vào chỗ, bạn đổi hạng thì đi từ chỗ cũ sang chỗ mới.
+// Mở trang (walk = false) thì ai cũng ngồi sẵn.
+function renderBoard(list, { walk = false } = {}) {
+  const before = new Map();
+  seats.forEach((seat, i) => seat.data && before.set(seat.data.key, i));
+  const keys = new Set(list.map((p) => p.key));
+  for (const key of [...walkers.keys()]) if (!keys.has(key)) stopWalker(key);
+  const moves = [];
   seats.forEach((seat, i) => {
     const player = list[i] ?? null;
     if ((seat.data?.key ?? null) !== (player?.key ?? null)) {
       seat.root.classList.toggle('ghost', !player);
-      seat.sprite.innerHTML = studentSvg(player ? player.look : seat.ghostLook);
-      if (player) restart(seat.root, 'popin');
+      seat.root.classList.remove('arriving');
+      paintKid(seat, player ? player.look : seat.ghostLook);
+      if (player && walk) moves.push({ index: i, player, from: before.get(player.key) });
+      else if (player) {
+        stopWalker(player.key);
+        restart(seat.root, 'popin');
+      }
     }
     seat.data = player;
     seat.rank.textContent = player ? i + 1 : '';
@@ -152,7 +286,13 @@ function renderBoard(list) {
     for (let n = 1; n <= 3; n++) seat.root.classList.toggle(`top-${n}`, top === n);
     seat.badge.textContent = top ? TITLES[top - 1] : '';
     if (player) markSolved(seat, player.key);
-    else seat.root.classList.remove('up');
+    else setUp(seat, false);
+  });
+  // Đông người đổi chỗ cùng lúc thì chỉ vài bạn đi (ưu tiên bạn mới vào lớp), còn lại ngồi luôn.
+  moves.sort((a, b) => (a.from === undefined ? 0 : 1) - (b.from === undefined ? 0 : 1));
+  moves.forEach(({ index, player, from }, n) => {
+    if (n < MAX_WALKERS || walkers.has(player.key)) walkTo(player.key, player.look, index, from === undefined ? null : seats[from].foot);
+    else restart(seats[index].root, 'popin');
   });
   for (const [key, delta] of pendingFloats) {
     const index = seatOf(key);
@@ -262,6 +402,8 @@ setInterval(() => {
   if (urgent && secs > 0 && secs !== lastTick) {
     lastTick = secs;
     sfx.tick();
+    // Sắp hết giờ mà chưa ai đoán ra: cô ôm má ngạc nhiên.
+    if (secs === 5 && solved.size === 0) teacherAct('surprised', 1600);
   }
 }, 100);
 
@@ -272,28 +414,128 @@ setInterval(() => {
   $('hand-h').setAttribute('transform', `rotate(${(now.getHours() % 12) * 30 + minutes / 2} 60 60)`);
 }, 1000);
 
-// ---------- Cô giáo: lời cô hiện thành bong bóng cho người xem đang tắt tiếng ----------
+// ---------- Cô giáo: đi lại trên bục giảng, chỉ bảng, nói, vỗ tay, reo hò ----------
+// Đứng ở góc phải bục; từ mới hoặc mở thêm chữ thì đi sang trái, cầm thước chỉ lên bảng rồi về chỗ.
+// Thỉnh thoảng tự đi dạo vài bước cho hình không đứng yên.
+const T_SIZE = 0.58;
+const T_FOOT = 1046;
+const T_HOME = 985;
+const T_POINT = 790;
+const teacher = { x: T_HOME, goal: T_HOME, mode: 'idle', until: 0, t: 0, talking: false, blinkAt: 2, wanderAt: 12, after: null };
+const teacherNode = $('teacher');
+const teacherSprite = el('i', 'tch');
+teacherNode.append(teacherSprite);
+Object.assign(teacherNode.style, { width: `${TEACHER.FW * T_SIZE}px`, height: `${TEACHER.FH * T_SIZE}px`, top: `${T_FOOT - TEACHER.FH * T_SIZE}px` });
+
+function teacherWalk(x, after = null) {
+  teacher.goal = x;
+  teacher.after = after;
+  teacher.mode = Math.abs(x - teacher.x) > 2 ? 'walk' : 'idle';
+  if (teacher.mode === 'idle') after?.();
+}
+
+// Làm một động tác tại chỗ trong ms mili giây, xong thì về góc phải.
+function teacherAct(mode, ms) {
+  teacher.mode = mode;
+  teacher.t = 0;
+  teacher.until = performance.now() + ms;
+  teacher.after = null;
+  if (mode === 'happy' || mode === 'cheer') restart(teacherNode, 'hop');
+}
+
+function teacherPoint(ms) {
+  if (teacher.mode === 'point') {
+    teacher.until = Math.max(teacher.until, performance.now() + ms);
+    return;
+  }
+  teacherWalk(T_POINT, () => teacherAct('point', ms));
+}
+
+function teacherTick(dt, now) {
+  const T = teacher;
+  T.t += dt;
+  if (T.mode === 'walk') {
+    const dir = Math.sign(T.goal - T.x);
+    T.x += dir * Math.min(Math.abs(T.goal - T.x), 210 * dt);
+    if (Math.abs(T.goal - T.x) < 1) {
+      T.x = T.goal;
+      T.mode = 'idle';
+      const after = T.after;
+      T.after = null;
+      after?.();
+    }
+  } else if (T.mode !== 'idle' && now >= T.until) {
+    T.mode = 'idle';
+    if (Math.abs(T.x - T_HOME) > 2) teacherWalk(T_HOME);
+  } else if (T.mode === 'idle' && T.t > T.wanderAt && !T.talking) {
+    T.t = 0;
+    T.wanderAt = 9 + Math.random() * 9;
+    const spot = Math.abs(T.x - T_HOME) > 30 ? T_HOME : T_HOME - 90 - Math.random() * 110;
+    teacherWalk(spot);
+  }
+  let frame = TF.idle;
+  let flip = false;
+  if (T.mode === 'walk') {
+    frame = TF.walk[Math.floor(T.t / 0.18) % 2];
+    flip = T.goal > T.x;
+  } else if (T.mode === 'point') frame = T.talking && Math.floor(T.t / 0.28) % 2 ? TF.pointTalk : TF.point;
+  else if (T.mode === 'happy') frame = T.t < 1.1 ? (Math.floor(T.t / 0.22) % 2 ? TF.idle : TF.clap) : TF.thumbs;
+  else if (T.mode === 'cheer') frame = TF.cheer;
+  else if (T.mode === 'surprised') frame = TF.surprised;
+  else if (T.talking) frame = [TF.talk[0], TF.idle, TF.talk[1], TF.idle][Math.floor(T.t / 0.32) % 4];
+  else {
+    T.blinkAt -= dt;
+    if (T.blinkAt < 0.14) frame = TF.blink;
+    if (T.blinkAt < 0) T.blinkAt = 2.5 + Math.random() * 3;
+  }
+  teacherFrame(teacherSprite, frame, flip);
+  const w = TEACHER.FW * T_SIZE;
+  teacherNode.style.left = `${T.x - w / 2}px`;
+  // Bong bóng lời cô luôn nằm bên trái cô, mũi nhọn chỉ vào cô.
+  const bubble = $('bubble');
+  bubble.style.right = `${W - (T.x - 62)}px`;
+  bubble.style.maxWidth = `${Math.min(860, T.x - 90)}px`;
+}
+
+// Một vòng lặp cho cô giáo và các bạn đang đi.
+let lastFrame = performance.now();
+let looping = false;
+function loop(now) {
+  const dt = Math.min(0.05, (now - lastFrame) / 1000);
+  lastFrame = now;
+  teacherTick(dt, now);
+  walkersTick(dt);
+  requestAnimationFrame(loop);
+}
+function ensureLoop() {
+  if (looping) return;
+  looping = true;
+  lastFrame = performance.now();
+  requestAnimationFrame(loop);
+}
+ensureLoop();
+
+// ---------- Lời cô hiện thành bong bóng cho người xem đang tắt tiếng ----------
 let bubbleTimer = 0;
 function say(msg) {
   const bubble = $('bubble');
-  const teacher = $('teacher');
   if (msg.cut) stopSpeech();
   clearTimeout(bubbleTimer);
   if (!msg.text) {
     bubble.hidden = true;
-    teacher.classList.remove('talking');
+    teacher.talking = false;
     return;
   }
   bubble.textContent = msg.text;
   bubble.hidden = false;
-  teacher.classList.add('talking');
+  teacher.talking = true;
   bubbleTimer = setTimeout(() => {
     bubble.hidden = true;
-    teacher.classList.remove('talking');
+    teacher.talking = false;
   }, Math.max(2600, msg.ms + 600));
   if (msg.clips.length) speak(msg);
 }
-const teacherHappy = () => restart($('teacher'), 'happy');
+const teacherHappy = () => teacherAct('happy', 1900);
 
 // ---------- Hiệu ứng ----------
 const toasts = [];
@@ -346,9 +588,10 @@ function flyIcon(src, index) {
   node.style.left = `${center.x - 48}px`;
   node.style.top = `${center.y - 48}px`;
   fx.append(node);
-  // Hình quà bay ra từ bảng x2 giữa màn.
-  const fromX = 540 - center.x;
-  const fromY = 892 - center.y;
+  // Hình quà bay ra từ bảng x2 (đứng trước bàn cô).
+  const g = $('guide');
+  const fromX = g.offsetLeft + (g.offsetWidth * GUIDE_SCALE) / 2 - center.x;
+  const fromY = g.offsetTop + (g.offsetHeight * GUIDE_SCALE) / 2 - center.y;
   node.animate([{ transform: `translate(${fromX}px, ${fromY}px) scale(.6)`, opacity: 0 }, { transform: `translate(${fromX * 0.5}px, ${fromY * 0.5 - 60}px) scale(1.3)`, opacity: 1, offset: 0.5 }, { transform: 'translate(0,0) scale(.8)', opacity: 1, offset: 0.92 }, { transform: 'translate(0,0) scale(1.5)', opacity: 0 }], { duration: 950, easing: 'ease-in-out' }).onfinish = () => {
     node.remove();
     sparks(center.x, center.y, 12);
@@ -364,7 +607,10 @@ function showSpotlight(fastest, endsAt, { quiet = false } = {}) {
   if (!fastest || ms < 1000) return hideSpotlight(true);
   const img = $('spot-img');
   const face = $('spot-face');
-  face.innerHTML = studentSvg(fastest.look);
+  const { variant, flip } = kidLook(fastest.look);
+  const faceKid = el('i', 'kid');
+  kidFrame(faceKid, variant, KF.wave, flip);
+  face.replaceChildren(faceKid);
   img.hidden = !fastest.avatar;
   face.hidden = Boolean(fastest.avatar);
   img.onerror = () => {
@@ -448,14 +694,16 @@ const handlers = {
     wake();
     sfx.bell();
     solved.clear();
-    seats.forEach((seat) => seat.root.classList.remove('up'));
+    seats.forEach((seat) => setUp(seat, false));
     hideSpotlight();
     showWord(msg);
     startTimer('asking', msg.endsAt);
+    teacherPoint(3800);
   },
   letter(msg) {
     sfx.letter();
     openTile(msg.index, msg.letter);
+    teacherPoint(2200);
   },
   correct(msg) {
     solved.set(msg.key, msg.delta);
@@ -489,12 +737,16 @@ const handlers = {
     showSpotlight(msg.fastest, msg.endsAt);
     if (msg.count) {
       sfx.fanfare();
-      teacherHappy();
-    } else sfx.none();
+      if (msg.fastest) teacherAct('cheer', 2200);
+      else teacherHappy();
+    } else {
+      sfx.none();
+      teacherAct('surprised', 1500);
+    }
   },
   board(msg) {
     setPlayers(msg.players);
-    renderBoard(msg.board);
+    renderBoard(msg.board, { walk: true });
   },
   say,
   boost(msg) {

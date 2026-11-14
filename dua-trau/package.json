@@ -1,0 +1,20 @@
+{
+  "name": "dua-trau",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Đua Trâu 5 nước cho TikTok LIVE: comment tên nước +0,1 m, quà của nước +1 m, mỗi vòng 60 giây",
+  "type": "module",
+  "scripts": {
+    "start": "node --env-file-if-exists=.env server.js",
+    "test": "node --test tests/*.test.js",
+    "cat-anh": "node scripts/cat-anh.mjs",
+    "window": "start \"\" msedge --app=http://127.0.0.1:3019/ --window-size=456,820 --window-position=0,0 --user-data-dir=D:\\tiktok-cache\\dua-trau-window --disable-component-update --no-first-run --no-default-browser-check --autoplay-policy=no-user-gesture-required --disable-backgrounding-occluded-windows --disable-renderer-backgrounding --disable-background-timer-throttling --disable-features=CalculateNativeWinOcclusion"
+  },
+  "engines": {
+    "node": ">=22.9"
+  },
+  "dependencies": {
+    "express": "^5.3.0",
+    "tiktok-live-connector": "^2.5.0"
+  }
+}

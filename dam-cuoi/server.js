@@ -35,6 +35,7 @@ const guide = {
   goldIcon: config.goldIcon ?? '',
   goldPerCoin: config.goldPerCoin ?? 1,
   renderScale: config.renderScale ?? 1,
+  guestsPerTable: config.guestsPerTable ?? 6,
   chatCommands: Object.fromEntries(chatCommands),
   ceremony: (config.ceremony?.steps ?? []).map(({ id, title }) => ({ id, title })),
 };

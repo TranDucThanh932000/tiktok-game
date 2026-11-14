@@ -46,3 +46,14 @@ Chạy [start.bat của game](dam-cuoi/start.bat). Nó mở game tại <http://1
 - Quà dồn dập được xếp hàng và diễn lần lượt, hàng dài thì diễn nhanh hơn. `npm run test-mode` sinh quà giả không cần live.
 
 Xem [cách chơi, cách lấy tên quà thật và cấu hình](dam-cuoi/README.md).
+
+## Đua Trâu 5 nước (Buffalo Race)
+
+Chạy [start.bat của game](dua-trau/start.bat). Nó mở game tại <http://127.0.0.1:3019> và [bảng điều khiển](http://127.0.0.1:3019/panel.html).
+
+- 5 con trâu chibi: Thái Lan, Việt Nam, Trung Quốc, Campuchia, Philippines. Chữ trên màn hình bằng tiếng Anh, để ít nhất có thể.
+- Comment tên nước +0,1 m. Mỗi nước có một quà riêng, mỗi quà +1 m: TikTok → Thái Lan, Hoa hồng → Việt Nam, GG → Trung Quốc, Kem ốc quế → Campuchia, Tim cam → Philippines.
+- Mỗi vòng 60 giây, nước đi xa nhất thắng vòng, có bảng đếm số vòng thắng.
+- Ảnh trâu chibi: làm theo [PROMPT-CHIBI.md](dua-trau/PROMPT-CHIBI.md) (3 ảnh) rồi `npm run cat-anh`.
+
+Xem [luật chơi và cấu hình](dua-trau/README.md).

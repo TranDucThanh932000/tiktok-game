@@ -1,6 +1,6 @@
 # Lớp Học Đoán Từ
 
-Game đoán từ cho TikTok LIVE màn dọc (1080×1920), giao diện lớp học chibi giống `lop-hoc`. Node + Express + `tiktok-live-connector`, màn hình là trang web mở bằng cửa sổ Edge `--app` để LIVE Studio/OBS bắt hình. Cổng 3015.
+Game đoán từ cho TikTok LIVE màn dọc (1080×1920), giao diện lớp học chibi vẽ bằng ảnh (tường xanh bạc hà, sàn gỗ, cô giáo áo dài). Node + Express + `tiktok-live-connector`, màn hình là trang web mở bằng cửa sổ Edge `--app` để LIVE Studio/OBS bắt hình. Cổng 3015.
 
 ## Chạy
 
@@ -63,6 +63,14 @@ Cô nói bằng Vbee (`VBEE_TOKEN`, `VBEE_APP_ID`, `VBEE_VOICE` trong `.env`, d�
 Sửa lời thoại ở `teacher.json`; thấy đọc sai từ nào thì thêm vào `fixes` (chỉ đổi cách đọc, chữ trên bảng giữ nguyên). Mỗi mẩu giọng chỉ tạo một lần rồi lưu ở `data/tts`. Giọng gợi ý và đáp án được tạo trước 3 từ, nên chỉ tốn lượt Vbee cho từ thực sự hỏi tới; tên người chơi mới mất vài giây để tạo.
 
 Có cảnh báo từ TikTok thì tự bật **chế độ an toàn**: cô im, game vẫn chạy, chủ kênh tắt lại ở bảng điều khiển.
+
+## Hình chibi và chuyển động
+
+Ảnh gốc ở `art-src/`, tạo bằng ChatGPT theo `PROMPT-CHIBI.md` (3 ảnh): `hoc-sinh.png` (6 bạn × 8 dáng), `co-giao.png` (12 dáng), `lop-hoc.png` (nền lớp). Ảnh game dùng nằm ở `public/chibi/`, cắt bằng `node scripts/cat-anh-chibi.cjs` (chạy trong thư mục `doan-tu`, cần Edge). Script cũng xuất `art-src/xem-thu-*.png` để soát các khung đã cắt. Đổi ảnh khác thì chạy lại script và sửa `FW`, `FH` trong `public/js/art.js` theo số script in ra.
+
+- **Học sinh:** bạn mới lọt vào bảng điểm bước ra từ cửa lớp bên trái, đi dọc bục giảng, xuống lối giữa rồi rẽ vào chỗ. Đổi hạng thì đi từ chỗ cũ sang chỗ mới. Đông người đổi chỗ cùng lúc thì chỉ 8 bạn đi, ưu tiên bạn mới vào, các bạn còn lại ngồi luôn. Ngồi thì quay lưng nhìn bảng; đoán đúng thì quay lại cười, giơ tay. Mỗi người chơi luôn là cùng một bạn trong 6 bạn, nửa số người được lật ngang cho lớp đỡ giống nhau. Mở lại trang thì ai cũng ngồi sẵn, không đi lại.
+- **Cô giáo:** đứng góc phải bục giảng, chớp mắt, thỉnh thoảng đi dạo vài bước. Lúc nói thì đổi dáng tay. Từ mới hoặc mở thêm chữ thì đi sang trái, cầm thước chỉ lên bảng rồi về chỗ. Bạn đầu tiên đoán ra thì vỗ tay rồi giơ ngón cái. Công bố có bạn nhanh nhất thì giơ hai tay reo. Còn 5 giây mà chưa ai ra, hoặc hết giờ không ai đoán được, thì cô ôm má ngạc nhiên. Bong bóng lời cô luôn nằm bên trái cô.
+- **Bảng đen** dùng khung gỗ và khay phấn cắt từ ảnh nền, kéo giãn cho vừa chữ. **Đồng hồ** dùng mặt đồng hồ trong ảnh, kim do game vẽ theo giờ thật.
 
 ## Bảng điều khiển
 

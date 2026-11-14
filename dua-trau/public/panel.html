@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bảng điều khiển · Đua Trâu</title>
+  <link rel="stylesheet" href="/fonts/fonts.css">
+  <style>
+    body { margin: 0; padding: 18px; background: #0f1a12; color: #e8f0ea; font: 15px/1.45 system-ui, sans-serif; }
+    h1 { margin: 0 0 4px; font: 700 26px "Be Vietnam Pro", sans-serif; color: #ffc93c; }
+    section { background: #18291c; border-radius: 14px; padding: 14px 16px; margin: 14px 0; max-width: 900px; }
+    h2 { margin: 0 0 10px; font-size: 16px; color: #ffc93c; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { padding: 6px 8px; text-align: right; border-bottom: 1px solid #2a4030; }
+    th:first-child, td:first-child { text-align: left; }
+    td img { width: 30px; height: 20px; vertical-align: -4px; margin-right: 8px; border-radius: 3px; }
+    button { font: inherit; padding: 7px 14px; border-radius: 9px; border: 0; background: #2d5a3a; color: #fff; cursor: pointer; margin: 3px 4px 3px 0; }
+    button:hover { background: #3c7a4e; }
+    button.warn { background: #7a2b2b; }
+    button img { width: 22px; height: 22px; object-fit: contain; vertical-align: -5px; margin-right: 4px; }
+    input { font: inherit; padding: 6px 10px; border-radius: 8px; border: 1px solid #3a5a42; background: #0f1a12; color: #fff; }
+    .row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 6px 0; }
+    #status.on { color: #6ee7a0; } #status { color: #ff9b9b; }
+    #log { max-height: 260px; overflow: auto; font-size: 13px; color: #b8cabd; white-space: pre-wrap; }
+    .hint { color: #8fa596; font-size: 13px; }
+    #clock { font-size: 22px; font-weight: 700; color: #ffc93c; }
+  </style>
+</head>
+<body>
+  <h1>🐃 Đua Trâu · bảng điều khiển</h1>
+  <div id="status">Đang kết nối server...</div>
+  <div class="hint" id="session"></div>
+
+  <section>
+    <h2>Vòng đua <span id="clock"></span></h2>
+    <table>
+      <thead><tr><th>Nước</th><th>Mét vòng này</th><th>Số vòng thắng</th></tr></thead>
+      <tbody id="score"></tbody>
+    </table>
+    <div class="row">
+      <button id="pause">Tạm dừng</button>
+      <button data-control="end" data-ask="Kết thúc vòng này ngay và công bố nước thắng?">Kết thúc vòng ngay</button>
+      <button class="warn" data-control="restart" data-ask="Chạy lại vòng này từ 0 mét? Số mét vòng này bị bỏ.">Chạy lại vòng</button>
+      <button class="warn" data-control="resetWins" data-ask="Xóa hết số vòng thắng, đếm lại từ vòng 1?">Xóa số vòng thắng</button>
+    </div>
+    <div class="hint">Trước buổi live nên bấm <b>Xóa số vòng thắng</b> để bỏ các lượt chạy thử. Quà gửi lúc đang công bố kết quả hoặc lúc tạm dừng được để dành, cộng vào lúc chạy lại.</div>
+  </section>
+
+  <section>
+    <h2>Chạy thử</h2>
+    <div class="row">Tên người xem <input id="name" value="Bạn thử" maxlength="24"> <button id="random">Tên ngẫu nhiên</button></div>
+    <div class="row" id="chat"></div>
+    <div class="row" id="gift"></div>
+    <div class="row">Số lượng quà <input id="count" type="number" min="1" max="999" value="1" style="width:80px">
+      <button id="other">Quà khác (Galaxy)</button>
+      <span class="hint">Quà khác cộng cho nước người đó comment gần nhất.</span></div>
+    <div class="row"><button id="storm">Mưa comment 5 giây</button> <span class="hint">Nhiều tên ngẫu nhiên comment tên nước liên tục.</span></div>
+  </section>
+
+  <section>
+    <h2>Nhật ký</h2>
+    <div id="log"></div>
+  </section>
+
+  <script type="module">
+    import { flagUrl } from '/js/flags.js';
+    const $ = (id) => document.getElementById(id);
+    let nations = [];
+    let paused = false;
+    let phase = 'race';
+    let endsAt = 0;
+    const nameOf = (id) => nations.find((n) => n.id === id)?.name ?? id;
+    const m = (u) => (u / 10).toFixed(1);
+
+    const post = (url, body) => fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then((r) => r.json());
+    const simulate = (body, name = $('name').value) => post('/api/simulate', { name, ...body });
+
+    function log(text) {
+      const line = `${new Date().toLocaleTimeString('vi-VN')}  ${text}\n`;
+      $('log').textContent = (line + $('log').textContent).slice(0, 8000);
+    }
+
+    function render(msg) {
+      if (msg.phase) phase = msg.phase;
+      if ('paused' in msg) paused = msg.paused;
+      if ('left' in msg) endsAt = Date.now() + msg.left;
+      $('pause').textContent = paused ? 'Chạy tiếp' : 'Tạm dừng';
+      $('score').replaceChildren(...nations.map((n) => {
+        const tr = document.createElement('tr');
+        const first = document.createElement('td');
+        first.append(Object.assign(document.createElement('img'), { src: flagUrl(n.id) }), `${n.name}${msg.leader === n.id ? ' 👑' : ''}`);
+        tr.append(first);
+        for (const v of [m(msg.scores[n.id]), msg.wins[n.id]]) tr.append(Object.assign(document.createElement('td'), { textContent: v }));
+        return tr;
+      }));
+    }
+    setInterval(() => {
+      const s = Math.max(0, Math.ceil((endsAt - Date.now()) / 1000));
+      $('clock').textContent = paused ? '· tạm dừng' : phase === 'race' ? `· còn ${s} giây` : `· công bố kết quả, vòng mới sau ${s} giây`;
+    }, 250);
+
+    const button = (text, icon, onclick) => {
+      const b = document.createElement('button');
+      if (icon) b.append(Object.assign(document.createElement('img'), { src: icon }));
+      b.append(text);
+      b.onclick = onclick;
+      return b;
+    };
+    function buildButtons() {
+      $('chat').replaceChildren('Comment:', ...nations.map((n) => button(n.name, flagUrl(n.id), () => simulate({ kind: 'chat', text: n.name }))));
+      $('gift').replaceChildren('Quà:', ...nations.map((n) => button(`${n.gift.label} → ${n.name}`, n.gift.icon, () => simulate({ kind: 'gift', gift: n.gift.label, count: Number($('count').value) || 1 }))));
+    }
+
+    const NAMES = ['Lan', 'Tuấn', 'Minh Anh', 'Hùng', 'Thảo', 'Somchai', 'Vy', 'Long', 'Dara', 'Phúc', 'Maria', 'Wei'];
+    const randomName = () => `${NAMES[Math.floor(Math.random() * NAMES.length)]} ${Math.floor(Math.random() * 90 + 10)}`;
+    $('random').onclick = () => ($('name').value = randomName());
+    $('other').onclick = () => simulate({ kind: 'gift', gift: 'Galaxy', count: Number($('count').value) || 1 }).then((r) => !r.result && log('Quà khác chưa tính: người này chưa comment tên nước nào'));
+    $('storm').onclick = () => {
+      const until = Date.now() + 5000;
+      const timer = setInterval(() => {
+        if (Date.now() > until) return clearInterval(timer);
+        const n = nations[Math.floor(Math.random() ** 1.6 * nations.length)];
+        simulate({ kind: 'chat', text: `${n.name} oi` }, randomName());
+      }, 90);
+    };
+    $('pause').onclick = () => post('/api/control', { action: paused ? 'resume' : 'pause' });
+    for (const b of document.querySelectorAll('[data-control]')) {
+      b.onclick = () => confirm(b.dataset.ask) && post('/api/control', { action: b.dataset.control });
+    }
+
+    const handlers = {
+      snapshot(msg) {
+        nations = msg.race.nations;
+        buildButtons();
+        render(msg.race);
+        handlers.status(msg.status);
+        handlers.session(msg.session);
+      },
+      status(s) {
+        $('status').textContent = s.text;
+        $('status').className = s.connected ? 'on' : '';
+      },
+      session(s) {
+        $('session').textContent = s.roomId ? `Phiên live: ${s.diamonds.toLocaleString('vi-VN')} kim cương · ${s.gifts} quà` : '';
+      },
+      boost(msg) {
+        if (msg.kind === 'gift') log(`${msg.who.name} tặng ${msg.giftName || 'quà'} x${msg.count} → ${nameOf(msg.nation)} +${m(msg.units)} m${msg.banked ? ' (để dành)' : ''}`);
+        render(msg);
+      },
+      round(msg) { log(`Vòng ${msg.round} bắt đầu`); render(msg); },
+      result(msg) { log(`Vòng ${msg.round}: ${msg.winner ? `${nameOf(msg.winner)} thắng (${m(msg.scores[msg.winner])} m)` : 'không ai chạy'}${msg.top ? ` · tiếp sức nhiều nhất ${msg.top.name}` : ''}`); render(msg); },
+      pause(msg) { render(msg); },
+    };
+    const events = new EventSource('/events');
+    events.onmessage = (e) => {
+      const msg = JSON.parse(e.data);
+      handlers[msg.type]?.(msg);
+    };
+    events.onerror = () => handlers.status({ connected: false, text: 'Mất kết nối server, đang thử lại...' });
+  </script>
+</body>
+</html>
