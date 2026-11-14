@@ -14,11 +14,15 @@
   "boost": {
     "multiplier": 2,
     "socialTurns": 1,
-    "socialGapSeconds": 60,
-    "tiers": [
-      { "coins": 1, "turns": 1, "label": "Hoa hồng", "icon": "/gifts/rose.webp" },
-      { "coins": 5, "turns": 6, "label": "Kem", "icon": "/gifts/kem.webp" },
-      { "coins": 10, "turns": 13, "label": "Heo may mắn", "icon": "/gifts/lucky-pig.webp" }
+    "socialGapSeconds": 60
+  },
+  "gifts": {
+    "fundGoal": 1000,
+    "photoGift": { "label": "Tim cam", "hint": "Treo ảnh", "names": ["Heart Me", "Tim cam"], "ids": [7934], "icon": "/gifts/heart-me.webp" },
+    "scenes": [
+      { "coins": 1, "scene": "rose", "label": "Hoa hồng", "hint": "Lên chào cô", "icon": "/gifts/rose.webp" },
+      { "coins": 5, "scene": "kem", "label": "Kem", "hint": "Cả lớp cười", "icon": "/gifts/kem.webp" },
+      { "coins": 10, "scene": "pig", "label": "Heo may mắn", "hint": "Heo chạy", "icon": "/gifts/lucky-pig.webp" }
     ]
   }
 }

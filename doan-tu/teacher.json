@@ -155,13 +155,6 @@
     "Cả lớp vỗ tay khen nhau nào!",
     "Tuyệt vời, rất nhiều bạn đúng!"
   ],
-  "boost": [
-    "được nhân đôi điểm nhé!",
-    "có thêm lượt nhân đôi điểm!",
-    "đoán đúng từ tới được gấp đôi điểm!",
-    "đang có lượt nhân đôi, cố lên nhé!",
-    "có lượt điểm gấp đôi rồi đó!"
-  ],
   "boostFollow": [
     "cảm ơn em đã theo dõi lớp, được nhân đôi điểm nhé!",
     "vừa theo dõi lớp mình, có lượt nhân đôi rồi!",
@@ -173,5 +166,45 @@
     "chia sẻ cho bạn bè rồi, có lượt nhân đôi nhé!",
     "rủ thêm bạn vào lớp, cô tặng lượt nhân đôi!",
     "cảm ơn em đã chia sẻ, từ tới đúng là gấp đôi điểm!"
+  ],
+  "giftRose": [
+    "cô cảm ơn em nhé!",
+    "cảm ơn em, cô thương em nhiều!",
+    "cô cảm ơn, chúc em đoán đâu trúng đó!",
+    "cảm ơn em, chúc em học giỏi nha!",
+    "cô cảm ơn, chúc em luôn tươi cười!",
+    "cảm ơn em, cô vui lắm đó!",
+    "cô cảm ơn, chúc em một ngày thật vui!",
+    "cảm ơn em, ngoan quá đi!"
+  ],
+  "giftKem": [
+    "cô cảm ơn em! Chúc em học giỏi, ăn mãi không béo!",
+    "cảm ơn em nhiều nha! Chúc em vui cả ngày, đoán từ nào trúng từ đó!",
+    "ôi cô cảm động quá! Chúc em luôn khỏe mạnh, cười thật nhiều!",
+    "cảm ơn em! Chúc em tiền vô như nước, tiền ra nhỏ giọt!",
+    "cô cảm ơn nha! Chúc em gặp toàn chuyện vui, ra đường gặp may!",
+    "cảm ơn em nhé! Chúc em làm gì cũng thành công!"
+  ],
+  "giftPig": [
+    "ôi, cô cảm ơn em nhiều lắm! Chúc em phát tài, may mắn ngập tràn! Cả lớp vỗ tay cho bạn nào!",
+    "trời ơi, cô bất ngờ quá! Chúc em sức khỏe dồi dào, tiền vào như nước! Cả lớp cảm ơn bạn đi nào!",
+    "cô cảm ơn em thật nhiều! Chúc em vạn sự như ý, ăn ngon ngủ kỹ! Cả lớp vỗ tay thật to nào!",
+    "em là học sinh cưng của cô hôm nay! Chúc em gặp toàn điều may! Lớp mình vỗ tay nào!"
+  ],
+  "giftNoName": [
+    "Cô cảm ơn em nhé!",
+    "Cảm ơn em, cô vui lắm!",
+    "Cô cảm ơn, chúc em đoán đâu trúng đó!"
+  ],
+  "fundNear": [
+    "Quỹ lớp sắp đủ rồi, sắp có sự kiện đó!",
+    "Quỹ lớp chỉ còn chút xíu nữa thôi các em!",
+    "Gần đủ quỹ lớp rồi, cả lớp chờ sự kiện nhé!"
+  ],
+  "candy": [
+    "Quỹ lớp đủ rồi! Cô phát kẹo cho cả lớp nè!",
+    "Hoan hô, quỹ lớp đầy rồi! Kẹo cho tất cả các em đây!",
+    "Cả lớp ơi, quỹ lớp đủ rồi! Cô phát kẹo cho mọi người nhé!",
+    "Quỹ lớp đủ rồi, cảm ơn các em! Cô mời cả lớp ăn kẹo nào!"
   ]
 }

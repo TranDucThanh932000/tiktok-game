@@ -1,4 +1,4 @@
-// Giọng cô giáo: đọc gợi ý từ mới, mở chữ, khen bạn đoán ra đầu tiên, công bố đáp án.
+// Giọng cô giáo: đọc gợi ý từ mới, mở chữ, khen bạn đoán ra đầu tiên, công bố đáp án, cảm ơn và chúc người gửi quà.
 // Mỗi câu ghép từ các mẩu Vbee đã lưu ở data/tts; mẩu riêng của từng từ được tạo trước vài từ nên đọc được ngay.
 import { readableName, speakText } from './spoken.js';
 
@@ -7,6 +7,13 @@ const LOAD_MAIN_MS = 6000;
 const LOAD_SIDE_MS = 4000;
 const SIDE_QUEUE = 3;
 const SIDE_MAX_WAIT_MS = 8000;
+// Lời cảm ơn quà: chen lên đầu hàng chờ, không bị lời chính cắt mất, chờ được lâu hơn.
+const KEEP_QUEUE = 3;
+const KEEP_MAX_WAIT_MS = 15_000;
+const MAIN_MAX_WAIT_MS = 10_000;
+const THANK_GAP_MS = 20_000;
+const SCENE_RANK = { rose: 1, kem: 2, pig: 3 };
+const THANK_LINES = { rose: 'giftRose', kem: 'giftKem', pig: 'giftPig' };
 const PREPARE_AHEAD = 3;
 const HURRY_AT_MS = 6000;
 const ENCOURAGE_AT_MS = 28_000;
@@ -39,6 +46,8 @@ export class Teacher {
     this.wordAt = 0;
     this.letters = 0;
     this.lastPick = new Map();
+    this.thanked = new Map(); // key người chơi -> { at, rank }: không cảm ơn dồn dập một người
+    this.current = null;
   }
 
   attach(game, deck) {
@@ -126,14 +135,37 @@ export class Teacher {
       this.say([...parts, this.spoken(end)], { main: true, text: `${text} ${end}` });
     } else if (msg.type === 'boost') {
       const name = readableName(msg.name);
-      const tail = this.pick(msg.kind === 'follow' ? 'boostFollow' : msg.kind === 'share' ? 'boostShare' : 'boost');
+      const tail = this.pick(msg.kind === 'share' ? 'boostShare' : 'boostFollow');
       if (name) this.say([name, this.spoken(tail)], { text: `${msg.name} ${tail}` });
+    } else if (msg.type === 'gift') {
+      this.thank(msg);
+    } else if (msg.type === 'fund' && msg.near) {
+      this.sayLine('fundNear');
+    } else if (msg.type === 'candy') {
+      const line = this.pick('candy');
+      this.say([this.spoken(line)], { text: line, keep: true });
     }
   }
 
-  sayLine(key, list) {
+  // Quà to hơn thì lời chúc dài hơn. Một người gửi liên tục chỉ được cảm ơn lại sau một lúc, trừ khi quà to hơn lần trước.
+  thank(msg) {
+    const rank = SCENE_RANK[msg.scene] ?? 1;
+    const t = this.now();
+    const last = this.thanked.get(msg.key);
+    if (last && t - last.at < THANK_GAP_MS && rank <= last.rank) return;
+    this.thanked.delete(msg.key);
+    this.thanked.set(msg.key, { at: t, rank });
+    if (this.thanked.size > 500) this.thanked.delete(this.thanked.keys().next().value);
+    const name = readableName(msg.name);
+    if (!name) return this.sayLine('giftNoName', undefined, { keep: true });
+    const tail = this.pick(THANK_LINES[msg.scene] ?? 'giftRose');
+    // Dấu phẩy để đọc thành lời gọi: "Lan Anh, cô cảm ơn em nhé!"
+    this.say([name, this.spoken(tail)], { text: `${msg.name}, ${tail}`, keep: true });
+  }
+
+  sayLine(key, list, { keep = false } = {}) {
     const line = this.pick(key, list);
-    this.say([this.spoken(line)], { text: line });
+    this.say([this.spoken(line)], { text: line, keep });
   }
 
   tick() {
@@ -155,30 +187,43 @@ export class Teacher {
     }
     while (this.queue.length && t >= this.busyUntil) {
       const item = this.queue.shift();
-      if (t - item.at <= SIDE_MAX_WAIT_MS) {
+      if (t - item.at <= (item.main ? MAIN_MAX_WAIT_MS : item.keep ? KEEP_MAX_WAIT_MS : SIDE_MAX_WAIT_MS)) {
         this.play(item);
         break;
       }
     }
   }
 
-  // Lời chính (từ mới, công bố) cắt ngang mọi thứ; lời phụ xếp hàng chờ cô nói xong, chờ lâu quá thì bỏ.
-  say(parts, { main = false, text = '' } = {}) {
-    const item = { parts: parts.filter(Boolean), main, text, at: this.now() };
+  // Lời chính (từ mới, công bố) cắt ngang mọi thứ, trừ lời cảm ơn quà: đang cảm ơn thì lời chính chờ nói ngay sau.
+  // Lời cảm ơn (keep) chen lên trước lời phụ thường; lời phụ xếp hàng chờ cô nói xong, chờ lâu quá thì bỏ.
+  say(parts, { main = false, text = '', keep = false } = {}) {
+    const item = { parts: parts.filter(Boolean), main, keep, text, at: this.now() };
+    const busy = this.now() < this.busyUntil;
+    const keeps = this.queue.filter((q) => q.keep);
     if (main) {
-      this.queue = [];
-      this.play(item);
-    } else if (this.now() < this.busyUntil) {
+      if (busy && this.current?.keep) this.queue = [item, ...keeps];
+      else {
+        this.queue = keeps;
+        this.play(item);
+      }
+    } else if (!busy) this.play(item);
+    else if (keep) {
+      if (keeps.length >= KEEP_QUEUE) return;
+      const firstSide = this.queue.findIndex((q) => !q.keep && !q.main);
+      this.queue.splice(firstSide === -1 ? this.queue.length : firstSide, 0, item);
+    } else {
       this.queue.push(item);
-      if (this.queue.length > SIDE_QUEUE) this.queue.shift();
-    } else this.play(item);
+      const sides = this.queue.filter((q) => !q.keep && !q.main);
+      if (sides.length > SIDE_QUEUE) this.queue.splice(this.queue.indexOf(sides[0]), 1);
+    }
   }
 
   async play(item) {
     const run = ++this.run;
+    this.current = item;
     let ids = [];
     if (this.voice.enabled && this.enabled()) {
-      const limit = item.main ? LOAD_MAIN_MS : LOAD_SIDE_MS;
+      const limit = item.main || item.keep ? LOAD_MAIN_MS : LOAD_SIDE_MS;
       this.busyUntil = this.now() + limit;
       let timer;
       const timeout = new Promise((resolve) => (timer = setTimeout(resolve, limit, null)));
@@ -186,8 +231,8 @@ export class Teacher {
       clearTimeout(timer);
       if (run !== this.run) return;
       ids = loaded ?? [];
-      // Lời phụ thiếu một mẩu (ví dụ tên) thì thôi không đọc, chỉ hiện chữ.
-      if (!item.main && ids.includes(null)) ids = [];
+      // Lời phụ thiếu một mẩu (ví dụ tên) thì thôi không đọc, chỉ hiện chữ. Lời cảm ơn thì vẫn đọc phần đã có.
+      if (!item.main && !item.keep && ids.includes(null)) ids = [];
       ids = ids.filter(Boolean);
     }
     const ms = ids.reduce((sum, id) => sum + this.voice.duration(id) + 40, 0);
@@ -198,6 +243,7 @@ export class Teacher {
   // Chế độ an toàn: im ngay.
   stop() {
     this.run++;
+    this.current = null;
     this.queue = [];
     this.busyUntil = 0;
     this.emit({ type: 'say', clips: [], text: '', ms: 0, cut: true });

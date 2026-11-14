@@ -10,8 +10,6 @@
 </head>
 <body>
   <div id="stage">
-    <div id="banner"></div>
-
     <section id="board">
       <header class="board-head">
         <span id="topic" class="pill"></span>
@@ -42,15 +40,22 @@
 
     </section>
 
-    <div id="clock">
-      <svg viewBox="0 0 120 120">
-        <path id="hand-h" d="M60 60V34" stroke="#2a211c" stroke-width="5" stroke-linecap="round"/>
-        <path id="hand-m" d="M60 60V22" stroke="#2a211c" stroke-width="4" stroke-linecap="round"/>
-        <circle cx="60" cy="60" r="4.5" fill="#d3263c"/>
-      </svg>
-    </div>
+    <!-- Dải quà ngay dưới bảng: hình quà và chuyện xảy ra trong lớp, không dùng chữ "tặng quà". -->
+    <div id="menu"></div>
 
     <aside id="guide"></aside>
+
+    <!-- Ảnh treo dưới mép bảng: người gửi Tim cam cuối cùng. -->
+    <div id="photo" class="empty">
+      <img id="photo-pin" alt="">
+      <div class="photo-label">Học sinh ngoan</div>
+      <div class="photo-frame">
+        <img id="photo-img" alt="" referrerpolicy="no-referrer" hidden>
+        <div id="photo-face" hidden></div>
+        <div id="photo-how"><img id="photo-how-icon" alt=""><span>treo ảnh</span></div>
+      </div>
+      <b id="photo-name"></b>
+    </div>
 
     <div id="teacher"></div>
     <div id="class"></div>
@@ -68,6 +73,10 @@
         <div id="spot-name"></div>
         <div id="spot-info"></div>
       </div>
+    </div>
+    <div id="candy" hidden>
+      <div class="candy-title">🍬 CÔ PHÁT KẸO CẢ LỚP 🍭</div>
+      <div id="candy-thanks"></div>
     </div>
     <div id="fx"></div>
     <div id="sound-hint">Bấm vào màn hình để bật âm thanh</div>

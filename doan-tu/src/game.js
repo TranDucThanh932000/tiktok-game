@@ -1,10 +1,12 @@
 // Luật chơi, không đụng tới mạng hay file: ai comment đúng từ đang đoán được +1 điểm
-// (có lượt x2 thì +2), mỗi người một lần mỗi từ. Bảng điểm cộng dồn cả buổi.
+// (có lượt x2 từ follow/share thì +2), mỗi người một lần mỗi từ. Bảng điểm cộng dồn cả buổi.
+// Quà không đụng tới điểm: quà nào cũng có cảnh vui trong lớp, góp vào quỹ lớp, và đưa tên người đó lên bảng.
 import { Puzzle } from './words.js';
 
 const BOARD_EVERY_MS = 400;
 const SAVED_PLAYERS = 5000;
 const SOLVER_NAMES = 12;
+const FUND_THANKS = 3;
 
 export class WordGame {
   constructor(config, { deck, emit = () => {}, now = Date.now, rng = Math.random }) {
@@ -22,10 +24,17 @@ export class WordGame {
       reveal: t.revealSeconds * 1000,
       socialGap: config.boost.socialGapSeconds * 1000,
     };
-    this.tiers = [...config.boost.tiers].sort((a, b) => b.coins - a.coins);
+    this.scenes = [...config.gifts.scenes].sort((a, b) => b.coins - a.coins);
+    this.fundGoal = config.gifts.fundGoal;
+    // Quà treo ảnh lên bảng (Tim cam / Heart Me), nhận theo tên hoặc mã quà; người gửi cuối cùng được treo.
+    const photo = config.gifts.photoGift;
+    this.photoNames = new Set(photo.names.map(giftKey));
+    this.photoIds = new Set(photo.ids.map(String));
+    this.photoIcon = photo.icon;
     this.players = new Map(); // id -> { id, key, name, score, reachedAt, look }
-    this.boosts = new Map(); // id -> lượt x2 còn lại
-    this.patrons = new Map(); // id -> hình quà
+    this.boosts = new Map(); // id -> lượt x2 còn lại (chỉ từ follow, share)
+    this.fund = { coins: 0, by: new Map() }; // quỹ lớp: xu góp từ quà; by: id -> { name, coins }
+    this.honor = null; // ảnh treo trên bảng: { id, name }
     this.socialAt = new Map();
     this.serial = 0;
     this.no = 0;
@@ -62,10 +71,7 @@ export class WordGame {
   board() {
     return this.ranking()
       .slice(0, this.config.seats)
-      .map((p) => {
-        const turns = this.boosts.get(p.id) ?? 0;
-        return { key: p.key, name: p.name, score: p.score, look: p.look, turns, icon: turns > 0 ? (this.patrons.get(p.id) ?? null) : null };
-      });
+      .map((p) => ({ key: p.key, name: p.name, score: p.score, look: p.look, turns: this.boosts.get(p.id) ?? 0 }));
   }
 
   sendBoard(t = this.now()) {
@@ -163,18 +169,69 @@ export class WordGame {
     return true;
   }
 
-  // ---------- Lượt x2 ----------
-  // Quà to tính theo mức gần nhất nhân lên (99 xu = 9 lần mức 10 xu), để quà to không bao giờ được ít hơn quà nhỏ.
-  turnsFor(coins) {
-    const tier = this.tiers.find((row) => coins >= row.coins);
-    return tier ? { turns: tier.turns * Math.floor(coins / tier.coins), icon: tier.icon } : null;
+  // ---------- Quà: cảnh vui, quỹ lớp, ảnh treo trên bảng (không đụng tới điểm) ----------
+  // Cảnh theo tổng xu của lần nhận: quà to hơn thì cảnh to hơn.
+  sceneFor(coins) {
+    return this.scenes.find((row) => coins >= row.coins) ?? null;
   }
 
-  gift(who, coins, count = 1) {
-    const reward = this.turnsFor(coins);
-    if (!reward) return null;
-    this.patrons.set(who.id, reward.icon);
-    return this.addTurns(who, reward.turns * count, { icon: reward.icon });
+  // image: hình quà thật từ TikTok (có thể rỗng), màn hình dùng hình của mức cảnh nếu không có. name, id: tên và mã quà TikTok.
+  gift(who, coins, count = 1, { image = '', name = '', id = '' } = {}) {
+    const total = coins * count;
+    const scene = this.sceneFor(total);
+    if (!scene) return null;
+    const player = this.player(who);
+    const photo = this.photoNames.has(giftKey(name)) || this.photoIds.has(String(id));
+    this.emit({ type: 'gift', key: player.key, name: player.name, avatar: player.avatar ?? '', look: player.look, coins: total, count, scene: scene.scene, photo, icon: image || (photo ? this.photoIcon : scene.icon) });
+    if (photo) this.hangPhoto(player);
+    this.addFund(player, total);
+    this.stateDirty = true;
+    return { scene: scene.scene, fund: this.fund.coins, photo };
+  }
+
+  // Ảnh treo trên bảng: người gửi quà treo ảnh cuối cùng.
+  hangPhoto(player) {
+    const changed = this.honor?.id !== player.id || this.honor.name !== player.name;
+    this.honor = { id: player.id, name: player.name };
+    if (changed) this.emit({ type: 'honor', ...this.publicHonor() });
+  }
+
+  // Ảnh TikTok chỉ có trong bộ nhớ: bật lại server thì hiện mặt chibi tới khi có người gửi tiếp.
+  publicHonor() {
+    if (!this.honor) return null;
+    const player = this.players.get(this.honor.id);
+    return { name: this.honor.name, avatar: player?.avatar ?? '', look: player?.look ?? lookOf(this.honor.id) };
+  }
+
+  addFund(player, coins) {
+    const fund = this.fund;
+    const before = fund.coins;
+    fund.coins += coins;
+    const mine = fund.by.get(player.id) ?? { name: player.name, coins: 0 };
+    mine.name = player.name;
+    mine.coins += coins;
+    fund.by.set(player.id, mine);
+    if (fund.coins < this.fundGoal) {
+      this.emit({ type: 'fund', coins: fund.coins, goal: this.fundGoal, near: before < this.fundGoal * 0.9 && fund.coins >= this.fundGoal * 0.9 });
+      return;
+    }
+    this.candy(Math.floor(fund.coins / this.fundGoal));
+    // Phần dư sang quỹ mới tính cho người vừa góp.
+    if (fund.coins > 0) fund.by.set(player.id, { name: player.name, coins: fund.coins });
+  }
+
+  // Quỹ đủ: cô phát kẹo cả lớp. Phần dư sang quỹ mới; quà quá to thì một lần phát kẹo vẫn tính đủ số lần.
+  candy(times = 1) {
+    const fund = this.fund;
+    const thanks = [...fund.by.entries()]
+      .sort((a, b) => b[1].coins - a[1].coins)
+      .slice(0, FUND_THANKS)
+      .map(([id, row]) => ({ name: row.name, avatar: this.players.get(id)?.avatar ?? '', look: this.players.get(id)?.look ?? 0 }));
+    fund.coins = Math.max(0, fund.coins - times * this.fundGoal);
+    fund.by = new Map();
+    this.stateDirty = true;
+    this.emit({ type: 'candy', times, thanks, coins: fund.coins, goal: this.fundGoal });
+    return true;
   }
 
   // Follow, share: mỗi người tính tối đa một lần mỗi socialGap (dùng chung cho cả hai).
@@ -184,16 +241,16 @@ export class WordGame {
     this.socialAt.delete(who.id);
     this.socialAt.set(who.id, t);
     if (this.socialAt.size > 5000) this.socialAt.delete(this.socialAt.keys().next().value);
-    return this.addTurns(who, this.config.boost.socialTurns, { kind });
+    return this.addTurns(who, this.config.boost.socialTurns, kind);
   }
 
-  addTurns(who, added, { icon, kind }) {
+  addTurns(who, added, kind) {
     const player = this.player(who);
     const turns = (this.boosts.get(who.id) ?? 0) + added;
     this.boosts.set(who.id, turns);
     this.stateDirty = true;
     this.boardDirty = true;
-    this.emit({ type: 'boost', key: player.key, name: player.name, added, turns, icon: icon ?? null, kind: kind ?? null });
+    this.emit({ type: 'boost', key: player.key, name: player.name, added, turns, kind });
     return { added, turns };
   }
 
@@ -208,14 +265,17 @@ export class WordGame {
       reveal: this.phase === 'reveal' ? this.publicReveal() : null,
       board: this.board(),
       players: this.ranking().length,
+      fund: { coins: this.fund.coins, goal: this.fundGoal },
+      honor: this.publicHonor(),
     };
   }
 
   reset() {
     this.players.clear();
     this.boosts.clear();
-    this.patrons.clear();
     this.socialAt.clear();
+    this.fund = { coins: 0, by: new Map() };
+    this.honor = null;
     this.no = 0;
     this.stateDirty = true;
     this.ask(this.now());
@@ -229,7 +289,8 @@ export class WordGame {
       no: this.no,
       players: keep.map(({ id, name, score, reachedAt }) => ({ id, name, score, reachedAt })),
       boosts: [...this.boosts].filter(([id]) => this.players.has(id)),
-      patrons: [...this.patrons].filter(([id]) => this.boosts.has(id)),
+      fund: { coins: this.fund.coins, by: [...this.fund.by].map(([id, row]) => [id, row.name, row.coins]) },
+      honor: this.honor && { id: this.honor.id, name: this.honor.name },
     };
   }
 
@@ -245,10 +306,22 @@ export class WordGame {
     for (const [id, turns] of Array.isArray(state.boosts) ? state.boosts : []) {
       if (this.players.has(id) && Number.isInteger(turns) && turns > 0) this.boosts.set(id, turns);
     }
-    for (const [id, icon] of Array.isArray(state.patrons) ? state.patrons : []) {
-      if (this.boosts.has(id) && typeof icon === 'string') this.patrons.set(id, icon);
+    // Bảng điểm cũ có lượt x2 từ quà (luật trước) thì vẫn giữ cho tới khi dùng hết.
+    const fund = state.fund;
+    if (Number.isInteger(fund?.coins) && fund.coins >= 0) {
+      this.fund.coins = Math.min(fund.coins, this.fundGoal - 1);
+      for (const [id, name, coins] of Array.isArray(fund.by) ? fund.by : []) {
+        if (typeof id === 'string' && typeof name === 'string' && Number.isInteger(coins) && coins > 0) this.fund.by.set(id, { name, coins });
+      }
     }
+    const honor = state.honor;
+    if (typeof honor?.id === 'string' && typeof honor.name === 'string') this.honor = { id: honor.id, name: honor.name };
   }
+}
+
+// So tên quà không phân biệt hoa thường, khoảng trắng.
+function giftKey(name) {
+  return String(name ?? '').toLowerCase().replace(/\s+/g, '');
 }
 
 // Kiểu tóc, màu da của hình chibi: cố định theo người chơi.

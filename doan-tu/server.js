@@ -21,14 +21,16 @@ const host = '127.0.0.1';
 
 const timing = config.timing ?? {};
 const positive = (key) => Number.isFinite(timing[key]) && timing[key] > 0;
-const tiers = config.boost?.tiers;
+const scenes = config.gifts?.scenes;
 const problems = [
   [Number.isInteger(config.seats) && config.seats >= 8 && config.seats <= 64, 'seats là số chỗ ngồi trong lớp (top bảng điểm), từ 8 đến 64'],
   [['wordSeconds', 'afterFirstSeconds', 'revealSeconds'].every(positive) && timing.graceSeconds >= 0 && timing.hintEverySeconds >= 0, 'timing cần số giây lớn hơn 0 (graceSeconds, hintEverySeconds để 0 được)'],
   [config.hints?.start >= 0 && config.hints.max <= 1 && config.hints.max >= config.hints.start, 'hints.start và hints.max là tỉ lệ chữ cái được mở, từ 0 đến 1, max không nhỏ hơn start'],
   [Number.isInteger(config.boost?.multiplier) && config.boost.multiplier >= 1, 'boost.multiplier là số lần nhân điểm, số nguyên từ 1'],
   [Number.isInteger(config.boost?.socialTurns) && config.boost.socialTurns >= 0 && config.boost.socialGapSeconds >= 0, 'boost.socialTurns và boost.socialGapSeconds từ 0 trở lên'],
-  [Array.isArray(tiers) && tiers.length && tiers.every((t) => t.coins >= 1 && Number.isInteger(t.turns) && t.turns >= 1 && t.label && t.icon), 'mỗi mức trong boost.tiers cần coins, turns, label, icon'],
+  [Number.isInteger(config.gifts?.fundGoal) && config.gifts.fundGoal >= 1, 'gifts.fundGoal là số xu quỹ lớp, từ 1'],
+  [Array.isArray(config.gifts?.photoGift?.names) && Array.isArray(config.gifts.photoGift.ids) && config.gifts.photoGift.label && config.gifts.photoGift.hint && config.gifts.photoGift.icon, 'gifts.photoGift (quà treo ảnh lên bảng) cần label, hint, names, ids, icon'],
+  [Array.isArray(scenes) && scenes.length && scenes.every((t) => t.coins >= 1 && ['rose', 'kem', 'pig'].includes(t.scene) && t.label && t.hint && t.icon), 'mỗi mức trong gifts.scenes cần coins, scene (rose, kem hoặc pig), label, hint (chữ ngắn hiện dưới hình quà), icon'],
 ].filter(([ok]) => !ok);
 if (problems.length) throw new Error(`config.json: ${problems.map(([, text]) => text).join('; ')}`);
 const bankProblems = validateBank(bank);
@@ -39,7 +41,9 @@ const guide = {
   seats: config.seats,
   multiplier: config.boost.multiplier,
   socialTurns: config.boost.socialTurns,
-  tiers: [...tiers].sort((a, b) => a.coins - b.coins).map(({ coins, turns, label, icon }) => ({ coins, turns, label, icon })),
+  fundGoal: config.gifts.fundGoal,
+  scenes: [...scenes].sort((a, b) => a.coins - b.coins).map(({ coins, scene, label, hint, icon }) => ({ coins, scene, label, hint, icon })),
+  photoGift: { label: config.gifts.photoGift.label, hint: config.gifts.photoGift.hint, icon: config.gifts.photoGift.icon, name: config.gifts.photoGift.names[0] ?? '' },
 };
 
 const vbee = {
@@ -134,7 +138,9 @@ function logEvent(msg) {
   if (msg.type === 'word') current = msg;
   if (msg.type === 'correct') console.log(`[Đoán đúng] ${msg.name} +${msg.delta}${msg.boosted ? ' (x2)' : ''} · ${msg.score} điểm${msg.first ? ' · đầu tiên' : ''}`);
   if (msg.type === 'reveal') console.log(`[Từ ${current?.no ?? '?'}] ${msg.answer} · ${msg.count} bạn đoán đúng`);
-  if (msg.type === 'boost') console.log(`[x2] ${msg.name} +${msg.added} lượt (${msg.kind ?? 'quà'}), còn ${msg.turns}`);
+  if (msg.type === 'boost') console.log(`[x2] ${msg.name} +${msg.added} lượt (${msg.kind}), còn ${msg.turns}`);
+  if (msg.type === 'honor') console.log(`[Tên trên bảng] ${msg.name}`);
+  if (msg.type === 'candy') console.log(`[Quỹ lớp] Đủ rồi, cô phát kẹo${msg.times > 1 ? ` (${msg.times} lần)` : ''}. Cảm ơn: ${msg.thanks.map((t) => t.name).join(', ')}`);
 }
 
 const STATE_FILE = path.join(dataDir, 'board.json');
@@ -182,7 +188,7 @@ function safeImageUrl(value) {
 
 function viewer(user) {
   const raw = String(user?.nickname || user?.displayId || user?.uniqueId || '').replace(/\s+/g, ' ').trim();
-  const name = Array.from(raw).slice(0, 20).join('') || 'Ẩn danh';
+  const name = Array.from(raw).slice(0, 20).join('').trim() || 'Ẩn danh';
   const urls = user?.avatarThumb?.urlList ?? user?.avatarMedium?.urlList ?? user?.profilePicture?.url ?? [];
   // Trình duyệt không hiện được ảnh HEIC.
   const avatar = safeImageUrl(urls.find((url) => !/\.heic\b/i.test(url)) ?? urls[0] ?? '');
@@ -330,11 +336,14 @@ function connectTikTok() {
     if (count <= 0) return;
     const who = viewer(e.user);
     const coins = Number(gift.diamondCount) || 0;
-    console.log(`[Quà] ${who.name}: ${String(gift.giftName ?? gift.name ?? '').slice(0, 40)} (${coins} xu) x${count}`);
+    const giftName = String(gift.giftName ?? gift.name ?? '').slice(0, 40);
+    console.log(`[Quà] ${who.name}: ${giftName} #${e.giftId ?? ''} (${coins} xu) x${count}`);
     session.diamonds += coins * count;
     session.gifts += count;
     broadcast({ type: 'session', ...session });
-    game.gift(who, coins, count);
+    // Hình quà thật để cảnh trong lớp đúng món quà; không có thì dùng hình của mức cảnh.
+    const urls = gift.giftImage?.url ?? gift.image?.url ?? [];
+    game.gift(who, coins, count, { image: safeImageUrl(urls.find((url) => !/\.heic\b/i.test(url)) ?? ''), name: giftName, id: e.giftId ?? '' });
   });
   conn.on(WebcastEvent.FOLLOW, (e) => game.social(viewer(e.user), 'follow'));
   conn.on(WebcastEvent.SHARE, (e) => game.social(viewer(e.user), 'share'));
@@ -407,7 +416,7 @@ const clampInt = (value, min, max) => Math.min(max, Math.max(min, Math.trunc(Num
 // JSON-only endpoints: browsers cannot send application/json cross-site without a CORS preflight.
 app.post('/api/simulate', (req, res) => {
   if (!req.is('application/json')) return res.status(415).end();
-  const { kind, name, text, coins, count, avatar } = req.body ?? {};
+  const { kind, name, text, coins, count, avatar, giftName } = req.body ?? {};
   const nickname = typeof name === 'string' && name.trim() ? name : 'Bạn thử';
   const who = viewer({ id: `sim:${nickname}`, nickname, avatarThumb: { urlList: typeof avatar === 'string' ? [avatar.slice(0, 1000)] : [] } });
   if (kind === 'chat') return res.json({ result: game.comment(who, String(text ?? '').slice(0, 200)) });
@@ -415,7 +424,7 @@ app.post('/api/simulate', (req, res) => {
     if (game.phase !== 'asking') return res.json({ result: false, message: 'Đang công bố đáp án, chờ từ mới nhé.' });
     return res.json({ result: game.comment(who, game.puzzle.answer) });
   }
-  if (kind === 'gift') return res.json({ result: game.gift(who, clampInt(coins, 1, 50_000), clampInt(count, 1, 999)) });
+  if (kind === 'gift') return res.json({ result: game.gift(who, clampInt(coins, 1, 50_000), clampInt(count, 1, 999), { name: typeof giftName === 'string' ? giftName.slice(0, 40) : '' }) });
   if (kind === 'follow' || kind === 'share') return res.json({ result: game.social(who, kind) });
   res.status(400).json({ error: 'kind không hợp lệ' });
 });
@@ -423,6 +432,7 @@ app.post('/api/simulate', (req, res) => {
 const controls = {
   letter: () => game.openLetter(),
   skip: () => game.skip(),
+  candy: () => game.candy(),
   reset: () => {
     game.reset();
     return true;

@@ -28,16 +28,24 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #2b1d12; }
 #stage > * { position: absolute; }
 
 
-#banner {
-  left: 50%; top: 18px; z-index: 2; width: 640px; height: 62px; transform: translateX(-50%);
-  display: flex; align-items: center; justify-content: center;
-  background: var(--red); border: 4px solid #fff3d6; border-radius: 999px; box-shadow: 0 5px 0 rgba(120, 40, 30, .35);
-  color: var(--gold); font: 700 36px var(--bold); letter-spacing: 3px; white-space: nowrap;
+/* Dải quà ngay dưới bảng: hình quà to, cạnh là chuyện xảy ra trong lớp. */
+#menu {
+  left: 12px; top: 746px; z-index: 3; width: 1056px; height: 82px; padding: 0 18px;
+  display: flex; align-items: center; justify-content: space-around;
+  border: 4px solid #f0b43a; border-radius: 999px; background: linear-gradient(#fffcef, #ffeeb3);
+  box-shadow: 0 5px 0 rgba(90, 50, 20, .3); animation: guide-glow 1.4s ease-in-out infinite alternate;
 }
+.menu-item { display: flex; align-items: center; gap: 6px; font: 700 32px var(--bold); color: #6b3a14; white-space: nowrap; }
+.menu-item img { width: 70px; height: 70px; object-fit: contain; filter: drop-shadow(0 3px 2px rgba(90, 50, 20, .3)); animation: guide-bob 1.2s ease-in-out infinite alternate; }
+.menu-item:nth-child(2) img { animation-delay: .3s; }
+.menu-item:nth-child(3) img { animation-delay: .6s; }
+.menu-item:nth-child(4) img { animation-delay: .9s; }
+.menu-item:last-child { color: var(--red); }
+.menu-item.hit { animation: menu-hit .6s cubic-bezier(.2, 1.6, .4, 1); }
 
 /* ---------- Bảng ---------- */
 #board {
-  left: 12px; top: 92px; width: 1056px; height: 730px;
+  left: 12px; top: 8px; width: 1056px; height: 730px;
   padding: 4px 14px 0; display: flex; flex-direction: column;
   /* Khung gỗ và khay phấn cắt từ ảnh lớp, kéo giãn theo chiều dọc cho vừa chữ. */
   border-style: solid; border-width: 38px 40px 68px;
@@ -93,22 +101,46 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #2b1d12; }
 .doodle.smile { right: -6px; bottom: 2px; animation: bob 1.4s ease-in-out infinite alternate; }
 
 
-/* ---------- Dưới bảng: đồng hồ, bảng x2, cô giáo ---------- */
-#clock { left: 976px; top: 4px; z-index: 2; width: 84px; height: 84px; background: url(/chibi/dong-ho.webp) center / contain no-repeat; filter: drop-shadow(0 3px 2px rgba(40, 70, 60, .35)); }
-#clock svg { display: block; width: 100%; height: 100%; }
+/* ---------- Dưới dải quà: ảnh treo, bảng x2 và quỹ lớp, cô giáo ---------- */
 
 #guide {
-  left: 34px; top: 840px; z-index: 4; transform: scale(.84); transform-origin: 0 0; width: max-content; height: 124px;
-  display: flex; align-items: center; gap: 16px; padding: 4px 22px;
+  left: 212px; top: 848px; z-index: 4; transform: scale(.78); transform-origin: 0 0; width: max-content; height: 124px;
+  display: flex; align-items: stretch; gap: 18px; padding: 6px 22px;
   border: 5px solid #f0b43a; border-radius: 24px; background: linear-gradient(#fffcef, #ffeeb3); color: #5a3519;
   box-shadow: 0 5px 0 rgba(90, 50, 20, .3); animation: guide-glow 1.4s ease-in-out infinite alternate;
 }
-#guide h3 { margin: 0; width: 2.4em; font: 700 34px var(--bold); line-height: 1.05; text-align: center; color: var(--red); }
-#guide div { display: flex; flex-direction: column; align-items: center; font: 700 30px var(--bold); line-height: 1.1; white-space: nowrap; color: #6b3a14; }
-#guide img { width: 72px; height: 72px; object-fit: contain; filter: drop-shadow(0 3px 2px rgba(90, 50, 20, .3)); animation: guide-bob 1.2s ease-in-out infinite alternate; }
-#guide div:nth-of-type(2) img { animation-delay: .3s; }
-#guide div:nth-of-type(3) img { animation-delay: .6s; }
+#guide.pulse { animation: guide-pulse .5s ease-out, guide-glow 1.4s ease-in-out infinite alternate; }
+#guide h3 { margin: 0; width: 2.4em; align-self: center; font: 700 34px var(--bold); line-height: 1.05; text-align: center; color: var(--red); }
+.g-x2 { display: flex; align-items: center; gap: 12px; padding-right: 18px; border-right: 3px dashed #e8c070; }
+#guide .social { display: flex; flex-direction: column; align-items: center; font: 700 30px var(--bold); line-height: 1.1; white-space: nowrap; color: #6b3a14; }
 #guide .social small { font-size: 24px; }
+/* Quỹ lớp: quà nào cũng góp vào, đủ thì cô phát kẹo cả lớp. */
+.g-fund { width: 400px; display: flex; flex-direction: column; justify-content: center; gap: 4px; }
+.fund-head { display: flex; justify-content: space-between; align-items: baseline; font: 700 30px var(--bold); line-height: 1; color: var(--red); white-space: nowrap; }
+.fund-head b { font-size: 28px; color: #6b3a14; }
+.fund-bar { height: 26px; border: 3px solid #d99a2b; border-radius: 999px; background: #fff6d6; overflow: hidden; }
+.fund-bar i { display: block; height: 100%; width: 0; border-radius: 999px; background: linear-gradient(90deg, #ff8fb8, #ffd84d); transition: width .8s cubic-bezier(.3, 1.4, .5, 1); }
+#guide.near .fund-bar i { animation: fund-near .6s ease-in-out infinite alternate; }
+.g-fund small { font: 700 22px var(--bold); color: #8a5a2b; white-space: nowrap; }
+
+/* Ảnh treo dưới mép trái bảng: người gửi Tim cam cuối cùng. Khung trống thì chỉ cách lên. */
+#photo {
+  left: 26px; top: 848px; z-index: 5; width: 172px; display: flex; flex-direction: column; align-items: center;
+  transform: rotate(-3deg); transform-origin: 50% 0; filter: drop-shadow(0 5px 3px rgba(60, 40, 20, .35));
+}
+#photo.pop { animation: photo-pop .8s cubic-bezier(.2, 1.5, .4, 1); }
+#photo-pin { position: absolute; z-index: 2; left: 50%; top: -22px; width: 50px; height: 50px; margin-left: -25px; object-fit: contain; animation: guide-bob 1.2s ease-in-out infinite alternate; }
+.photo-label { margin-top: 18px; padding: 1px 10px; border-radius: 10px 10px 0 0; background: var(--red); color: var(--gold); font: 700 19px var(--bold); white-space: nowrap; }
+.photo-frame { position: relative; width: 156px; height: 156px; padding: 9px; border-radius: 10px; background: #fffdf6; box-shadow: 0 0 0 4px #f0b43a, 0 0 18px 4px rgba(255, 214, 60, .8); }
+#photo-img, #photo-face { width: 138px; height: 138px; border-radius: 6px; object-fit: cover; background: #ffe9b0; overflow: hidden; position: relative; }
+/* Phóng to khung "quay lại cười" cho đầu vừa khung ảnh. */
+#photo-face .kid { inset: auto; left: 50%; top: -34px; width: 180px; height: 265px; margin-left: -90px; }
+#photo-how { display: none; }
+#photo-name { max-width: 172px; margin-top: 6px; padding: 1px 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; border-radius: 999px; background: #3f2410; color: #fffde0; font: 700 24px var(--bold); box-shadow: 0 0 0 3px var(--glow); }
+#photo.empty .photo-frame { box-shadow: 0 0 0 4px #f0b43a; background: rgba(255, 253, 246, .85); }
+#photo.empty #photo-how { position: absolute; inset: 9px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; border: 3px dashed #e0b25a; border-radius: 6px; color: #8a5a2b; font: 700 24px var(--bold); }
+#photo.empty #photo-how img { width: 70px; height: 70px; object-fit: contain; animation: guide-bob 1.2s ease-in-out infinite alternate; }
+#photo.empty #photo-pin, #photo.empty #photo-name { display: none; }
 
 /* Cô giáo: kích thước, vị trí và khung hình do main.js đặt (ảnh public/chibi/co-giao.webp). */
 #teacher { z-index: 6; transform-origin: 50% 100%; filter: drop-shadow(0 4px 3px rgba(60, 40, 20, .28)); }
@@ -174,9 +206,22 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #2b1d12; }
   font: 700 18px var(--bold); box-shadow: 0 2px 0 #b8285a; white-space: nowrap;
 }
 .seat.boosted .turns { display: block; }
-.gifticon { position: absolute; display: none; object-fit: contain; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, .35)); animation: bob 1.4s ease-in-out infinite alternate; }
-.seat.vip .gifticon { display: block; }
-.seat.vip:not(.top-1, .top-2, .top-3) .plate { background: #8e1d6b; box-shadow: 0 0 0 3px #ff8fc4, 0 0 16px 4px rgba(255, 111, 165, .85); }
+/* Cả lớp quay lại cười, giơ tay (quà, phát kẹo). */
+#class.cheer .seat:not(.ghost) .sprite { animation: bounce .55s ease-out 3; }
+#class.cheer .seat:not(.ghost) .sprite .kid { animation: wave-arm .4s ease-in-out infinite alternate; transform-origin: 50% 90%; }
+
+/* Cảnh quà: bạn chạy lên đưa quà cho cô, heo chạy quanh lớp. */
+.visitor { overflow: visible; }
+.visitor .held { position: absolute; left: 50%; top: -6%; width: 62%; aspect-ratio: 1; transform: translateX(-30%); object-fit: contain; filter: drop-shadow(0 3px 2px rgba(0, 0, 0, .3)); animation: bob .5s ease-in-out infinite alternate; }
+.visitor-name {
+  position: absolute; left: 50%; bottom: 100%; transform: translateX(-50%); max-width: 260px; padding: 1px 12px; border-radius: 999px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; background: var(--pink); color: #fff; font: 700 22px var(--bold); box-shadow: 0 2px 0 #b8285a;
+}
+.visitor .visitor-name { bottom: auto; top: -38px; }
+.pig { position: absolute; left: 0; top: 0; pointer-events: none; }
+.pig img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 6px 3px rgba(60, 30, 10, .35)); }
+.pig .visitor-name { bottom: 96%; font-size: 26px; }
+.heart { position: absolute; color: #ff4f8b; font-size: 34px; line-height: 1; pointer-events: none; text-shadow: 0 2px 0 #fff; }
 
 
 .card {
@@ -190,7 +235,7 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #2b1d12; }
 .float { position: absolute; color: var(--gold); font: 700 46px var(--bold); -webkit-text-stroke: 2px #5a3519; paint-order: stroke fill; white-space: nowrap; pointer-events: none; }
 .float.x2 { color: #ffb3d0; }
 .spark { position: absolute; width: 14px; height: 14px; border-radius: 3px; pointer-events: none; }
-.flyer { position: absolute; width: 96px; height: 96px; object-fit: contain; pointer-events: none; }
+.flyer { position: absolute; object-fit: contain; pointer-events: none; display: grid; place-items: center; line-height: 1; }
 
 #fx { left: 0; top: 0; width: 1080px; height: 1920px; pointer-events: none; z-index: 200; }
 
@@ -201,6 +246,7 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #2b1d12; }
 }
 #toast.big { background: var(--red); color: var(--gold); font-size: 46px; box-shadow: 0 0 26px var(--glow); }
 #toast img { width: 52px; height: 52px; object-fit: contain; margin: -6px 0; }
+#toast img.avatar { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 3px solid var(--gold); margin: -8px 0 -8px -12px; }
 #toast b { font-weight: 400; color: var(--gold); }
 #toast.big b { color: #fff; }
 
@@ -233,6 +279,22 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #2b1d12; }
 #spot-info { margin-top: 2px; font-size: 36px; color: #6b3a14; }
 #spot-info b { font-family: var(--bold); color: var(--pink); }
 
+/* ---------- Quỹ đủ: cô phát kẹo cả lớp ---------- */
+#candy {
+  left: 50%; top: 560px; z-index: 185; width: 940px; transform: translateX(-50%); pointer-events: none;
+  display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 18px 26px 20px;
+  border: 8px solid #ff8fb8; border-radius: 36px; background: linear-gradient(#fff8fb, #ffe0ec);
+  box-shadow: 0 8px 0 rgba(150, 40, 80, .35), 0 0 50px 14px rgba(255, 143, 184, .85);
+}
+#candy.show { animation: spot-in .6s cubic-bezier(.2, 1.5, .4, 1) both; }
+#candy.hide { animation: spot-out .45s ease-in both; }
+.candy-title { font: 700 56px var(--bold); color: #d3265f; letter-spacing: 1px; white-space: nowrap; animation: beat .5s ease-in-out infinite alternate; }
+#candy-thanks { max-width: 100%; display: flex; align-items: center; justify-content: center; gap: 16px; font-size: 30px; color: #8e1d4b; }
+#candy-thanks:empty { display: none; }
+.candy-who { min-width: 0; display: flex; align-items: center; gap: 8px; padding: 2px 14px 2px 4px; border-radius: 999px; background: #fff; box-shadow: 0 2px 0 rgba(150, 40, 80, .25); }
+.candy-who img { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; border: 3px solid #ff8fb8; }
+.candy-who b { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 700 30px var(--bold); }
+
 #sound-hint { left: 50%; bottom: 40px; transform: translateX(-50%); z-index: 300; padding: 6px 20px; border-radius: 999px; background: rgba(0, 0, 0, .6); color: #fff; font: 24px "Segoe UI", sans-serif; }
 
 @keyframes pop { from { transform: translateX(-50%) scale(.2); opacity: 0; } to { transform: translateX(-50%) scale(1); opacity: 1; } }
@@ -253,3 +315,7 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #2b1d12; }
 @keyframes sway { from { rotate: -6deg; } to { rotate: 6deg; } }
 @keyframes guide-bob { from { transform: translateY(2px) scale(.96); } to { transform: translateY(-4px) scale(1.06); } }
 @keyframes guide-glow { from { box-shadow: 0 5px 0 rgba(90, 50, 20, .3), 0 0 6px 2px rgba(255, 200, 60, .45); } to { box-shadow: 0 5px 0 rgba(90, 50, 20, .3), 0 0 24px 8px rgba(255, 200, 60, .95); } }
+@keyframes photo-pop { 0% { transform: rotate(-20deg) scale(.3); opacity: 0; } 60% { transform: rotate(4deg) scale(1.12); opacity: 1; } 100% { transform: rotate(-3deg) scale(1); } }
+@keyframes guide-pulse { 0% { scale: 1; } 40% { scale: 1.06; } 100% { scale: 1; } }
+@keyframes fund-near { from { filter: brightness(1); } to { filter: brightness(1.25) saturate(1.3); } }
+@keyframes menu-hit { 0% { transform: scale(1); } 40% { transform: scale(1.25); } 100% { transform: scale(1); } }

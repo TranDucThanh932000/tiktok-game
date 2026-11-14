@@ -87,14 +87,14 @@ test('mở chữ cuối thì nói khác; giữa từ chưa ai ra thì động vi
   assert.deepEqual(said.slice(2).map((s) => s.text), [lines.encourage[0]]);
 });
 
-test('follow, share cảm ơn riêng, quà thì chỉ báo nhân đôi', async () => {
+test('follow, share cảm ơn riêng', async () => {
   const { teacher, said, flush, advance } = setup();
-  for (const kind of ['follow', 'share', null]) {
+  for (const kind of ['follow', 'share']) {
     teacher.onEvent({ type: 'boost', name: 'Chi', kind });
     await flush();
     advance(5000);
   }
-  assert.deepEqual(said.map((s) => s.text), [`Chi ${lines.boostFollow[0]}`, `Chi ${lines.boostShare[0]}`, `Chi ${lines.boost[0]}`]);
+  assert.deepEqual(said.map((s) => s.text), [`Chi ${lines.boostFollow[0]}`, `Chi ${lines.boostShare[0]}`]);
 });
 
 test('đoán ra đầu tiên: đọc tên rồi lời khen; tên không đọc được thì khen chung', async () => {
@@ -120,7 +120,7 @@ test('lời phụ chờ cô nói xong mới đọc, chờ quá lâu thì bỏ', 
   await flush();
   assert.equal(said.length, 2);
   assert.equal(said[1].text, lines.letter[0]);
-  teacher.onEvent({ type: 'boost', name: 'Chi' });
+  teacher.onEvent({ type: 'boost', name: 'Chi', kind: 'follow' });
   advance(9000);
   teacher.tick();
   await flush();
@@ -152,10 +152,10 @@ test('sắp hết giờ thì giục một lần mỗi từ', async () => {
 
 test('thiếu tên trong lời phụ thì chỉ hiện chữ; tắt Vbee hoặc chế độ an toàn thì chỉ hiện chữ', async () => {
   const a = setup({ missing: ['Chi'] });
-  a.teacher.onEvent({ type: 'boost', name: 'Chi' });
+  a.teacher.onEvent({ type: 'boost', name: 'Chi', kind: 'follow' });
   await a.flush();
   assert.deepEqual(a.said[0].clips, []);
-  assert.equal(a.said[0].text, `Chi ${lines.boost[0]}`);
+  assert.equal(a.said[0].text, `Chi ${lines.boostFollow[0]}`);
 
   const b = setup({ enabled: false });
   b.teacher.onEvent({ type: 'letter' });
@@ -189,8 +189,83 @@ test('công bố gọi tên bạn nhanh nhất; tên chưa có giọng sẵn th�
 test('mọi lời thoại tĩnh đều có trong danh sách tạo sẵn', () => {
   const { teacher } = setup();
   const parts = teacher.staticParts();
-  for (const key of ['newWord', 'letter', 'lastLetter', 'encourage', 'hurry', 'first', 'firstFast', 'firstNoName', 'answerIs', 'fastestIs', 'nobody', 'one', 'some', 'many', 'boost', 'boostFollow', 'boostShare'])
+  for (const key of ['newWord', 'letter', 'lastLetter', 'encourage', 'hurry', 'first', 'firstFast', 'firstNoName', 'answerIs', 'fastestIs', 'nobody', 'one', 'some', 'many', 'boostFollow', 'boostShare', 'giftRose', 'giftKem', 'giftPig', 'giftNoName', 'fundNear', 'candy'])
     for (const line of lines[key]) assert.ok(parts.includes(line), line);
   for (const line of Object.values(lines.milestones).flat()) assert.ok(parts.includes(line), line);
   assert.ok(!parts.some((p) => p.includes('{')), 'không tạo sẵn mẫu giới thiệu còn chỗ trống');
+});
+
+test('quà: gọi tên rồi chúc, quà to chúc dài hơn; tên không đọc được thì cảm ơn chung', async () => {
+  const { teacher, said, flush, advance } = setup();
+  teacher.onEvent({ type: 'gift', key: 'p1', name: 'Lan Anh 2k5', scene: 'rose' });
+  await flush();
+  assert.deepEqual(said[0].clips.map((c) => c.id), ['id:Lan Anh', `id:${lines.giftRose[0]}`]);
+  assert.equal(said[0].text, `Lan Anh 2k5, ${lines.giftRose[0]}`);
+  advance(5000);
+  teacher.onEvent({ type: 'gift', key: 'p2', name: 'Bình', scene: 'pig' });
+  await flush();
+  assert.equal(said[1].text, `Bình, ${lines.giftPig[0]}`);
+  advance(8000);
+  teacher.onEvent({ type: 'gift', key: 'p3', name: '🌸🌸', scene: 'kem' });
+  await flush();
+  assert.equal(said[2].text, lines.giftNoName[0]);
+});
+
+test('một người gửi liên tục chỉ được cảm ơn lại sau 20 giây, trừ khi quà to hơn', async () => {
+  const { teacher, said, flush, advance } = setup();
+  teacher.onEvent({ type: 'gift', key: 'p1', name: 'An', scene: 'rose' });
+  await flush();
+  advance(3000);
+  teacher.onEvent({ type: 'gift', key: 'p1', name: 'An', scene: 'rose' });
+  await flush();
+  assert.equal(said.length, 1);
+  teacher.onEvent({ type: 'gift', key: 'p1', name: 'An', scene: 'kem' });
+  teacher.tick();
+  await flush();
+  assert.equal(said.length, 2, 'quà to hơn thì cảm ơn ngay');
+  advance(21_000);
+  teacher.onEvent({ type: 'gift', key: 'p1', name: 'An', scene: 'rose' });
+  await flush();
+  assert.equal(said.length, 3);
+});
+
+test('lời cảm ơn quà chen lên trước lời phụ, không bị từ mới cắt mất; từ mới đọc ngay sau', async () => {
+  const { teacher, said, flush, advance } = setup();
+  teacher.onEvent({ type: 'correct', first: true, name: 'An' });
+  await flush();
+  teacher.onEvent({ type: 'letter' });
+  teacher.onEvent({ type: 'gift', key: 'p1', name: 'Chi', scene: 'rose' });
+  advance(2500);
+  teacher.tick();
+  await flush();
+  assert.equal(said[1].text, `Chi, ${lines.giftRose[0]}`, 'cảm ơn trước lời mở chữ');
+  teacher.onEvent({ type: 'word', no: 2, topic: '🐾 Con vật', hint: 'Bắt chuột giỏi.' });
+  await flush();
+  assert.equal(said.length, 2, 'đang cảm ơn thì từ mới chờ');
+  advance(2500);
+  teacher.tick();
+  await flush();
+  assert.equal(said[2].text, lines.newWord[0]);
+  advance(3000);
+  teacher.tick();
+  await flush();
+  assert.equal(said.length, 3, 'lời mở chữ cũ đã bị từ mới bỏ');
+});
+
+test('quà: tên chưa tạo được giọng thì vẫn đọc lời chúc', async () => {
+  const { teacher, said, flush } = setup({ missing: ['Chi'] });
+  teacher.onEvent({ type: 'gift', key: 'p1', name: 'Chi', scene: 'kem' });
+  await flush();
+  assert.deepEqual(said[0].clips.map((c) => c.id), [`id:${lines.giftKem[0]}`]);
+});
+
+test('quỹ lớp gần đủ thì cô báo; đủ thì cô báo phát kẹo', async () => {
+  const { teacher, said, flush, advance } = setup();
+  teacher.onEvent({ type: 'fund', coins: 500, goal: 1000, near: false });
+  teacher.onEvent({ type: 'fund', coins: 950, goal: 1000, near: true });
+  await flush();
+  advance(3000);
+  teacher.onEvent({ type: 'candy', times: 1, thanks: [], coins: 0, goal: 1000 });
+  await flush();
+  assert.deepEqual(said.map((s) => s.text), [lines.fundNear[0], lines.candy[0]]);
 });

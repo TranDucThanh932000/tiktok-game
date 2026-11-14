@@ -34,7 +34,6 @@ const ROWS_TOP = 1080; // sàn gỗ của ảnh nền bắt đầu ở đây
 const ROWS_BOTTOM = 1912;
 const AISLE = 40;
 const TITLES = ['Lớp trưởng', 'Lớp phó', 'Lớp phó'];
-const GUIDE_SCALE = 0.84; // khớp #guide trong style.css
 // Cỡ hình học sinh: hệ số so với ảnh gốc ở hàng có scale = 1.
 const KID_SIZE = 0.8;
 // Cửa lớp ở mép trái bục giảng; học sinh đi trên bục ở độ cao này rồi xuống lối giữa (x = 540).
@@ -108,13 +107,10 @@ function buildClass(total) {
       Object.assign(badge.style, { left: `${cell / 2}px`, top: `${spriteTop - 14}px`, zIndex: 101 });
       const turns = el('div', 'turns');
       Object.assign(turns.style, { left: '2px', bottom: `${plateH + 2}px`, zIndex: z + 4 });
-      const giftSize = Math.round(42 * s);
-      const gift = Object.assign(new Image(), { className: 'gifticon', alt: '' });
-      Object.assign(gift.style, { width: `${giftSize}px`, height: `${giftSize}px`, left: `${Math.max(0, cell / 2 - spriteW * 0.5 - giftSize * 0.35)}px`, top: `${spriteTop + spriteH * 0.22}px`, zIndex: z + 4 });
 
-      seat.append(sprite, plate, score, card, badge, turns, gift);
+      seat.append(sprite, plate, score, card, badge, turns);
       root.append(seat);
-      const entry = { root: seat, sprite, kid, rank, name, score, card, badge, turns, gift, data: null, ghostLook: look, center: { x: x + cell / 2, y: y + rowH * 0.35 }, foot: { x: x + cell / 2, y: y + rowH - spriteBottom } };
+      const entry = { root: seat, sprite, kid, rank, name, score, card, badge, turns, data: null, ghostLook: look, center: { x: x + cell / 2, y: y + rowH * 0.35 }, foot: { x: x + cell / 2, y: y + rowH - spriteBottom } };
       paintKid(entry, look);
       seats.push(entry);
     }
@@ -123,10 +119,12 @@ function buildClass(total) {
   }
 }
 
+// Cả lớp quay lại cười (quà, phát kẹo) hoặc bạn đã đoán đúng: dáng quay mặt giơ tay; còn lại ngồi quay lưng.
 function paintKid(seat, look) {
   const { variant, flip } = kidLook(look);
   seat.look = look;
-  kidFrame(seat.kid, variant, seat.root.classList.contains('up') ? KF.wave : KF.sit, flip);
+  const cheering = $('class').classList.contains('cheer') && !seat.root.classList.contains('ghost');
+  kidFrame(seat.kid, variant, cheering || seat.root.classList.contains('up') ? KF.wave : KF.sit, flip);
 }
 
 // ---------- Học sinh đi lại: vào lớp từ cửa, đổi chỗ khi đổi hạng ----------
@@ -239,9 +237,7 @@ const seatOf = (key) => seats.findIndex((seat) => seat.data?.key === key);
 function setTurns(seat, player) {
   const turns = player?.turns ?? 0;
   seat.root.classList.toggle('boosted', turns > 0);
-  seat.root.classList.toggle('vip', Boolean(player?.icon && turns > 0));
   seat.turns.textContent = `x2 · ${turns}`;
-  if (player?.icon && seat.gift.getAttribute('src') !== player.icon) seat.gift.src = player.icon;
 }
 
 function markSolved(seat, key) {
@@ -407,20 +403,13 @@ setInterval(() => {
   }
 }, 100);
 
-setInterval(() => {
-  const now = new Date();
-  const minutes = now.getMinutes();
-  $('hand-m').setAttribute('transform', `rotate(${minutes * 6} 60 60)`);
-  $('hand-h').setAttribute('transform', `rotate(${(now.getHours() % 12) * 30 + minutes / 2} 60 60)`);
-}, 1000);
-
 // ---------- Cô giáo: đi lại trên bục giảng, chỉ bảng, nói, vỗ tay, reo hò ----------
 // Đứng ở góc phải bục; từ mới hoặc mở thêm chữ thì đi sang trái, cầm thước chỉ lên bảng rồi về chỗ.
 // Thỉnh thoảng tự đi dạo vài bước cho hình không đứng yên.
 const T_SIZE = 0.58;
 const T_FOOT = 1046;
 const T_HOME = 985;
-const T_POINT = 790;
+const T_POINT = 880;
 const teacher = { x: T_HOME, goal: T_HOME, mode: 'idle', until: 0, t: 0, talking: false, blinkAt: 2, wanderAt: 12, after: null };
 const teacherNode = $('teacher');
 const teacherSprite = el('i', 'tch');
@@ -494,7 +483,8 @@ function teacherTick(dt, now) {
   // Bong bóng lời cô luôn nằm bên trái cô, mũi nhọn chỉ vào cô.
   const bubble = $('bubble');
   bubble.style.right = `${W - (T.x - 62)}px`;
-  bubble.style.maxWidth = `${Math.min(860, T.x - 90)}px`;
+  // Không tràn sang khung ảnh treo dưới mép trái bảng (#photo, mép phải khoảng x = 200).
+  bubble.style.maxWidth = `${Math.min(860, T.x - 62 - 215)}px`;
 }
 
 // Một vòng lặp cho cô giáo và các bạn đang đi.
@@ -505,6 +495,7 @@ function loop(now) {
   lastFrame = now;
   teacherTick(dt, now);
   walkersTick(dt);
+  visitorsTick(dt);
   requestAnimationFrame(loop);
 }
 function ensureLoop() {
@@ -540,8 +531,8 @@ const teacherHappy = () => teacherAct('happy', 1900);
 // ---------- Hiệu ứng ----------
 const toasts = [];
 let toastTimer = 0;
-function toast(parts, { big = false, icon = '', first = false } = {}) {
-  const item = { parts, big, icon };
+function toast(parts, { big = false, icon = '', avatar = '', first = false } = {}) {
+  const item = { parts, big, icon, avatar };
   if (first) toasts.unshift(item);
   else if (toasts.length < 4) toasts.push(item);
   else toasts[toasts.length - 1] = item; // Đông người thì bỏ bớt, giữ tin mới nhất.
@@ -557,7 +548,12 @@ function nextToast() {
   }
   box.className = item.big ? 'big' : '';
   box.replaceChildren();
-  if (item.icon) box.append(Object.assign(new Image(), { src: item.icon, alt: '' }));
+  if (item.avatar) {
+    const face = Object.assign(new Image(), { className: 'avatar', src: item.avatar, alt: '', referrerPolicy: 'no-referrer' });
+    face.onerror = () => face.remove();
+    box.append(face);
+  }
+  if (item.icon) box.append(Object.assign(new Image(), { src: item.icon, alt: '', referrerPolicy: 'no-referrer' }));
   for (const part of item.parts) box.append(typeof part === 'string' ? part : el('b', '', part.b));
   box.hidden = false;
   toastTimer = setTimeout(nextToast, item.big ? 2400 : 1300);
@@ -582,20 +578,42 @@ function sparks(x, y, count = 16) {
     node.animate([{ transform: 'translate(0,0) rotate(0)', opacity: 1 }, { transform: `translate(${Math.cos(angle) * reach}px, ${Math.sin(angle) * reach + 50}px) rotate(320deg)`, opacity: 0 }], { duration: 800 + Math.random() * 500, easing: 'cubic-bezier(.15,.7,.4,1)' }).onfinish = () => node.remove();
   }
 }
-function flyIcon(src, index) {
-  const { center } = seats[index];
-  const node = Object.assign(new Image(), { className: 'flyer', src, alt: '' });
-  node.style.left = `${center.x - 48}px`;
-  node.style.top = `${center.y - 48}px`;
+// Toạ độ giữa một phần tử trên sân khấu 1080×1920 (sân khấu đang được thu nhỏ cho vừa cửa sổ).
+function stagePoint(node) {
+  const r = node.getBoundingClientRect();
+  const box = stage.getBoundingClientRect();
+  const k = box.width / W;
+  return { x: (r.left + r.width / 2 - box.left) / k, y: (r.top + r.height / 2 - box.top) / k };
+}
+
+// Một hình (quà, kẹo) bay vòng cung từ a tới b.
+function fly(node, a, b, { size = 90, ms = 900, lift = 120, delay = 0, end = 1, onDone } = {}) {
+  Object.assign(node.style, { left: `${b.x - size / 2}px`, top: `${b.y - size / 2}px`, width: `${size}px`, height: `${size}px`, fontSize: `${size * 0.8}px` });
+  node.classList.add('flyer');
   fx.append(node);
-  // Hình quà bay ra từ bảng x2 (đứng trước bàn cô).
-  const g = $('guide');
-  const fromX = g.offsetLeft + (g.offsetWidth * GUIDE_SCALE) / 2 - center.x;
-  const fromY = g.offsetTop + (g.offsetHeight * GUIDE_SCALE) / 2 - center.y;
-  node.animate([{ transform: `translate(${fromX}px, ${fromY}px) scale(.6)`, opacity: 0 }, { transform: `translate(${fromX * 0.5}px, ${fromY * 0.5 - 60}px) scale(1.3)`, opacity: 1, offset: 0.5 }, { transform: 'translate(0,0) scale(.8)', opacity: 1, offset: 0.92 }, { transform: 'translate(0,0) scale(1.5)', opacity: 0 }], { duration: 950, easing: 'ease-in-out' }).onfinish = () => {
+  const dx = a.x - b.x;
+  const dy = a.y - b.y;
+  node.animate(
+    [
+      { transform: `translate(${dx}px, ${dy}px) scale(.7)` },
+      { transform: `translate(${dx * 0.5}px, ${dy * 0.5 - lift}px) scale(1.15)`, offset: 0.5 },
+      { transform: `translate(0, 0) scale(${end})` },
+    ],
+    { duration: ms, delay, easing: 'ease-in-out', fill: 'backwards' },
+  ).onfinish = () => {
     node.remove();
-    sparks(center.x, center.y, 12);
+    onDone?.();
   };
+}
+
+// Hình quà thật từ TikTok; tải lỗi thì dùng hình của mức cảnh.
+function giftImage(src, fallback) {
+  const img = Object.assign(new Image(), { src: src || fallback, alt: '', referrerPolicy: 'no-referrer' });
+  img.onerror = () => {
+    img.onerror = null;
+    img.src = fallback;
+  };
+  return img;
 }
 
 // ---------- Nhanh nhất: ảnh TikTok (không tải được thì mặt chibi) và tên, hiện trong lúc công bố ----------
@@ -640,6 +658,338 @@ function hideSpotlight(now = false) {
   spotTimer = setTimeout(() => (box.hidden = true), 450);
 }
 
+
+// ---------- Quà: cảnh vui trong lớp (không đụng tới điểm) ----------
+// rose: chibi của người gửi chạy từ cửa lên đưa quà cho cô. kem: như vậy, thêm cả lớp quay lại cười.
+// pig: hình quà chạy một vòng quanh lớp, cô giật mình rồi reo. Xong cảnh, quà bay vào quỹ lớp.
+const sceneQueue = [];
+const visitors = new Set();
+const MAX_VISITORS = 3;
+const VISITOR_SIZE = 0.85;
+const VISIT_GAP_MS = 700;
+const SCENE_QUEUE = 8;
+let visitorsOut = 0;
+let lastVisitAt = 0;
+let pigBusy = false;
+
+const sceneIcon = (scene) => guide?.scenes.find((row) => row.scene === scene)?.icon ?? '/gifts/rose.webp';
+const teacherHand = () => ({ x: teacher.x - 62, y: 900 });
+
+function queueScene(msg) {
+  // Một người bấm liên tục (combo) thì gộp vào cảnh đang chờ của người đó.
+  const waiting = sceneQueue.find((row) => row.key === msg.key && row.scene === msg.scene);
+  if (waiting) waiting.count += msg.count;
+  else {
+    sceneQueue.push({ ...msg });
+    // Quá đông thì bỏ bớt cảnh nhỏ cũ nhất (thông báo và lời cô vẫn có).
+    if (sceneQueue.length > SCENE_QUEUE) sceneQueue.splice(Math.max(0, sceneQueue.findIndex((row) => row.scene === 'rose')), 1);
+  }
+  runScenes();
+}
+
+function runScenes() {
+  for (let i = 0; i < sceneQueue.length; ) {
+    const row = sceneQueue[i];
+    const free = row.scene === 'pig' ? !pigBusy : visitorsOut < MAX_VISITORS;
+    if (!free) {
+      i++;
+      continue;
+    }
+    sceneQueue.splice(i, 1);
+    if (row.scene === 'pig') pigRun(row);
+    else {
+      visitorsOut++;
+      const wait = Math.max(0, lastVisitAt + VISIT_GAP_MS - Date.now());
+      lastVisitAt = Date.now() + wait;
+      setTimeout(() => visit(row), wait);
+    }
+  }
+}
+
+// Quà vào quỹ lớp: bay từ tay cô xuống thanh quỹ.
+function giftToFund(src, scene, from) {
+  const bar = $('fund-bar');
+  if (!bar) return;
+  fly(giftImage(src, sceneIcon(scene)), from, stagePoint(bar), { size: 70, ms: 800, lift: 60, end: 0.4, onDone: () => restart($('guide'), 'pulse') });
+}
+
+function visit(row) {
+  const node = el('div', 'walker visitor');
+  const kid = el('i', 'kid');
+  const held = giftImage(row.icon, sceneIcon(row.scene));
+  held.className = 'held';
+  const tag = el('span', 'visitor-name', row.count > 1 ? `${row.name} x${row.count}` : row.name);
+  node.append(kid, held, tag);
+  $('class').append(node);
+  node.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 300 });
+  const v = { node, kid, held, row, variant: kidLook(row.look).variant, x: DOOR.x, t: 0, stage: 'in', wait: 0 };
+  visitors.add(v);
+  placeVisitor(v, 1);
+  ensureLoop();
+}
+
+function placeVisitor(v, dx) {
+  // To hơn bạn ngồi trong lớp; đứng sau bong bóng lời cô để lời cảm ơn không bị che.
+  const d = VISITOR_SIZE;
+  const width = KID.FW * d;
+  const height = KID.FH * d;
+  Object.assign(v.node.style, { left: `${v.x - width / 2}px`, top: `${DOOR.y - height}px`, width: `${width}px`, height: `${height}px`, zIndex: 130 });
+  // Đứng đưa quà thì quay mặt ra giơ tay; chạy thì dùng dáng đi ngang.
+  if (v.stage === 'give') kidFrame(v.kid, v.variant, KF.wave);
+  else kidFrame(v.kid, v.variant, KF.left[Math.floor(v.t / 0.12) % 2], dx > 0);
+}
+
+function visitorsTick(dt) {
+  for (const v of [...visitors]) {
+    v.t += dt;
+    if (v.stage === 'give') {
+      v.wait -= dt;
+      if (v.wait <= 0) v.stage = 'out';
+      placeVisitor(v, 0);
+      continue;
+    }
+    // Cô có thể đang đi chỉ bảng, nên đích là chỗ cô đang đứng.
+    const goal = v.stage === 'in' ? Math.max(DOOR.x + 80, teacher.x - 125) : DOOR.x;
+    const dx = goal - v.x;
+    const step = 560 * dt;
+    if (Math.abs(dx) > step) v.x += Math.sign(dx) * step;
+    else if (v.stage === 'in') {
+      v.x = goal;
+      v.stage = 'give';
+      v.wait = 1.5;
+      giveGift(v);
+    } else {
+      leave(v);
+      continue;
+    }
+    placeVisitor(v, dx);
+  }
+}
+
+function giveGift(v) {
+  const { row } = v;
+  const from = { x: v.x + 20, y: DOOR.y - KID.FH * VISITOR_SIZE * 0.95 };
+  v.held.hidden = true;
+  sfx.gift();
+  teacherAct('happy', 1900);
+  if (row.scene === 'kem') classCheer(2600);
+  const hand = teacherHand();
+  fly(giftImage(row.icon, sceneIcon(row.scene)), from, hand, {
+    size: 84,
+    ms: 600,
+    lift: 70,
+    onDone: () => {
+      sparks(hand.x, hand.y, row.scene === 'kem' ? 22 : 12);
+      hearts(hand.x, hand.y - 30, row.scene === 'kem' ? 6 : 3);
+      setTimeout(() => giftToFund(row.icon, row.scene, teacherHand()), 400);
+    },
+  });
+}
+
+function leave(v) {
+  visitors.delete(v);
+  v.node.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 300 }).onfinish = () => v.node.remove();
+  visitorsOut--;
+  runScenes();
+}
+
+function hearts(x, y, count) {
+  for (let i = 0; i < count; i++) {
+    const node = el('span', 'heart', '❤');
+    Object.assign(node.style, { left: `${x - 16 + (Math.random() - 0.5) * 80}px`, top: `${y}px` });
+    fx.append(node);
+    node.animate([{ transform: 'translateY(0) scale(.5)', opacity: 0 }, { transform: 'translateY(-30px) scale(1.1)', opacity: 1, offset: 0.25 }, { transform: `translateY(-${120 + Math.random() * 60}px) scale(1)`, opacity: 0 }], { duration: 1300 + Math.random() * 400, delay: i * 120, easing: 'ease-out', fill: 'backwards' }).onfinish = () => node.remove();
+  }
+}
+
+let cheerTimer = 0;
+function classCheer(ms) {
+  $('class').classList.add('cheer');
+  seats.forEach((seat) => paintKid(seat, seat.look));
+  clearTimeout(cheerTimer);
+  cheerTimer = setTimeout(() => {
+    $('class').classList.remove('cheer');
+    seats.forEach((seat) => paintKid(seat, seat.look));
+  }, ms);
+}
+
+// Heo chạy vòng quanh lớp: từ cửa sang phải, xuống cuối lớp, sang trái, lên lại bục giảng tới chỗ cô.
+function pigRun(row) {
+  pigBusy = true;
+  const size = 140;
+  const node = el('div', 'pig');
+  const img = giftImage(row.icon, sceneIcon('pig'));
+  node.append(img, el('span', 'visitor-name', row.count > 1 ? `${row.name} x${row.count}` : row.name));
+  Object.assign(node.style, { width: `${size}px`, height: `${size}px` });
+  fx.append(node);
+  const end = { x: Math.max(200, teacher.x - 150), y: 1040 };
+  const points = [{ x: DOOR.x + 30, y: 1050 }, { x: 1010, y: 1090 }, { x: 1010, y: 1850 }, { x: 70, y: 1850 }, { x: 70, y: 1120 }, end];
+  const lengths = points.slice(1).map((p, i) => Math.hypot(p.x - points[i].x, p.y - points[i].y));
+  const total = lengths.reduce((a, b) => a + b, 0);
+  const ms = (total / 760) * 1000;
+  let at = 0;
+  const moves = points.map((p, i) => {
+    if (i > 0) at += lengths[i - 1] / total;
+    return { transform: `translate(${p.x - size / 2}px, ${p.y - size}px)`, offset: Math.min(1, at) };
+  });
+  // Quay mặt theo hướng chạy ngang (đoạn chạy dọc giữ hướng cũ), đổi hướng tức thì ở điểm rẽ.
+  const faces = [];
+  let face = 1;
+  points.slice(0, -1).forEach((p, i) => {
+    const next = points[i + 1];
+    if (Math.abs(next.x - p.x) < 40) return;
+    const want = next.x > p.x ? 1 : -1;
+    if (faces.length && want === face) return;
+    if (faces.length) faces.push({ transform: `scaleX(${face})`, offset: Math.max(0, moves[i].offset - 0.0001) });
+    face = want;
+    faces.push({ transform: `scaleX(${face})`, offset: faces.length ? moves[i].offset : 0 });
+  });
+  faces.push({ transform: `scaleX(${face})`, offset: 1 });
+  img.animate(faces, { duration: ms, fill: 'forwards' });
+  sfx.oink();
+  teacherAct('surprised', 1600);
+  classCheer(ms + 1500);
+  const dust = setInterval(() => {
+    const p = stagePoint(img);
+    sparks(p.x, p.y + size * 0.4, 4);
+  }, 220);
+  node.animate(moves, { duration: ms, easing: 'linear', fill: 'forwards' }).onfinish = () => {
+    clearInterval(dust);
+    sfx.oink();
+    teacherAct('cheer', 2200);
+    sparks(end.x, end.y - 80, 40);
+    hearts(end.x, end.y - 120, 8);
+    setTimeout(() => {
+      const from = stagePoint(img);
+      node.remove();
+      giftToFund(row.icon, 'pig', from);
+      pigBusy = false;
+      runScenes();
+    }, 900);
+  };
+}
+
+// ---------- Ảnh treo trên bảng và quỹ lớp ----------
+// Người gửi Tim cam cuối cùng được treo ảnh TikTok (không tải được thì mặt chibi). Chưa có ai thì khung trống chỉ cách lên.
+function setPhoto(honor, { pop = false } = {}) {
+  const box = $('photo');
+  box.classList.toggle('empty', !honor);
+  $('photo-name').textContent = honor?.name ?? '';
+  const img = $('photo-img');
+  const face = $('photo-face');
+  if (!honor) {
+    img.hidden = true;
+    face.hidden = true;
+    return;
+  }
+  const { variant, flip } = kidLook(honor.look);
+  const faceKid = el('i', 'kid');
+  kidFrame(faceKid, variant, KF.wave, flip);
+  face.replaceChildren(faceKid);
+  img.hidden = !honor.avatar;
+  face.hidden = Boolean(honor.avatar);
+  img.onerror = () => {
+    img.hidden = true;
+    face.hidden = false;
+  };
+  if (honor.avatar) img.src = honor.avatar;
+  else img.removeAttribute('src');
+  if (pop) {
+    restart(box, 'pop');
+    const p = stagePoint(box);
+    sparks(p.x, p.y, 30);
+    sfx.gift();
+  }
+}
+
+let fundShown = { coins: 0, goal: 1 };
+function setFund({ coins, goal }) {
+  fundShown = { coins, goal };
+  const fill = $('fund-fill');
+  if (!fill) return;
+  fill.style.width = `${Math.min(100, (coins / goal) * 100)}%`;
+  $('fund-num').textContent = `${coins.toLocaleString('vi-VN')}/${goal.toLocaleString('vi-VN')}`;
+  $('guide').classList.toggle('near', coins >= goal * 0.9);
+}
+
+// Dải quà dưới bảng: Hoa hồng, Kem, Heo may mắn, Tim cam. Có quà tới thì ô của quà đó nảy lên.
+function buildMenu() {
+  const items = [...guide.scenes.map((row) => ({ ...row, key: row.scene })), { ...guide.photoGift, key: 'photo' }];
+  $('menu').replaceChildren(
+    ...items.map((row) => {
+      const item = el('div', 'menu-item');
+      item.dataset.key = row.key;
+      item.append(Object.assign(new Image(), { src: row.icon, alt: row.label }), el('span', '', row.hint));
+      return item;
+    }),
+  );
+}
+
+function pulseMenu(msg) {
+  const item = $('menu').querySelector(`[data-key="${msg.photo ? 'photo' : msg.scene}"]`);
+  if (item) restart(item, 'hit');
+}
+
+function buildGuide() {
+  const x2 = el('div', 'g-x2');
+  x2.append(el('h3', '', `ĐIỂM x${guide.multiplier}`));
+  if (guide.socialTurns) x2.append(socialGuide());
+  const head = el('div', 'fund-head');
+  const num = el('b');
+  num.id = 'fund-num';
+  head.append('🍬 QUỸ LỚP ', num);
+  const bar = el('div', 'fund-bar');
+  bar.id = 'fund-bar';
+  const fill = el('i');
+  fill.id = 'fund-fill';
+  bar.append(fill);
+  const fund = el('div', 'g-fund');
+  fund.append(head, bar, el('small', '', 'Đủ sẽ có sự kiện 🎉'));
+  $('guide').replaceChildren(x2, fund);
+  setFund(fundShown);
+}
+
+// ---------- Quỹ đủ: cô phát kẹo cả lớp ----------
+const CANDIES = ['🍬', '🍭', '🍫', '🍬', '🍡'];
+function candyParty(msg, tries = 0) {
+  // Chờ phần "bạn nhanh nhất" và cảnh heo chạy xong cho đỡ rối.
+  if ((!$('spotlight').hidden || pigBusy) && tries < 20) return setTimeout(() => candyParty(msg, tries + 1), 500);
+  const card = $('candy');
+  const thanks = $('candy-thanks');
+  thanks.replaceChildren();
+  if (msg.thanks.length) thanks.append(el('small', '', 'Cảm ơn'));
+  for (const row of msg.thanks) {
+    const who = el('span', 'candy-who');
+    if (row.avatar) {
+      const face = Object.assign(new Image(), { src: row.avatar, alt: '', referrerPolicy: 'no-referrer' });
+      face.onerror = () => face.remove();
+      who.append(face);
+    }
+    who.append(el('b', '', row.name));
+    thanks.append(who);
+  }
+  card.hidden = false;
+  restart(card, 'show');
+  sfx.candy();
+  teacherAct('cheer', 3200);
+  classCheer(5000);
+  // Thanh quỹ đầy rồi mới về số mới.
+  const fill = $('fund-fill');
+  if (fill) fill.style.width = '100%';
+  setTimeout(() => setFund({ coins: msg.coins, goal: msg.goal }), 1600);
+  const targets = seats.filter((seat) => seat.data).map((seat) => seat.center);
+  while (targets.length < 12) targets.push({ x: 80 + Math.random() * 920, y: 1150 + Math.random() * 700 });
+  const from = teacherHand();
+  targets.forEach((to, i) => {
+    fly(el('span', 'candy-bit', CANDIES[i % CANDIES.length]), from, to, { size: 54, ms: 900, lift: 160, delay: 300 + i * 70, onDone: () => sparks(to.x, to.y, 5) });
+  });
+  setTimeout(() => sparks(540, 700, 50), 200);
+  setTimeout(() => {
+    restart(card, 'hide');
+    setTimeout(() => (card.hidden = true), 450);
+  }, 5500);
+}
+
 // ---------- Nhận tin từ server ----------
 function setPlayers(count) {
   $('players').textContent = count ? `👥 ${count} bạn có điểm` : '';
@@ -649,6 +999,8 @@ function applyGame(game) {
   solved.clear();
   for (const key of game.solved) solved.set(key, 1);
   setPlayers(game.players);
+  setFund(game.fund);
+  setPhoto(game.honor);
   renderBoard(game.board);
   if (!game.word) return;
   showWord(game.word);
@@ -674,16 +1026,10 @@ function socialGuide() {
 const handlers = {
   snapshot(msg) {
     guide = msg.guide;
-    $('banner').textContent = guide.title;
-    $('guide').replaceChildren(
-      el('h3', '', `ĐIỂM x${guide.multiplier}`),
-      ...guide.tiers.map((tier) => {
-        const row = el('div');
-        row.append(Object.assign(new Image(), { src: tier.icon, alt: tier.label }), `${tier.turns} lượt`);
-        return row;
-      }),
-      ...(guide.socialTurns ? [socialGuide()] : []),
-    );
+    buildMenu();
+    buildGuide();
+    $('photo-pin').src = guide.photoGift.icon;
+    $('photo-how-icon').src = guide.photoGift.icon;
     if (seats.length !== guide.seats) buildClass(guide.seats);
     applyGame(msg.game);
   },
@@ -751,10 +1097,22 @@ const handlers = {
   say,
   boost(msg) {
     sfx.boost();
-    const index = seatOf(msg.key);
-    if (index >= 0 && msg.icon) flyIcon(msg.icon, index);
-    if (msg.kind) toast([{ b: msg.name }, ` x2 điểm · ${msg.added} lượt`]);
-    else toast([{ b: msg.name }, ` x2 điểm · ${msg.added} lượt`], { icon: msg.icon, first: true });
+    toast([{ b: msg.name }, ` x2 điểm · ${msg.added} lượt`]);
+  },
+  // Quà nhỏ: tên đã hiện trên đầu bạn chạy lên đưa quà, không cần thêm thông báo.
+  gift(msg) {
+    pulseMenu(msg);
+    if (msg.scene !== 'rose') toast(['❤ ', { b: msg.name }, msg.count > 1 ? ` x${msg.count}` : ''], { big: true, icon: msg.icon, avatar: msg.avatar, first: true });
+    queueScene(msg);
+  },
+  honor(msg) {
+    setPhoto(msg, { pop: true });
+  },
+  fund(msg) {
+    setFund(msg);
+  },
+  candy(msg) {
+    candyParty(msg);
   },
 };
 

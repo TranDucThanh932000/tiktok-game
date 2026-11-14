@@ -6,14 +6,14 @@ const config = {
   seats: 40,
   timing: { wordSeconds: 45, afterFirstSeconds: 10, hintEverySeconds: 8, graceSeconds: 1.5, revealSeconds: 6 },
   hints: { start: 0, max: 0.5 },
-  boost: {
-    multiplier: 2,
-    socialTurns: 1,
-    socialGapSeconds: 60,
-    tiers: [
-      { coins: 1, turns: 1, label: 'Hoa hồng', icon: '/gifts/rose.webp' },
-      { coins: 5, turns: 6, label: 'Kem', icon: '/gifts/kem.webp' },
-      { coins: 10, turns: 13, label: 'Heo may mắn', icon: '/gifts/lucky-pig.webp' },
+  boost: { multiplier: 2, socialTurns: 1, socialGapSeconds: 60 },
+  gifts: {
+    fundGoal: 100,
+    photoGift: { label: 'Tim cam', names: ['Heart Me', 'Tim cam'], ids: [7934], icon: '/gifts/heart-me.webp' },
+    scenes: [
+      { coins: 1, scene: 'rose', label: 'Hoa hồng', icon: '/gifts/rose.webp' },
+      { coins: 5, scene: 'kem', label: 'Kem', icon: '/gifts/kem.webp' },
+      { coins: 10, scene: 'pig', label: 'Heo may mắn', icon: '/gifts/lucky-pig.webp' },
     ],
   },
 };
@@ -121,18 +121,62 @@ test('đoán ra rồi thì thôi mở chữ', () => {
   assert.equal(of('letter').length, 1);
 });
 
-test('quà cho lượt x2 theo số xu, quà to tính theo mức gần nhất nhân lên', () => {
-  const { game } = setup();
-  assert.deepEqual(game.turnsFor(1), { turns: 1, icon: '/gifts/rose.webp' });
-  assert.deepEqual(game.turnsFor(5), { turns: 6, icon: '/gifts/kem.webp' });
-  assert.deepEqual(game.turnsFor(99), { turns: 117, icon: '/gifts/lucky-pig.webp' });
-  assert.equal(game.turnsFor(0), null);
-  assert.deepEqual(game.gift(who('An'), 5, 2), { added: 12, turns: 12 });
+test('quà không đụng tới điểm hay lượt x2: chỉ có cảnh theo tổng xu, hình quà thật nếu có', () => {
+  const { game, of } = setup();
+  assert.deepEqual(game.gift(who('An'), 1), { scene: 'rose', fund: 1, photo: false });
+  assert.deepEqual(game.gift(who('An'), 1, 5), { scene: 'kem', fund: 6, photo: false });
+  assert.deepEqual(game.gift(who('Bình'), 30, 1, { image: 'https://p16.tiktokcdn.com/g.png' }), { scene: 'pig', fund: 36, photo: false });
+  assert.equal(game.gift(who('Chi'), 0), null);
+  const gifts = of('gift');
+  assert.deepEqual(gifts.map((g) => [g.name, g.scene, g.coins, g.count]), [['An', 'rose', 1, 1], ['An', 'kem', 5, 5], ['Bình', 'pig', 30, 1]]);
+  assert.equal(gifts[0].icon, '/gifts/rose.webp');
+  assert.equal(gifts[2].icon, 'https://p16.tiktokcdn.com/g.png');
+  assert.equal(game.players.get('id:An').score, 0);
+  assert.equal(game.boosts.size, 0);
+  assert.equal(game.ranking().length, 0, 'gửi quà không có ghế trong lớp');
+});
+
+test('quỹ lớp: góp xu từ quà, gần đủ thì báo, đủ thì phát kẹo kèm 3 người góp nhiều nhất, phần dư sang quỹ mới', () => {
+  const { game, of } = setup();
+  game.gift(who('An'), 10);
+  game.gift(who('Bình'), 30);
+  game.gift(who('Chi'), 5);
+  game.gift(who('Dũng'), 1);
+  game.gift(who('An'), 45);
+  assert.equal(of('fund').at(-1).coins, 91);
+  assert.equal(of('fund').at(-1).near, true);
+  assert.equal(of('fund').filter((f) => f.near).length, 1, 'chỉ báo gần đủ một lần');
+  game.gift(who('Chi'), 20);
+  const [candy] = of('candy');
+  assert.deepEqual(candy.thanks.map((t) => t.name), ['An', 'Bình', 'Chi']);
+  assert.equal(candy.coins, 11);
+  assert.equal(candy.times, 1);
+  assert.equal(game.fund.coins, 11);
+  game.gift(who('Em'), 250);
+  assert.equal(of('candy')[1].times, 2);
+  assert.equal(game.fund.coins, 61);
+  assert.deepEqual(of('candy')[1].thanks.map((t) => t.name), ['Em', 'Chi'], 'quỹ mới chỉ tính người góp từ sau lần phát trước');
+});
+
+test('treo ảnh trên bảng: chỉ Tim cam (theo tên hoặc mã quà), người gửi cuối cùng được treo', () => {
+  const { game, of } = setup();
+  game.gift(who('An'), 30);
+  game.gift(who('An'), 1, 1, { name: 'Rose', id: 5655 });
+  assert.equal(game.snapshot().honor, null, 'quà khác không treo ảnh');
+  assert.equal(game.gift({ id: 'id:Bình', name: 'Bình', avatar: 'https://p16.tiktokcdn.com/b.webp' }, 1, 1, { name: 'Heart Me', id: 7934 }).photo, true);
+  assert.deepEqual(game.snapshot().honor, { name: 'Bình', avatar: 'https://p16.tiktokcdn.com/b.webp', look: game.players.get('id:Bình').look });
+  assert.equal(of('gift').at(-1).icon, '/gifts/heart-me.webp', 'không có hình quà thật thì dùng hình Tim cam');
+  game.gift(who('Chi'), 1, 1, { name: 'tim  CAM' });
+  assert.equal(game.snapshot().honor.name, 'Chi');
+  game.gift(who('Dũng'), 1, 1, { id: '7934' });
+  game.gift(who('Dũng'), 1, 1, { id: 7934 });
+  assert.deepEqual(of('honor').map((h) => h.name), ['Bình', 'Chi', 'Dũng'], 'cùng người gửi tiếp thì không báo lại');
+  assert.ok(!JSON.stringify(game.exportState()).includes('tiktokcdn'), 'không lưu ảnh ra file');
 });
 
 test('có lượt x2 thì đoán đúng +2 và mất một lượt; đoán sai không mất lượt', () => {
   const { game, of, advance } = setup();
-  game.gift(who('An'), 1, 2);
+  game.addTurns(who('An'), 2, 'follow');
   game.comment(who('An'), 'con chó');
   assert.equal(game.boosts.get('id:An'), 2);
   game.comment(who('An'), 'mèo');
@@ -163,11 +207,10 @@ test('bảng điểm: điểm cao đứng trên, bằng điểm thì ai đạt t
   game.comment(who('An'), 'mèo');
   advance(100);
   game.comment(who('Bình'), 'mèo');
-  game.gift(who('Chi'), 10);
+  game.social(who('Chi'), 'follow');
   advance(500);
   const board = of('board').at(-1).board;
-  assert.deepEqual(board.map((p) => [p.name, p.score, p.turns]), [['An', 1, 0], ['Bình', 1, 0], ['Chi', 0, 13]]);
-  assert.equal(board[2].icon, '/gifts/lucky-pig.webp');
+  assert.deepEqual(board.map((p) => [p.name, p.score, p.turns]), [['An', 1, 0], ['Bình', 1, 0], ['Chi', 0, 1]]);
   advance(20_000);
   game.comment(who('Bình'), 'xoài');
   advance(500);
@@ -190,19 +233,24 @@ test('màn hình chỉ hiện top theo số ghế', () => {
   assert.equal(game.snapshot().players, 50);
 });
 
-test('lưu và nạp lại bảng điểm cùng lượt x2', () => {
+test('lưu và nạp lại bảng điểm cùng lượt x2, quỹ lớp, tên trên bảng', () => {
   const a = setup();
   a.game.comment(who('An'), 'mèo');
-  a.game.gift(who('Bình'), 5);
+  a.game.gift(who('Bình'), 5, 1, { name: 'Tim cam' });
   a.game.social(who('Chi'), 'follow');
   const saved = JSON.parse(JSON.stringify(a.game.exportState()));
   const b = setup();
   b.game.importState(saved);
   assert.equal(b.game.players.get('id:An').score, 1);
-  assert.equal(b.game.boosts.get('id:Bình'), 6);
-  assert.equal(b.game.patrons.get('id:Bình'), '/gifts/kem.webp');
   assert.equal(b.game.boosts.get('id:Chi'), 1);
-  assert.equal(b.game.patrons.has('id:Chi'), false);
+  assert.equal(b.game.fund.coins, 5);
+  assert.deepEqual(b.game.fund.by.get('id:Bình'), { name: 'Bình', coins: 5 });
+  assert.equal(b.game.snapshot().honor.name, 'Bình');
+  // Bảng điểm cũ (luật trước) có lượt x2 từ quà và patrons: lượt x2 vẫn giữ.
+  const c = setup();
+  c.game.importState({ players: [{ id: 'id:Dũng', name: 'Dũng', score: 3, reachedAt: 1 }], boosts: [['id:Dũng', 13]], patrons: [['id:Dũng', '/gifts/lucky-pig.webp']] });
+  assert.equal(c.game.boosts.get('id:Dũng'), 13);
+  assert.equal(c.game.fund.coins, 0);
   b.game.importState({ players: [{ id: 1, name: 'x', score: 'a' }], boosts: [['ma', 5]] });
   assert.equal(b.game.players.has('ma'), false);
 });

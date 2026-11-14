@@ -40,6 +40,7 @@
     <p id="status">Đang kết nối máy chủ game...</p>
     <p class="info" id="word">Chưa có từ nào.</p>
     <p class="info" id="session"></p>
+    <p class="info" id="fund"></p>
     <p class="info" id="tts"></p>
     <div id="alerts"></div>
     <div id="safe-box"><span id="safe"></span><button type="button" id="safe-toggle"></button></div>
@@ -69,6 +70,7 @@
     <div class="row">
       <button type="button" data-control="letter">🔤 Mở thêm một chữ</button>
       <button type="button" data-control="skip">⏭️ Sang bước tiếp theo</button>
+      <button type="button" data-control="candy">🍬 Thử phát kẹo</button>
       <button type="button" id="reset" class="danger">🧹 Xóa bảng điểm</button>
       <button type="button" id="telegram-test">📨 Gửi thử Telegram</button>
     </div>
@@ -111,7 +113,7 @@
     $('crowd').onclick = () => crowd(10);
     $('crowd40').onclick = () => crowd(40);
     $('reset').onclick = () => {
-      if (confirm('Xóa toàn bộ điểm và lượt x2 để bắt đầu buổi mới?')) post('/api/control', { action: 'reset' });
+      if (confirm('Xóa toàn bộ điểm, lượt x2, quỹ lớp và ảnh trên bảng để bắt đầu buổi mới?')) post('/api/control', { action: 'reset' });
     };
     let safeMode = false;
     function showSafeMode(on) {
@@ -127,16 +129,32 @@
       $('log').textContent = message;
     };
 
+    // Quà không cho điểm: mỗi mức có một cảnh trong lớp, xu góp vào quỹ lớp.
+    const SCENE_NAMES = { rose: 'chạy lên đưa cô', kem: 'đưa cô, cả lớp quay lại', pig: 'chạy vòng quanh lớp' };
     function renderGifts() {
       $('gifts').replaceChildren(
-        ...guide.tiers.map((tier) => {
+        ...guide.scenes.map((tier) => {
           const button = document.createElement('button');
           button.type = 'button';
-          button.append(Object.assign(new Image(), { className: 'gift-icon', alt: '', src: tier.icon }), `${tier.label} ${tier.coins} xu · ${tier.turns} lượt`);
+          button.append(Object.assign(new Image(), { className: 'gift-icon', alt: '', src: tier.icon }), `${tier.label} ${tier.coins} xu · ${SCENE_NAMES[tier.scene]}`);
           button.onclick = () => simulate({ kind: 'gift', coins: tier.coins, count: 1 });
           return button;
         }),
+        photoButton(),
       );
+    }
+    // Tim cam: treo ảnh người gửi lên bảng (người gửi cuối cùng).
+    function photoButton() {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.append(Object.assign(new Image(), { className: 'gift-icon', alt: '', src: guide.photoGift.icon }), `${guide.photoGift.label} 1 xu · treo ảnh lên bảng`);
+      button.onclick = () => simulate({ kind: 'gift', coins: 1, count: 1, giftName: guide.photoGift.name });
+      return button;
+    }
+    let fund = { coins: 0, goal: 1 };
+    let honor = null;
+    function showFund() {
+      $('fund').textContent = `🍬 Quỹ lớp: ${fund.coins.toLocaleString('vi-VN')}/${fund.goal.toLocaleString('vi-VN')} xu (đủ thì cô phát kẹo cả lớp) · 🖼️ Ảnh trên bảng: ${honor?.name ?? 'chưa có'}`;
     }
 
     function renderBoard(board, players) {
@@ -171,6 +189,9 @@
     function loadGame(game) {
       word = game.word;
       solvedCount = game.count;
+      fund = game.fund;
+      honor = game.honor;
+      showFund();
       loadAnswer();
       renderBoard(game.board, game.players);
     }
@@ -230,6 +251,22 @@
           break;
         case 'boost':
           $('log').textContent = `✨ ${msg.name} +${msg.added} lượt x2 (còn ${msg.turns}).`;
+          break;
+        case 'gift':
+          $('log').textContent = `🎁 ${msg.name}: ${msg.coins} xu${msg.count > 1 ? ` (x${msg.count})` : ''}, cảnh "${SCENE_NAMES[msg.scene]}".`;
+          break;
+        case 'fund':
+          fund = msg;
+          showFund();
+          break;
+        case 'honor':
+          honor = msg;
+          showFund();
+          break;
+        case 'candy':
+          fund = { coins: msg.coins, goal: msg.goal };
+          showFund();
+          $('log').textContent = `🍬 Quỹ lớp đủ, cô phát kẹo cả lớp. Cảm ơn: ${msg.thanks.map((t) => t.name).join(', ') || '(thử)'}`;
           break;
         case 'status':
           showStatus(msg);

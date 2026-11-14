@@ -46,8 +46,18 @@ export const sfx = {
   first: () => notes([784, 988, 1175, 1568], 0.09, 0.42, 0.17),
   // không ai đoán ra
   none: () => notes([392, 330], 0.2, 0.4, 0.15, 'triangle'),
-  // lượt x2
+  // lượt x2 (follow, share)
   boost: () => notes([1047, 1319, 1568, 2093], 0.06, 0.32, 0.15),
+  // bạn đưa quà cho cô
+  gift: () => notes([1568, 2093, 2637, 3136], 0.05, 0.3, 0.1),
+  // heo chạy quanh lớp: "ụt ịt"
+  oink: () => {
+    const t = ctx.currentTime;
+    tone(330, t, 0.16, 0.16, 'sawtooth', 190);
+    tone(360, t + 0.2, 0.2, 0.16, 'sawtooth', 200);
+  },
+  // quỹ lớp đủ, cô phát kẹo
+  candy: () => notes([784, 988, 1175, 1568, 1175, 1568, 2093, 1568, 2093], 0.09, 0.36, 0.16, 'triangle'),
   // công bố đáp án có người đúng
   fanfare: () => notes([523, 659, 784, 1047, 784, 1047, 1319], 0.1, 0.42, 0.19, 'triangle'),
   // vào top lớp: tiếng "pop"
