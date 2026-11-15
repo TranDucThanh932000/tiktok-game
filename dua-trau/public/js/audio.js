@@ -78,6 +78,13 @@ export const sfx = {
     notes.forEach((f, i) => tone({ at: at + i * 0.07, freq: f, dur: 0.25, type: 'triangle', peak: 0.25 }));
     noise({ at, dur: 0.35, type: 'highpass', freq: 2500, peak: 0.08 });
   },
+  // Người mới vào đội: hai nốt "bóc" vui tai.
+  join() {
+    if (!gate('join', 250)) return;
+    const at = ctx.currentTime;
+    tone({ at, freq: 660, to: 990, dur: 0.09, type: 'sine', peak: 0.22 });
+    tone({ at: at + 0.09, freq: 990, to: 1320, dur: 0.12, type: 'sine', peak: 0.2 });
+  },
   lead() {
     if (!gate('lead', 1500)) return;
     const at = ctx.currentTime;
@@ -102,31 +109,31 @@ export const sfx = {
   },
 };
 
-// ---------- Giọng đọc tên nước khi có quà ----------
-// Mỗi nước một mẩu mp3 tạo sẵn ở server. Combo quà gửi liên tục thì cùng một nước không đọc lại trong `gapMs`,
-// hàng chờ giữ tối đa `maxQueue` nước, để giọng không bị dồn và trễ xa so với quà.
+// ---------- Giọng đọc số trâu khi có quà ----------
+// Mỗi trâu một mẩu mp3 tạo sẵn ở server. Combo quà gửi liên tục thì cùng một trâu không đọc lại trong `gapMs`,
+// hàng chờ giữ tối đa `maxQueue` trâu, để giọng không bị dồn và trễ xa so với quà.
 const voice = { buffers: new Map(), loading: new Map(), queue: [], playing: null, lastStart: new Map(), gapMs: 2500, maxQueue: 2 };
 
 export function setVoice({ clips = {}, gapMs, maxQueue } = {}) {
   if (gapMs != null) voice.gapMs = gapMs;
   if (maxQueue != null) voice.maxQueue = maxQueue;
   if (muted) return;
-  for (const [nation, id] of Object.entries(clips)) {
-    const url = `/voice/${id}.mp3`;
-    if (voice.loading.get(nation) === url) continue;
-    voice.loading.set(nation, url);
+  for (const [key, clip] of Object.entries(clips)) {
+    const url = `/voice/${clip}.mp3`;
+    if (voice.loading.get(key) === url) continue;
+    voice.loading.set(key, url);
     fetch(url)
       .then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(new Error(`HTTP ${r.status}`))))
       .then((data) => {
         audioReady();
         return ctx.decodeAudioData(data);
       })
-      .then((buffer) => voice.buffers.set(nation, trimSilence(buffer)))
-      .catch((err) => console.warn(`Không tải được giọng đọc ${nation}: ${err.message}`));
+      .then((buffer) => voice.buffers.set(key, trimSilence(buffer)))
+      .catch((err) => console.warn(`Không tải được giọng đọc ${key}: ${err.message}`));
   }
 }
 
-// Vbee để khoảng lặng hơn 1 giây sau mỗi câu; cắt đi (chừa 40 ms) để hàng chờ đọc nước kế tiếp ngay.
+// Vbee để khoảng lặng hơn 1 giây sau mỗi câu; cắt đi (chừa 40 ms) để hàng chờ đọc trâu kế tiếp ngay.
 function trimSilence(buffer, threshold = 0.012, padMs = 40) {
   const data = buffer.getChannelData(0);
   let start = 0;
@@ -142,26 +149,26 @@ function trimSilence(buffer, threshold = 0.012, padMs = 40) {
   return out;
 }
 
-export function sayNation(nation) {
-  if (muted || !ctx || ctx.state !== 'running' || !voice.buffers.has(nation)) return;
-  if (voice.playing === nation || voice.queue.includes(nation)) return;
-  if (performance.now() - (voice.lastStart.get(nation) ?? -Infinity) < voice.gapMs) return;
-  voice.queue.push(nation);
-  // Hàng chờ dài quá thì bỏ nước cũ nhất, ưu tiên quà mới nhất.
+export function sayBuffalo(id) {
+  if (muted || !ctx || ctx.state !== 'running' || !voice.buffers.has(id)) return;
+  if (voice.playing === id || voice.queue.includes(id)) return;
+  if (performance.now() - (voice.lastStart.get(id) ?? -Infinity) < voice.gapMs) return;
+  voice.queue.push(id);
+  // Hàng chờ dài quá thì bỏ trâu cũ nhất, ưu tiên quà mới nhất.
   while (voice.queue.length > voice.maxQueue) voice.queue.shift();
   if (!voice.playing) playNext();
 }
 
 function playNext() {
-  const nation = voice.queue.shift();
-  if (!nation) {
+  const id = voice.queue.shift();
+  if (!id) {
     voice.playing = null;
     return;
   }
-  voice.playing = nation;
-  voice.lastStart.set(nation, performance.now());
+  voice.playing = id;
+  voice.lastStart.set(id, performance.now());
   const src = ctx.createBufferSource();
-  src.buffer = voice.buffers.get(nation);
+  src.buffer = voice.buffers.get(id);
   const gain = ctx.createGain();
   gain.gain.value = 1.6;
   src.connect(gain).connect(master);

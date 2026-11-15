@@ -49,6 +49,7 @@ Quà không bao giờ cộng điểm hay cho lượt x2, để người chơi gi
 - **Cô chúc riêng:** gọi tên rồi chúc, quà càng to lời chúc càng dài (`giftRose`, `giftKem`, `giftPig` trong `teacher.json`). Một người gửi liên tục chỉ được cảm ơn lại sau 20 giây, trừ khi quà to hơn lần trước. Lời cảm ơn được ưu tiên: không bị lời từ mới cắt ngang (từ mới đọc ngay sau), tên chưa tạo được giọng thì vẫn đọc lời chúc.
 - **Ảnh treo trên bảng:** khung ảnh treo dưới mép trái bảng, ghi "Học sinh ngoan". Chỉ quà **Tim cam** (Heart Me, mã 7934) mới được treo, người gửi Tim cam cuối cùng được treo ảnh TikTok và tên. Chưa có ai thì khung hiện hình Tim cam và chữ "treo ảnh". Đổi quà ở `gifts.photoGift` (tên hoặc mã quà; mã của mọi quà nhận được có in trong cửa sổ server). Ảnh chỉ giữ trong bộ nhớ: bật lại server thì khung hiện mặt chibi kèm tên tới khi có người gửi tiếp.
 - **Quỹ lớp:** mọi quà góp xu vào quỹ, thanh quỹ hiện "350/1.000 · Đủ sẽ có sự kiện". Được 90% thì thanh nhấp nháy và cô báo sắp đủ (một lần). Đủ `gifts.fundGoal` (1000 xu) thì **cô phát kẹo cả lớp**: thẻ "Cô phát kẹo cả lớp" kèm 3 người góp nhiều nhất, kẹo bay tới từng bạn, cả lớp quay lại cười. Phần dư sang quỹ mới. Quỹ được lưu cùng bảng điểm.
+- **Học sinh lên chúc cô 20/11:** khoảng mỗi `wishes.everySeconds` giây (75 giây, xê dịch ngẫu nhiên), một bạn đang ngồi trong lớp (không chọn một bạn hai lần liền) đứng dậy cầm hoa chạy theo lối giữa lên bục, đứng trước cô với bong bóng lời chúc (câu ngẫu nhiên trong `wishes.lines`), đưa hoa cho cô, cô vui, gọi tên và cảm ơn (`wishThanks` trong `teacher.json`; tên chỉ đọc khi đã có giọng sẵn), rồi bạn về chỗ. Chỉ chen vào giữa lượt đoán khi cô không đọc từ mới hay công bố và còn ít nhất 8 giây. Không cộng điểm, không vào quỹ. Hết dịp thì đặt `everySeconds` về `0`.
 
 ## Bộ từ
 
@@ -88,10 +89,11 @@ Có cảnh báo từ TikTok thì tự bật **chế độ an toàn**: cô im, ga
 - **Học sinh:** bạn mới lọt vào bảng điểm bước ra từ cửa lớp bên trái, đi dọc bục giảng, xuống lối giữa rồi rẽ vào chỗ. Đổi hạng thì đi từ chỗ cũ sang chỗ mới. Đông người đổi chỗ cùng lúc thì chỉ 8 bạn đi, ưu tiên bạn mới vào, các bạn còn lại ngồi luôn. Ngồi thì quay lưng nhìn bảng; đoán đúng thì quay lại cười, giơ tay. Mỗi người chơi luôn là cùng một bạn trong 6 bạn, nửa số người được lật ngang cho lớp đỡ giống nhau. Mở lại trang thì ai cũng ngồi sẵn, không đi lại.
 - **Cô giáo:** đứng góc phải bục giảng, chớp mắt, thỉnh thoảng đi dạo vài bước. Lúc nói thì đổi dáng tay. Từ mới hoặc mở thêm chữ thì đi sang trái, cầm thước chỉ lên bảng rồi về chỗ. Bạn đầu tiên đoán ra thì vỗ tay rồi giơ ngón cái. Công bố có bạn nhanh nhất thì giơ hai tay reo. Còn 5 giây mà chưa ai ra, hoặc hết giờ không ai đoán được, thì cô ôm má ngạc nhiên. Bong bóng lời cô luôn nằm bên trái cô.
 - **Bảng đen** dùng khung gỗ và khay phấn cắt từ ảnh nền, kéo giãn cho vừa chữ, nằm sát mép trên màn hình.
+- **Trang trí 20-11 (Ngày Nhà giáo Việt Nam):** băng rôn "Mừng ngày Nhà giáo Việt Nam 20-11" trên khung bảng, chùm hoa hai góc bảng, lẵng hoa trên bục cạnh bàn cô, dây hoa viền mép bục và cánh hoa rơi sau lớp. Vẽ bằng SVG/CSS, không dùng ảnh. Hết dịp thì xóa các khối có class `deco` trong `public/index.html` và phần "Trang trí 20-11" cuối `public/style.css`.
 
 ## Bảng điều khiển
 
-`http://127.0.0.1:3015/panel.html`: trạng thái kết nối, kim cương phiên live, giọng cô và chế độ an toàn, từ đang hỏi kèm **đáp án** (chỉ chủ kênh thấy), quỹ lớp và người đang được treo ảnh, nút thử comment đúng/sai/từng mức quà/Tim cam/follow, thử đông người, mở thêm chữ, sang bước tiếp theo, thử phát kẹo, xóa bảng điểm (xóa cả quỹ lớp và ảnh), gửi thử Telegram, và bảng xếp hạng.
+`http://127.0.0.1:3015/panel.html`: trạng thái kết nối, kim cương phiên live, giọng cô và chế độ an toàn, từ đang hỏi kèm **đáp án** (chỉ chủ kênh thấy), quỹ lớp và người đang được treo ảnh, nút thử comment đúng/sai/từng mức quà/Tim cam/follow, thử đông người, mở thêm chữ, sang bước tiếp theo, thử phát kẹo, thử học sinh chúc cô 20/11, xóa bảng điểm (xóa cả quỹ lớp và ảnh), gửi thử Telegram, và bảng xếp hạng.
 
 ## Từ ngữ trên màn hình
 

@@ -168,6 +168,14 @@ export class Teacher {
     this.say([this.spoken(line)], { text: line, keep });
   }
 
+  // 20/11: một bạn trong lớp lên tặng hoa, chúc cô. Tên chỉ đọc khi đã có giọng sẵn, chữ thì luôn có tên.
+  thankWish({ name: shown }) {
+    const tail = this.pick('wishThanks');
+    const name = readableName(shown);
+    const parts = name && this.voice.ready(name) ? [name, this.spoken(tail)] : [this.spoken(tail)];
+    this.say(parts, { text: `${shown}, ${tail}`, keep: true });
+  }
+
   tick() {
     const game = this.game;
     const t = this.now();

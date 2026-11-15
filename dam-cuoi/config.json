@@ -9,6 +9,7 @@
     { "action": "steal_groom", "label": "Đổi vai chú rể", "giftLabel": "Kem", "names": ["Bing Chilling", "Ice cream", "Kem"], "ids": ["7412"], "coins": 5, "icon": "/gifts/kem.webp" },
     { "action": "steal_bride", "label": "Đổi vai cô dâu", "giftLabel": "Bắn tim", "names": ["Finger Heart", "Bắn tim", "Tim tay"], "ids": [], "coins": 5, "icon": "/gifts/finger-heart.webp" },
     { "action": "cancel_wedding", "label": "Hủy hôn", "giftLabel": "Bánh vòng", "names": ["Doughnut", "Bánh vòng", "Bánh donut"], "ids": [], "coins": 30, "icon": "/gifts/doughnut.webp" },
+    { "action": "bridal_chamber", "label": "Động phòng", "giftLabel": "Lọ nước hoa", "names": ["Perfume", "Lọ nước hoa", "Nước hoa"], "ids": [], "coins": 20, "icon": "/gifts/perfume.webp" },
     { "action": "gold", "label": "Mừng 1 chỉ vàng", "giftLabel": "Kem ốc quế", "names": ["Ice Cream Cone", "Kem ốc quế"], "ids": [], "coins": 1, "icon": "/gifts/kem-oc-que.webp" }
   ],
   "goldPerCoin": 1,
@@ -24,9 +25,12 @@
     "!doichure": "steal_groom",
     "!doicodau": "steal_bride",
     "!huyhon": "cancel_wedding",
+    "!dongphong": "bridal_chamber",
     "!vang": "gold"
   },
   "chatCommandsLive": false,
+
+  "bridalChamber": { "seconds": 10, "enterMs": 6500, "exitMs": 5500 },
 
   "ceremony": {
     "startDelayMs": 5000,

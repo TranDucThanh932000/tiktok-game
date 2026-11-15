@@ -23,6 +23,7 @@ const problems = [
   [Array.isArray(config.goals) && config.goals.length > 0 && config.goals.every((g) => whole(g, 1)), 'goals là danh sách mốc chỉ vàng, số nguyên từ 1'],
   [whole(config.goalStepAfter ?? 5000, 1), 'goalStepAfter là khoảng cách mốc sau khi hết danh sách goals, số nguyên từ 1'],
   [whole(timing.claimMs, 500) && whole(timing.stealMs, 1000) && whole(timing.cancelMs, 1000), 'timing cần claimMs, stealMs, cancelMs (mili giây)'],
+  [whole(config.bridalChamber?.seconds ?? 10, 1), 'bridalChamber.seconds là số giây động phòng mỗi lọ nước hoa, số nguyên từ 1'],
   [Object.values(config.chatCommands ?? {}).every((a) => ACTIONS.includes(a)), 'chatCommands: mỗi lệnh phải trỏ tới một action hợp lệ'],
 ].filter(([ok]) => !ok);
 if (problems.length) throw new Error(`config.json: ${problems.map(([, text]) => text).join('; ')}`);
@@ -125,10 +126,14 @@ function mcReact(msg) {
   const couple = { chure: groom?.name, codau: bride?.name };
   if (msg.type === 'scene') {
     if (msg.kind === 'claim') mc.say(`claim_${msg.role}`, { ten: msg.who.name }, { priority: 3 });
-    if (msg.kind === 'steal') mc.say(`steal_${msg.role}`, { ten: msg.who.name, cu: msg.from?.name }, { priority: 3 });
-    if (msg.kind === 'cancel') mc.say('cancel', { ten: msg.who.name }, { priority: 3 });
+    if (msg.kind === 'steal') mc.say(`${msg.inChamber ? 'chamber_steal' : 'steal'}_${msg.role}`, { ten: msg.who.name, cu: msg.from?.name }, { priority: 3 });
+    if (msg.kind === 'cancel') mc.say(msg.inChamber ? 'chamber_cancel' : 'cancel', { ten: msg.who.name }, { priority: 3 });
     if (msg.kind === 'farewell') mc.say('farewell', { chure: msg.from.groom?.name, codau: msg.from.bride?.name }, { priority: 3, ttl: 12_000 });
+    if (msg.kind === 'chamber_enter') mc.say('chamber_enter', { ten: msg.who.name, ...couple }, { priority: 3 });
+    if (msg.kind === 'chamber_exit') mc.say('chamber_exit', couple, { priority: 3 });
   }
+  if (msg.type === 'chamber') mc.say('chamber_extend', { ten: msg.who.name });
+  if (msg.type === 'cheer' && msg.action === 'bridal_chamber') mc.say('chamber_need', { ten: msg.who.name });
   if (msg.type === 'ritual') mc.say(msg.step < 0 ? (msg.restart ? 'restart' : 'ceremony_start') : `step_${msg.id}`, couple, { priority: 3, ttl: 9000 });
   if (msg.type === 'registered') mc.say(`register_${msg.role}`, { ten: msg.who.name, so: msg.position });
   if (msg.type === 'cheer' && msg.role) mc.say('cheer', { ten: msg.who.name });
@@ -155,7 +160,7 @@ if (existsSync(statePath)) {
   }
 }
 setInterval(() => wedding.tick(), 50);
-setInterval(() => mc.tick({ groom: wedding.roles.groom, bride: wedding.roles.bride, ceremony: wedding.ceremony }), 400);
+setInterval(() => mc.tick({ groom: wedding.roles.groom, bride: wedding.roles.bride, ceremony: wedding.ceremony ?? wedding.chamber }), 400);
 
 // Tạo sẵn mọi mẩu lời cố định (chỉ lần đầu, sau đó lấy từ data/tts).
 async function pregenerate() {
@@ -275,7 +280,7 @@ const FAKE = ['Nam', 'Huy', 'Lan', 'Thảo', 'Tuấn', 'Vy', 'Minh Anh', 'Long',
 function fakeGift() {
   const name = FAKE[Math.floor(Math.random() * FAKE.length)];
   const who = { id: `sim:${name}`, name, avatar: '' };
-  const weight = { become_groom: 3, become_bride: 3, steal_groom: 2, steal_bride: 2, cancel_wedding: 0.6, gold: 1.5 };
+  const weight = { become_groom: 3, become_bride: 3, steal_groom: 2, steal_bride: 2, cancel_wedding: 0.6, bridal_chamber: 1, gold: 1.5 };
   const total = config.gifts.reduce((sum, x) => sum + (weight[x.action] ?? 1), 0);
   let roll = Math.random() * total;
   const g = config.gifts.find((x) => (roll -= weight[x.action] ?? 1) < 0);

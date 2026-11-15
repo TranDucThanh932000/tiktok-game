@@ -1,6 +1,6 @@
-import { flagUrl, flagImage } from './flags.js';
+import { bibEl, drawBib } from './bib.js';
 import { drawBuffalo, loadSprites } from './buffalo.js';
-import { sfx, unlockAudio, audioReady, setVoice, sayNation } from './audio.js';
+import { sfx, unlockAudio, audioReady, setVoice, sayBuffalo } from './audio.js';
 
 const W = 1080;
 const H = 1920;
@@ -37,12 +37,12 @@ function avatar(who, className = 'ava') {
   }
   return initial();
 }
-const flagEl = (id, className = 'flag') => el('img', { className, src: flagUrl(id), alt: '' });
+const bibOf = (id, className) => bibEl(buffaloOf(id), className);
 const meters = (units) => (units / 10).toFixed(1);
 const short = (units) => (units % 10 ? meters(units) : String(units / 10));
 
 // ---------- Trạng thái ----------
-let nations = [];
+let buffaloes = [];
 let scores = {};
 let wins = {};
 let leader = null;
@@ -51,6 +51,8 @@ let paused = false;
 let round = 1;
 let endsAt = performance.now();
 let result = null;
+let resultMs = 12_000;
+let teams = {};
 let unitsComment = 1;
 const lanes = new Map();
 let shownScale = MIN_SCALE;
@@ -58,7 +60,7 @@ let groundShift = 0;
 const dust = [];
 
 const laneY = (i) => LANE_TOP + i * LANE_H;
-const nationOf = (id) => nations.find((n) => n.id === id);
+const buffaloOf = (id) => buffaloes.find((n) => n.id === id);
 
 // ---------- Nền ----------
 const background = new Image();
@@ -72,7 +74,7 @@ function paintBackground() {
     // Phóng và dời ảnh để dải đất trùng đúng vùng làn đua, không đủ rộng thì phóng thêm cho kín ngang.
     const bh = background.naturalHeight;
     const bw = background.naturalWidth;
-    const lanesH = LANE_H * nations.length;
+    const lanesH = LANE_H * buffaloes.length;
     const s = Math.max(lanesH / ((track.bottom - track.top) * bh), W / bw);
     const w = bw * s;
     const top = LANE_TOP + lanesH / 2 - ((track.top + track.bottom) / 2) * bh * s;
@@ -112,7 +114,7 @@ function paintBackground() {
     g.fillRect(0, 1460, W, H - 1460);
   }
   // Làn đua vẽ bằng code để luôn khớp với thẻ tên và số mét.
-  for (let i = 0; i < nations.length; i++) {
+  for (let i = 0; i < buffaloes.length; i++) {
     const y = laneY(i);
     g.fillStyle = i % 2 ? 'rgba(120, 72, 30, .10)' : 'rgba(255, 235, 200, .10)';
     g.fillRect(0, y, W, LANE_H);
@@ -128,7 +130,7 @@ function paintBackground() {
       g.fill();
     }
   }
-  const last = laneY(nations.length);
+  const last = laneY(buffaloes.length);
   g.fillStyle = 'rgba(255, 255, 255, .75)';
   g.fillRect(0, last - 3, W, 6);
   // Vạch xuất phát
@@ -144,30 +146,6 @@ function paintBackground() {
 }
 
 // ---------- Trâu ----------
-function drawFlag(x, y, id, t) {
-  const img = flagImage(id);
-  g.strokeStyle = '#5a3a1c';
-  g.lineWidth = 5;
-  g.beginPath();
-  g.moveTo(x, y);
-  g.lineTo(x, y - 70);
-  g.stroke();
-  g.fillStyle = '#ffd34d';
-  g.beginPath();
-  g.arc(x, y - 72, 5, 0, Math.PI * 2);
-  g.fill();
-  if (!img.complete) return;
-  const fw = 57;
-  const fh = 38;
-  const strips = 12;
-  for (let s = 0; s < strips; s++) {
-    const sx = (s / strips) * img.naturalWidth;
-    const sw = img.naturalWidth / strips;
-    const wave = Math.sin(t * 8 - s * 0.6) * 3 * (s / strips);
-    g.drawImage(img, sx, 0, sw, img.naturalHeight, x + 2 + (s * fw) / strips, y - 68 + wave, fw / strips + 0.6, fh);
-  }
-}
-
 function spawnDust(x, y, n, strong) {
   for (let k = 0; k < n; k++) {
     dust.push({ x: x - 60 + Math.random() * 20, y: y - 6 - Math.random() * 16, vx: -60 - Math.random() * (strong ? 200 : 80), vy: -20 - Math.random() * 40, r: 8 + Math.random() * (strong ? 16 : 8), life: 0, max: 0.6 + Math.random() * 0.5 });
@@ -177,10 +155,10 @@ function spawnDust(x, y, n, strong) {
 
 function draw(now, dt) {
   const racing = phase === 'race' && !paused;
-  const top = Math.max(0, ...nations.map((n) => scores[n.id] ?? 0));
+  const top = Math.max(0, ...buffaloes.map((n) => scores[n.id] ?? 0));
   const scale = Math.max(MIN_SCALE, top);
   shownScale += (scale - shownScale) * Math.min(1, dt * 3);
-  const hurry = Math.max(0, ...nations.map((n) => (lanes.get(n.id)?.boostUntil ?? 0) - now)) > 0;
+  const hurry = Math.max(0, ...buffaloes.map((n) => (lanes.get(n.id)?.boostUntil ?? 0) - now)) > 0;
   if (racing) groundShift += dt * (hurry ? 420 : 160);
 
   g.clearRect(0, 0, W, H);
@@ -202,7 +180,7 @@ function draw(now, dt) {
     g.fill();
   }
 
-  nations.forEach((n, i) => {
+  buffaloes.forEach((n, i) => {
     const lane = lanes.get(n.id);
     const target = START_X + Math.min(1, (scores[n.id] ?? 0) / shownScale) * (END_X - START_X);
     lane.x += (target - lane.x) * Math.min(1, dt * 4);
@@ -220,12 +198,12 @@ function draw(now, dt) {
     g.beginPath();
     g.ellipse(lane.x, ground + 2, 86, 14, 0, 0, Math.PI * 2);
     g.fill();
-    const back = drawBuffalo(g, { x: lane.x, y: ground + hop, nation: n, pose, frame: Math.floor(lane.phase * 4), phase: lane.phase });
-    drawFlag(back.backX, back.backY, n.id, now / 1000 + i);
+    const back = drawBuffalo(g, { x: lane.x, y: ground + hop, buffalo: n, pose, frame: Math.floor(lane.phase * 4), phase: lane.phase });
+    drawBib(g, back.backX, back.backY, n, now / 1000 + i);
     if (leader === n.id && phase === 'race') {
       g.font = '44px "Segoe UI Emoji", sans-serif';
       g.textAlign = 'center';
-      g.fillText('👑', back.backX + 66, back.backY - 6 + Math.sin(now / 250) * 4);
+      g.fillText('👑', back.backX + 94, back.backY - 6 + Math.sin(now / 250) * 4);
     }
     lane.head = { x: lane.x + 70, y: ground - 150 };
   });
@@ -254,6 +232,7 @@ function tickClock(now) {
     $('time').textContent = '0:00';
     $('clock').classList.remove('hurry');
     $('clock').classList.add('done');
+    if (resultPage && resultPageAt(left) !== resultPage) showResult(resultPageAt(left));
     const next = $('result').querySelector('.next b');
     if (next) next.textContent = String(Math.max(1, sec));
   }
@@ -267,32 +246,56 @@ function setClock(left) {
 
 // ---------- Đầu trang và làn ----------
 function renderWins(bumped) {
-  const order = [...nations].sort((a, b) => (wins[b.id] ?? 0) - (wins[a.id] ?? 0));
+  const order = [...buffaloes].sort((a, b) => (wins[b.id] ?? 0) - (wins[a.id] ?? 0));
   const best = wins[order[0]?.id] ?? 0;
   $('wins-list').replaceChildren(
-    ...order.map((n) => el('li', { className: `${best > 0 && wins[n.id] === best ? 'first' : ''} ${bumped === n.id ? 'bump' : ''}` }, flagEl(n.id, ''), el('span', { textContent: String(wins[n.id] ?? 0) }))),
+    ...order.map((n) => el('li', { className: `${best > 0 && wins[n.id] === best ? 'first' : ''} ${bumped === n.id ? 'bump' : ''}` }, bibEl(n), el('span', { textContent: String(wins[n.id] ?? 0) }))),
   );
   if (bumped) setTimeout(() => $('wins-list').querySelector('.bump')?.classList.remove('bump'), 600);
-  $('round').textContent = `ROUND ${round}`;
+  $('round').textContent = `VÒNG ${round}`;
 }
 
 function buildLanes() {
   $('lanes').replaceChildren();
   lanes.clear();
-  nations.forEach((n, i) => {
+  buffaloes.forEach((n, i) => {
     const rank = el('div', { className: 'rank' });
-    const tag = el('div', { className: 'tag' }, flagEl(n.id, ''), rank, el('div', { className: 'name', textContent: n.name }));
-    tag.style.top = `${laneY(i) + (LANE_H - 116) / 2}px`;
+    const faces = el('span', { className: 'faces' });
+    const count = el('span', { className: 'cnt' });
+    const crowd = el('div', { className: 'crowd' }, faces, count);
+    const tag = el('div', { className: 'tag' }, el('div', { className: 'top' }, bibEl(n), rank), crowd);
+    tag.style.top = `${laneY(i) + (LANE_H - 148) / 2}px`;
     const value = el('span');
     const meter = el('div', { className: 'meter' }, value, el('small', { textContent: 'm' }));
     meter.style.top = `${laneY(i) + (LANE_H - 74) / 2}px`;
     $('lanes').append(tag, meter);
-    lanes.set(n.id, { x: START_X, phase: i * 0.37, boostUntil: 0, rank, meter, value, head: { x: START_X, y: laneY(i) } });
+    lanes.set(n.id, { x: START_X, phase: i * 0.37, boostUntil: 0, rank, meter, value, faces, count, crowdKey: '', head: { x: START_X, y: laneY(i) } });
   });
+  renderCrowd();
+}
+
+// Hàng cổ vũ trên thẻ làn: ảnh đại diện 3 người trong đội vừa tương tác gần nhất và số người đã chọn trâu đó.
+function renderCrowd() {
+  for (const n of buffaloes) {
+    const lane = lanes.get(n.id);
+    const team = teams[n.id] ?? { count: 0, recent: [] };
+    const key = JSON.stringify(team);
+    if (!lane || key === lane.crowdKey) continue;
+    const grew = team.count > (lane.shownCount ?? team.count);
+    lane.crowdKey = key;
+    lane.shownCount = team.count;
+    lane.faces.replaceChildren(...team.recent.slice(0, 3).map((who) => avatar(who, 'ava')));
+    lane.count.textContent = `👥${team.count}`;
+    if (grew) {
+      lane.count.classList.remove('bump');
+      void lane.count.offsetWidth;
+      lane.count.classList.add('bump');
+    }
+  }
 }
 
 function renderScores(bumped) {
-  const order = [...nations].sort((a, b) => (scores[b.id] ?? 0) - (scores[a.id] ?? 0) || (a.id === leader ? -1 : b.id === leader ? 1 : 0));
+  const order = [...buffaloes].sort((a, b) => (scores[b.id] ?? 0) - (scores[a.id] ?? 0) || (a.id === leader ? -1 : b.id === leader ? 1 : 0));
   order.forEach((n, i) => {
     const lane = lanes.get(n.id);
     lane.rank.textContent = `#${i + 1}`;
@@ -310,26 +313,39 @@ function renderScores(bumped) {
 
 function buildPanel() {
   $('cards').replaceChildren(
-    ...nations.map((n) =>
-      el('div', { className: 'gcard', id: `card-${n.id}` }, flagEl(n.id), el('div', { className: 'nm', textContent: n.name }), el('img', { className: 'gift', src: n.gift?.icon ?? '', alt: '' }), el('div', { className: 'plus', textContent: `+${short(unitsGift)}m` })),
+    ...buffaloes.map((n) =>
+      el('div', { className: 'gcard', id: `card-${n.id}` }, bibEl(n), el('img', { className: 'gift', src: n.gift?.icon ?? '', alt: '' }), el('div', { className: 'plus', textContent: `+${short(unitsGift)}m` })),
     ),
   );
-  $('how').querySelector('em').textContent = `+${short(unitsComment)}m`;
+  showHow();
 }
 let unitsGift = 10;
+let unitsLike = 1;
+let likesPerStep = 30;
 
-// Dòng "💬 VIETNAM +0.1m" đổi tên nước liên tục để người xem biết gõ gì.
+// Dòng hướng dẫn đổi qua lại: "💬 1 2 3 4 5 PICK" (comment số để chọn trâu) và "❤️ TAP x30 +0.1m".
+function howFrames() {
+  const pick = [el('span', { className: 'bubble', textContent: '💬' }), el('span', { className: 'bibs' }, ...buffaloes.map((n) => bibEl(n))), el('b', { textContent: 'CHỌN TRÂU' })];
+  if (unitsComment) pick.push(el('em', { textContent: `+${short(unitsComment)}m` }));
+  const frames = [pick];
+  if (unitsLike) frames.push([el('span', { className: 'bubble', textContent: '❤️' }), el('b', { textContent: `THẢ ${likesPerStep} TIM` }), el('em', { textContent: `+${short(unitsLike)}m` })]);
+  return frames;
+}
 let howIndex = 0;
+function showHow() {
+  const frames = howFrames();
+  howIndex %= frames.length;
+  $('how').replaceChildren(el('div', {}, ...frames[howIndex]));
+}
 setInterval(() => {
-  if (!nations.length) return;
-  const b = $('how').querySelector('b');
-  b.classList.add('swap');
+  if (!buffaloes.length) return;
+  $('how').classList.add('swap');
   setTimeout(() => {
-    howIndex = (howIndex + 1) % nations.length;
-    b.textContent = nations[howIndex].name;
-    b.classList.remove('swap');
+    howIndex++;
+    showHow();
+    $('how').classList.remove('swap');
   }, 250);
-}, 2200);
+}, 3000);
 
 // ---------- Phản hồi khi có người tiếp sức ----------
 let tickerHold = 0;
@@ -338,9 +354,11 @@ function showTicker(msg) {
   const gift = msg.kind === 'gift';
   if (!gift && now < tickerHold) return;
   tickerHold = now + (gift ? 1800 : 400);
-  const parts = [avatar(msg.who), el('span', { className: 'name', textContent: msg.who.name }), el('span', { className: 'arrow', textContent: '➜' }), flagEl(msg.nation)];
+  const parts = [avatar(msg.who), el('span', { className: 'name', textContent: msg.who.name }), el('span', { className: 'arrow', textContent: '➜' }), bibOf(msg.buffalo)];
   if (gift && msg.icon) parts.push(el('img', { className: 'gift', src: msg.icon, alt: '' }));
-  parts.push(el('em', { textContent: `+${short(msg.units)}m` }));
+  if (msg.kind === 'like' || msg.type === 'like') parts.push(el('span', { textContent: '❤️' }));
+  const label = { pick: msg.joined ? 'VÀO ĐỘI!' : '✔', like: `x${msg.count}` }[msg.type] ?? `+${short(msg.units)}m`;
+  parts.push(el('em', { textContent: label }));
   $('ticker').replaceChildren(el('div', { className: 'tick' }, ...parts));
 }
 
@@ -353,8 +371,51 @@ function floatText(lane, text, big) {
   setTimeout(() => node.remove(), 1200);
 }
 
+// Tim bay lên từ trâu được thả tim, mỗi làn tối đa ~7 tim mỗi giây.
+const lastHeart = new Map();
+function heart(lane, id) {
+  const now = performance.now();
+  if (now - (lastHeart.get(id) ?? 0) < 140) return;
+  lastHeart.set(id, now);
+  const node = el('div', { className: 'heart', textContent: '❤️' });
+  node.style.left = `${lane.x - 40 + Math.random() * 80}px`;
+  node.style.top = `${lane.head.y + 60}px`;
+  node.style.setProperty('--dx', `${Math.round(Math.random() * 80 - 40)}px`);
+  $('fx').append(node);
+  setTimeout(() => node.remove(), 1300);
+}
+
+// Người mới vào đội: ảnh đại diện bay từ dải tên xuống hàng cổ vũ của làn, trên trâu hiện "Tên · VÀO ĐỘI!".
+// Nhiều người vào cùng lúc thì mỗi 250 ms chỉ diễn một người để màn hình không rối (hàng cổ vũ vẫn cập nhật đủ).
+let lastJoin = 0;
+function joinFx(msg) {
+  const lane = lanes.get(msg.buffalo);
+  const now = performance.now();
+  if (!lane || now - lastJoin < 250) return;
+  lastJoin = now;
+  const i = buffaloes.findIndex((n) => n.id === msg.buffalo);
+  const fly = avatar(msg.who, 'ava joiner');
+  const from = { x: 540, y: 434 };
+  const to = { x: 46, y: laneY(i) + (LANE_H - 148) / 2 + 104 };
+  fly.style.left = `${from.x}px`;
+  fly.style.top = `${from.y}px`;
+  $('fx').append(fly);
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    fly.style.transform = `translate(${to.x - from.x}px, ${to.y - from.y}px) scale(.6)`;
+  }));
+  setTimeout(() => fly.remove(), 900);
+  const pop = el('div', { className: 'pop join' }, avatar(msg.who), el('span', { className: 'name', textContent: msg.who.name }), el('em', { textContent: 'VÀO ĐỘI!' }));
+  pop.style.left = `${Math.min(760, Math.max(330, lane.x))}px`;
+  pop.style.top = `${lane.head.y + 20}px`;
+  $('fx').querySelectorAll(`.pop[data-n="${msg.buffalo}"]`).forEach((p) => p.remove());
+  pop.dataset.n = msg.buffalo;
+  $('fx').append(pop);
+  setTimeout(() => pop.remove(), 2300);
+  sfx.join();
+}
+
 function giftFlight(msg, lane) {
-  const card = $(`card-${msg.nation}`);
+  const card = $(`card-${msg.buffalo}`);
   if (card) {
     card.classList.remove('hit');
     void card.offsetWidth;
@@ -362,8 +423,8 @@ function giftFlight(msg, lane) {
   }
   if (msg.icon) {
     const fly = el('img', { className: 'flyer', src: msg.icon, alt: '' });
-    const i = nations.findIndex((n) => n.id === msg.nation);
-    const fromX = 22 + 16 + (i + 0.5) * (1036 - 32) / nations.length;
+    const i = buffaloes.findIndex((n) => n.id === msg.buffalo);
+    const fromX = 22 + 16 + (i + 0.5) * (1036 - 32) / buffaloes.length;
     fly.style.left = `${fromX}px`;
     fly.style.top = '1660px';
     $('fx').append(fly);
@@ -377,22 +438,22 @@ function giftFlight(msg, lane) {
   if (msg.count > 1) pop.append(el('em', { textContent: `x${msg.count}` }));
   pop.style.left = `${Math.min(760, Math.max(250, lane.x))}px`;
   pop.style.top = `${lane.head.y - 30}px`;
-  $('fx').querySelectorAll(`.pop[data-n="${msg.nation}"]`).forEach((p) => p.remove());
-  pop.dataset.n = msg.nation;
+  $('fx').querySelectorAll(`.pop[data-n="${msg.buffalo}"]`).forEach((p) => p.remove());
+  pop.dataset.n = msg.buffalo;
   $('fx').append(pop);
   setTimeout(() => pop.remove(), 2300);
 }
 
 function onBoost(msg) {
-  const lane = lanes.get(msg.nation);
+  const lane = lanes.get(msg.buffalo);
   if (!lane) return;
   const prevLeader = leader;
   applyBoard(msg);
-  renderScores(msg.nation);
+  renderScores(msg.buffalo);
   showTicker(msg);
   const now = performance.now();
-  // Quà lúc công bố hay tạm dừng vẫn được đọc tên nước, dù số mét để dành cho vòng sau.
-  if (msg.kind === 'gift') sayNation(msg.nation);
+  // Quà lúc công bố hay tạm dừng vẫn được đọc số trâu, dù số mét để dành cho vòng sau.
+  if (msg.kind === 'gift') sayBuffalo(msg.buffalo);
   if (msg.banked) return;
   lane.boostUntil = Math.max(lane.boostUntil, now + (msg.kind === 'gift' ? 1600 : 500));
   if (msg.kind === 'gift') {
@@ -401,9 +462,10 @@ function onBoost(msg) {
     spawnDust(lane.x, lane.head.y + 150, 14, true);
     sfx.gift(msg.units >= 100);
   } else {
-    // Comment dồn dập: mỗi làn hiện "+0.1" tối đa 4 lần mỗi giây.
-    if (now - (lastFloat.get(msg.nation) ?? 0) > 250) {
-      lastFloat.set(msg.nation, now);
+    if (msg.kind === 'like') heart(lane, msg.buffalo);
+    // Tương tác dồn dập: mỗi làn hiện "+0.1" tối đa 4 lần mỗi giây.
+    if (now - (lastFloat.get(msg.buffalo) ?? 0) > 250) {
+      lastFloat.set(msg.buffalo, now);
       floatText(lane, `+${short(msg.units)}`, false);
     }
     sfx.step();
@@ -422,30 +484,60 @@ function banner(text) {
   banner.timer = setTimeout(() => (b.hidden = true), 1500);
 }
 
-function showResult() {
+// Bảng kết quả có 2 trang: nửa đầu thời gian công bố là trâu thắng + bục vinh danh,
+// nửa sau là bảng vàng cả buổi live (nếu đã có người tiếp sức).
+let resultPage = null;
+function resultPageAt(left) {
+  return result?.session?.length && left <= resultMs / 2 ? 'hall' : 'win';
+}
+
+function podiumEl(list) {
+  const medals = ['🥇', '🥈', '🥉'];
+  // Bục kiểu Olympic: hạng 2 bên trái, hạng 1 ở giữa cao nhất, hạng 3 bên phải.
+  const order = [1, 0, 2].filter((k) => list[k]);
+  return el(
+    'div',
+    { className: 'podium' },
+    ...order.map((k) =>
+      el('div', { className: `step s${k + 1}` }, el('span', { className: 'medal', textContent: medals[k] }), avatar(list[k]), el('span', { className: 'name', textContent: list[k].name }), el('em', { textContent: `+${short(list[k].units)}m` })),
+    ),
+  );
+}
+
+function showResult(page = resultPageAt(paused ? pausedLeft : endsAt - performance.now())) {
   const box = $('result');
   if (phase !== 'result' || !result) {
     box.hidden = true;
+    resultPage = null;
     return;
   }
+  resultPage = page;
   const parts = [];
-  const winner = nationOf(result.winner);
-  if (winner) {
+  const winner = buffaloOf(result.winner);
+  if (page === 'hall') {
+    parts.push(
+      el('div', { className: 'hall-title', textContent: '🏅 BẢNG VÀNG BUỔI LIVE' }),
+      el('ol', { className: 'hall' }, ...result.session.map((p, k) => el('li', {}, el('b', { textContent: String(k + 1) }), avatar(p), el('span', { className: 'name', textContent: p.name }), el('em', { textContent: `${short(p.units)}m` })))),
+    );
+  } else if (winner) {
     // Trâu thắng nhảy mừng ngay trong bảng kết quả (làn đua bị bảng che).
     const hero = el('canvas', { className: 'hero', width: 460, height: 320 });
-    drawBuffalo(hero.getContext('2d'), { x: 230, y: 312, nation: winner, pose: 'happy', frame: 0, phase: 0.25, size: 1.9 });
+    drawBuffalo(hero.getContext('2d'), { x: 230, y: 312, buffalo: winner, pose: 'happy', frame: 0, phase: 0.25, size: 1.9 });
+    const fans = result.team ? ` · 👥 ${result.team} NGƯỜI CỔ VŨ` : '';
     parts.push(
       el('div', { className: 'stage' }, el('span', { className: 'trophy', textContent: '🏆' }), hero),
-      el('div', { className: 'who' }, flagEl(winner.id), el('span', { textContent: winner.name })),
-      el('div', { className: 'wins', textContent: 'WINS!' }),
-      el('div', { className: 'meters', textContent: `${meters(scores[winner.id] ?? 0)}m` }),
+      el('div', { className: 'who' }, bibEl(winner), el('span', { textContent: winner.name })),
+      el('div', { className: 'wins', textContent: 'VỀ NHẤT!' }),
+      el('div', { className: 'meters', textContent: `${meters(scores[winner.id] ?? 0)}m${fans}` }),
     );
-    if (result.top) parts.push(el('div', {}, el('div', { className: 'mvp' }, el('span', { textContent: '⭐' }), avatar(result.top), el('span', { className: 'name', textContent: result.top.name }), el('em', { textContent: `+${short(result.top.units)}m` }))));
+    const podium = result.podium ?? (result.top ? [result.top] : []);
+    if (podium.length) parts.push(podiumEl(podium));
   } else {
     parts.push(el('div', { className: 'empty', textContent: '🐃💤' }));
   }
-  parts.push(el('div', { className: 'next' }, 'NEXT ROUND ', el('b', { textContent: '' })));
+  parts.push(el('div', { className: 'next' }, 'VÒNG MỚI SAU ', el('b', { textContent: String(Math.max(1, Math.ceil((endsAt - performance.now()) / 1000))) }), ' GIÂY'));
   box.replaceChildren(...parts);
+  box.classList.toggle('hall-mode', page === 'hall');
   box.hidden = false;
 }
 
@@ -454,25 +546,32 @@ function applyBoard(msg) {
   if (msg.wins) wins = msg.wins;
   if ('leader' in msg) leader = msg.leader;
   if (msg.round) round = msg.round;
+  if (msg.teams) {
+    teams = msg.teams;
+    renderCrowd();
+  }
 }
 
 const handlers = {
   snapshot(msg) {
     const r = msg.race;
-    nations = r.nations;
+    buffaloes = r.buffaloes;
     unitsComment = r.units.comment;
+    unitsLike = r.units.like;
+    likesPerStep = r.units.likesPerStep;
     unitsGift = r.units.gift;
     phase = r.phase;
     paused = r.paused;
     result = r.result;
+    resultMs = r.resultMs ?? resultMs;
     applyBoard(r);
     setClock(r.left);
-    loadSprites(msg.sprites, nations);
+    loadSprites(msg.sprites, buffaloes);
     setVoice(msg.voice);
     if (msg.sprites.includes('nen.png')) {
       fetch('/chibi/nen.json').then((r) => (r.ok ? r.json() : null)).then((t) => t && (track = { ...track, ...t })).catch(() => {}).finally(() => (background.src = '/chibi/nen.png'));
     }
-    $('title').textContent = msg.title || 'BUFFALO RACE';
+    $('title').textContent = msg.title || 'ĐUA TRÂU';
     buildLanes();
     buildPanel();
     renderWins();
@@ -486,6 +585,19 @@ const handlers = {
     $('status').hidden = s.connected;
   },
   boost: onBoost,
+  // Tim chưa đủ để trâu đi: chỉ hiện tim bay trên trâu và người vừa thả tim.
+  like(msg) {
+    applyBoard(msg);
+    const lane = lanes.get(msg.buffalo);
+    if (!lane || phase !== 'race' || paused) return;
+    heart(lane, msg.buffalo);
+    showTicker(msg);
+  },
+  pick(msg) {
+    applyBoard(msg);
+    showTicker(msg);
+    if (msg.joined) joinFx(msg);
+  },
   voice: setVoice,
   round(msg) {
     phase = 'race';
@@ -498,7 +610,7 @@ const handlers = {
     renderWins();
     showResult();
     if (!paused) {
-      banner('GO!');
+      banner('CHẠY!');
       sfx.start();
     }
   },
@@ -527,7 +639,7 @@ events.onmessage = (e) => {
   const msg = JSON.parse(e.data);
   handlers[msg.type]?.(msg);
 };
-events.onerror = () => handlers.status({ connected: false, text: 'Lost connection to game server, retrying...' });
+events.onerror = () => handlers.status({ connected: false, text: 'Mất kết nối server game, đang thử lại...' });
 
 // Trình duyệt chặn âm thanh tới khi người dùng bấm (cửa sổ start.bat đã cho phép tự phát).
 if (!audioReady()) {

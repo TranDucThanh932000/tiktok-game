@@ -76,6 +76,15 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #160309; }
 .tag.gone { opacity: 0; }
 .tag.mc { padding: 4px 18px; font-size: 26px; background: rgba(20, 30, 70, 0.85); border-color: #9cc4ff; }
 .tag.mc.nu { background: rgba(110, 20, 70, 0.85); border-color: #ff9fc0; }
+/* Avatar cô dâu chú rể dán trên hai cánh cửa phòng tân hôn. */
+.tag.door { padding: 4px 18px 4px 5px; font-size: 26px; }
+.tag.door[hidden] { display: none; }
+.tag.door img, .tag.door .ini { width: 48px; height: 48px; }
+.tag.door .who { display: flex; flex-direction: column; line-height: 1.1; }
+.tag.door small { font-size: 17px; color: var(--gold); letter-spacing: 1px; }
+.tag.door span { max-width: 190px; }
+.tag.door.groom { background: rgba(20, 50, 130, 0.9); border-color: #9cc4ff; }
+.tag.door.bride { background: rgba(170, 20, 80, 0.9); border-color: #ffb3cc; }
 
 /* ---------- Thông báo chạy ---------- */
 #ticker { position: absolute; left: 30px; right: 30px; top: 1296px; height: 82px; pointer-events: none; }
@@ -85,6 +94,7 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #160309; }
 .tick.steal { background: linear-gradient(90deg, #7b2cbf, #e0218a); }
 .tick.cancel { background: linear-gradient(90deg, #3a3a4a, #6b0f1a); }
 .tick.gold { background: linear-gradient(90deg, #b07d00, #f2a900); }
+.tick.chamber { background: linear-gradient(90deg, #d6336c, #ff85b3); }
 .tick.out { animation: tick-out 0.35s forwards; }
 #queue { position: absolute; right: 34px; top: 1240px; padding: 4px 18px; border-radius: 999px; font-size: 26px; background: rgba(40, 6, 18, 0.8); color: #ffd6e0; }
 

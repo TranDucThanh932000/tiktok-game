@@ -40,6 +40,7 @@ Chạy bằng dòng lệnh (trong thư mục này, dùng Node của Laragon):
 | Kem (Bing Chilling, 5 xu) | Đổi vai chú rể: người mới đi vào, đá văng chú rể cũ (camera cận cảnh, chữ "BỐP!", rung màn hình) rồi thế chỗ. |
 | Bắn tim | Đổi vai cô dâu, cách tính giống quà Kem. |
 | Bánh vòng | Hủy hôn: trái tim vỡ, "BÙM!", cả hai văng khỏi sân khấu. |
+| Lọ nước hoa (20 xu) | Động phòng: cô dâu chú rể đang đứng sân khấu vào phòng tân hôn 10 giây. Tặng thêm thì cộng dồn. Xem mục **Động phòng**. |
 | Kem ốc quế (1 xu) | Mừng 1 chỉ vàng. |
 
 - Quà nào cũng cộng chỉ vàng, 1 xu = 1 chỉ (`goldPerCoin`). Quà không có trong bảng thì chỉ cộng chỉ vàng. Đủ mốc thì bắn pháo hoa: 300 → 1.000 → 3.000 → 6.000 → 10.000, sau đó cứ 5.000 một mốc.
@@ -66,11 +67,23 @@ Khi có đủ cô dâu và chú rể, sau 5 giây chuẩn bị, đám cưới t�
 - Làm xong lễ cuối: hiện băng "Trăm năm hạnh phúc", cặp đôi đi xuống lễ đường rồi rời sân khấu, dòng "Đã cưới N cặp" tăng lên. Người đứng đầu hàng chờ của mỗi vai lên thay, đủ đôi thì làm lễ cho cặp mới. Sau khi hủy hôn cũng vậy.
 - Muốn đổi tên, lời MC hay thời lượng từng nghi thức thì sửa `ceremony.steps` trong `config.json`. Thứ tự và `id` phải giữ nguyên, vì mỗi `id` gắn với một cảnh diễn riêng.
 
+## Động phòng
+
+Ai tặng Lọ nước hoa cũng được, miễn sân khấu đã đủ cô dâu và chú rể (chưa đủ thì chỉ cộng chỉ vàng, MC nhắc cần đủ đôi).
+
+- Cô dâu chú rể quay sang nhìn nhau, tim bay, cùng đi khỏi sân khấu. Camera cắt sang **phòng tân hôn** (`public/js/chamber.js`): tường hồng hoa đào, biển "PHÒNG TÂN HÔN", băng rôn "ĐỘNG PHÒNG HOA CHÚC", đèn lồng, tường hoa hồng, hai giá biển tên cô dâu chú rể. Cửa mở ánh hồng, hai người đi vào, cửa đóng.
+- Trong phòng đèn sáng, bóng hai người in lên giấy dán cửa song gỗ: ngồi trò chuyện, xích lại gần, hôn, ôm, tắt đèn (tim bay ra cửa). Cửa treo biển "XIN ĐỪNG LÀM PHIỀN", avatar cô dâu chú rể dán trên hai cánh cửa. Dòng tiến độ đổi thành "🚪 Động phòng · còn N giây".
+- Mỗi lọ 10 giây (`bridalChamber.seconds`). Tặng thêm lúc đang động phòng thì cộng dồn; quà combo x3 là 30 giây.
+- Lễ cưới đang dở thì tạm dừng. Hết giờ, cửa mở, cặp đôi bước ra rồi quay lại sân khấu, **làm lại nghi thức đang dở** từ đầu nghi thức đó.
+- **Đổi vai lúc động phòng** (Kem / Bắn tim): người mới đi tới, mở cửa xông vào, "BỐP!", người cũ văng ra khỏi phòng, nằm choáng trước cửa (sao và chim bay quanh đầu), cửa đóng lại, bóng người diễn tiếp với cặp mới. Cặp mới ở trong phòng ít nhất 10 giây. Ra khỏi phòng thì lễ cưới làm lại từ đầu cho cặp mới.
+- **Hủy hôn lúc động phòng**: cửa bật tung, "BÙM!", cả hai văng ra khỏi phòng, camera về sảnh chờ cặp mới.
+- Mở lại trang lúc đang động phòng thì vẽ thẳng phòng tân hôn đang đóng cửa.
+
 ## MC
 
 Hai MC đám cưới, giọng nam và giọng nữ, đọc bằng Vbee. Cần 4 dòng trong `.env` của game: `VBEE_TOKEN`, `VBEE_APP_ID`, `VBEE_VOICE_MALE`, `VBEE_VOICE_FEMALE` (tùy chọn `VBEE_SPEED`).
 
-- MC lên tiếng khi: có người lên vai, đăng ký vào hàng chờ, đổi vai, hủy hôn, mừng vàng từ 10 chỉ, đủ mốc pháo hoa, từng nghi thức cưới, tiễn cặp đôi. Lúc vắng, cứ khoảng 40 giây MC nói một câu mời gọi (`mc.idleSeconds` trong `config.json`).
+- MC lên tiếng khi: có người lên vai, đăng ký vào hàng chờ, đổi vai, hủy hôn, động phòng (vào phòng, tặng thêm, bị xông vào, ra phòng), mừng vàng từ 10 chỉ, đủ mốc pháo hoa, từng nghi thức cưới, tiễn cặp đôi. Lúc vắng, cứ khoảng 40 giây MC nói một câu mời gọi (`mc.idleSeconds` trong `config.json`).
 - Lời nói nằm trong [mc.json](mc.json). Mỗi tình huống có 3 đến 8 cách nói, nhiều chỗ là đoạn hai MC đối đáp. MC chọn ngẫu nhiên và không lặp lại những cách vừa dùng. Thêm hoặc sửa câu thì giữ dạng `"nam: ..."` / `"nu: ..."` và các chỗ điền `{ten}`, `{cu}`, `{chure}`, `{codau}`, `{moc}`, `{so}`.
 - Mỗi câu được cắt thành đoạn cố định và đoạn tên người chơi. Đoạn cố định được tạo một lần lúc bật server lần đầu (khoảng 270 đoạn, mất vài phút), lưu trong `data/tts` và dùng lại mãi. Tên người chơi được tạo khi cần, đọc chậm hơn khoảng một giây.
 - Tên có chữ lạ, biểu tượng hay số được làm sạch trước khi đọc. Không đọc được thì MC gọi là "bạn".
@@ -84,7 +97,7 @@ Hai MC đứng hai góc sân khấu, tay phải cầm micro (đầu micro luôn 
 
 ## Hàng đợi kịch bản
 
-Server giữ trạng thái và hàng đợi, mỗi lúc chỉ chạy một kịch bản (lên vai, đổi vai, hủy hôn, tiễn cặp đôi), nên quà dồn dập vẫn được diễn lần lượt, không chồng nhau. Từ 3 kịch bản chờ trở lên, các kịch bản chạy nhanh dần (tối đa gấp đôi). Hàng đợi giữ tối đa 50 kịch bản (`queueLimit`). Khi hàng đầy, quà vẫn được cộng chỉ vàng nhưng không có kịch bản.
+Server giữ trạng thái và hàng đợi, mỗi lúc chỉ chạy một kịch bản (lên vai, đổi vai, hủy hôn, vào / ra phòng tân hôn, tiễn cặp đôi), nên quà dồn dập vẫn được diễn lần lượt, không chồng nhau. Từ 3 kịch bản chờ trở lên, các kịch bản chạy nhanh dần (tối đa gấp đôi). Hàng đợi giữ tối đa 50 kịch bản (`queueLimit`). Khi hàng đầy, quà vẫn được cộng chỉ vàng nhưng không có kịch bản.
 
 Mở lại cửa sổ game giữa chừng thì trang vẽ ngay trạng thái hiện tại. Tắt server rồi bật lại thì chú rể, cô dâu, chỉ vàng, kỷ lục, hàng chờ đăng ký và số cặp đã cưới được khôi phục từ `data/state.json`. Nghi thức đang dở thì diễn lại từ đầu nghi thức đó.
 
@@ -99,7 +112,7 @@ Tên quà có thể khác nhau tùy ngôn ngữ. Khi đang live, cửa sổ serv
 
 Chép tên vào `names` hoặc mã vào `ids` của quà tương ứng trong `config.json`, rồi khởi động lại server. Server khớp mã trước, sau đó mới khớp tên (không phân biệt hoa thường, có dấu hay không). Quà combo chỉ được tính phần tăng thêm, nên không bị cộng trùng.
 
-Muốn đổi quà nào làm việc gì thì sửa `action` trong mục `gifts`: `become_groom` / `become_bride` (đăng ký), `steal_groom` / `steal_bride` (đổi vai), `cancel_wedding`, `gold`.
+Muốn đổi quà nào làm việc gì thì sửa `action` trong mục `gifts`: `become_groom` / `become_bride` (đăng ký), `steal_groom` / `steal_bride` (đổi vai), `cancel_wedding`, `bridal_chamber` (động phòng), `gold`.
 
 ## Cấu hình khác (`config.json`)
 
@@ -109,8 +122,10 @@ Muốn đổi quà nào làm việc gì thì sửa `action` trong mục `gifts`:
 | `ceremony.startDelayMs`, `ceremony.farewellMs`, `ceremony.steps` | Thời gian chuẩn bị, màn tiễn cặp đôi, danh sách nghi thức |
 | `waitlistLimit` | Số người tối đa trong hàng chờ của mỗi vai (30) |
 | `timing.claimMs` / `stealMs` / `cancelMs` | Độ dài từng kịch bản (mili giây) |
+| `bridalChamber.seconds` | Số giây động phòng mỗi lọ nước hoa (10) |
+| `bridalChamber.enterMs` / `exitMs` | Độ dài màn vào phòng và ra phòng (mili giây) |
 | `timing.speedupAt`, `timing.maxSpeed` | Từ bao nhiêu kịch bản chờ thì tăng tốc, và tốc độ tối đa |
-| `chatCommands` | Lệnh chat để thử (`!chure`, `!codau`, `!doichure`, `!doicodau`, `!huyhon`, `!vang`) |
+| `chatCommands` | Lệnh chat để thử (`!chure`, `!codau`, `!doichure`, `!doicodau`, `!huyhon`, `!dongphong`, `!vang`) |
 | `chatCommandsLive` | `false`: lệnh chat chỉ chạy từ bảng điều khiển. Bật `true` thì người xem gõ lệnh cũng được, tức là chơi không cần quà. |
 | `renderScale` | Giảm xuống 0,6–0,8 nếu máy giật khi vừa chạy game vừa phát live |
 | `guestsPerTable` | Số khách ngồi mỗi bàn (0–8, mặc định 6). Giảm xuống 3–4 nếu máy yếu; thử nhanh bằng `?guests=4` trên địa chỉ trang game |
@@ -125,6 +140,6 @@ Thêm `?mute` vào địa chỉ trang game để tắt tiếng (cả giọng MC)
 
 ## Chưa kiểm chứng
 
-- Chưa thử với phiên LIVE thật. Tên quà "TikTok", "Finger Heart", "Doughnut", "Ice Cream Cone" là phỏng đoán. Quà Kem lấy mã 7412 từ game Sơn Tinh Thủy Tinh. Hãy xem log `[Quà gốc]` rồi sửa `config.json` theo.
-- Icon quà lấy từ ảnh gốc của TikTok. Kem ốc quế (`kem-oc-que.webp`) và Kem 5 xu (`kem.webp`) đã đối chiếu với danh mục quà trên streamtoearn.io.
+- Chưa thử với phiên LIVE thật. Tên quà "TikTok", "Finger Heart", "Doughnut", "Ice Cream Cone", "Perfume" là phỏng đoán. Quà Kem lấy mã 7412 từ game Sơn Tinh Thủy Tinh. Hãy xem log `[Quà gốc]` rồi sửa `config.json` theo.
+- Icon quà lấy từ ảnh gốc của TikTok. Kem ốc quế (`kem-oc-que.webp`) và Kem 5 xu (`kem.webp`) đã đối chiếu với danh mục quà trên streamtoearn.io. Lọ nước hoa (`perfume.webp`) lấy từ game Câu Cá.
 - Chưa đo FPS trong lúc LIVE Studio đang phát, và chưa chạy thử liên tục 2 giờ như giai đoạn 7 của kế hoạch.

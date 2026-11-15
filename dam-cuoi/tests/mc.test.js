@@ -18,7 +18,7 @@ test('tách câu thành mẩu cố định và chỗ điền tên, bỏ mẩu ch
 });
 
 test('mỗi tình huống trong game đều có lời, mỗi nghi thức đều có lời', () => {
-  for (const key of ['claim_groom', 'claim_bride', 'steal_groom', 'steal_bride', 'register_groom', 'register_bride', 'cheer', 'cancel', 'ceremony_start', 'restart', 'farewell', 'gold_big', 'gold_huge', 'goal', 'idle_empty', 'idle_groom', 'idle_bride', 'idle_couple']) {
+  for (const key of ['claim_groom', 'claim_bride', 'steal_groom', 'steal_bride', 'register_groom', 'register_bride', 'cheer', 'cancel', 'ceremony_start', 'restart', 'farewell', 'gold_big', 'gold_huge', 'goal', 'idle_empty', 'idle_groom', 'idle_bride', 'idle_couple', 'chamber_enter', 'chamber_extend', 'chamber_exit', 'chamber_need', 'chamber_steal_groom', 'chamber_steal_bride', 'chamber_cancel']) {
     assert.ok(lines[key]?.length >= 3, key);
   }
   for (const step of config.ceremony.steps) assert.ok(lines[`step_${step.id}`]?.length >= 3, step.id);

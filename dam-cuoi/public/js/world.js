@@ -30,7 +30,7 @@ function rng(seed) {
   };
 }
 
-function canvasTexture(w, h, draw) {
+export function canvasTexture(w, h, draw) {
   const c = document.createElement('canvas');
   c.width = w;
   c.height = h;
@@ -236,7 +236,7 @@ class Batch {
 }
 
 // Gom hoa của mọi bó (bàn tiệc, trụ hoa, cổng hoa cửa chính) thành ba lượt vẽ: hồng, lá, hoa baby.
-class Bouquets {
+export class Bouquets {
   constructor() {
     this.roses = [];
     this.leaves = [];

@@ -222,6 +222,14 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #2b1d12; }
 .pig img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 6px 3px rgba(60, 30, 10, .35)); }
 .pig .visitor-name { bottom: 96%; font-size: 26px; }
 .heart { position: absolute; color: #ff4f8b; font-size: 34px; line-height: 1; pointer-events: none; text-shadow: 0 2px 0 #fff; }
+/* 20/11: lời chúc của bạn đứng trước cô, nằm bên trái đầu bạn ấy, ngay trên bong bóng lời cảm ơn của cô. */
+.wish-say {
+  position: absolute; right: 88%; top: -4px; width: max-content; max-width: 340px;
+  padding: 6px 18px; border: 4px solid var(--pink); border-radius: 22px; background: #fffdf3; color: #2a211c;
+  font-size: 30px; line-height: 1.12; text-align: center; box-shadow: 0 4px 12px rgba(0, 0, 0, .25);
+  animation: tile-pop .35s cubic-bezier(.2, 1.6, .4, 1);
+}
+.wish-say::after { content: ""; position: absolute; right: -18px; top: 18px; border: 10px solid transparent; border-left: 18px solid var(--pink); border-right: 0; }
 
 
 .card {
@@ -319,3 +327,39 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #2b1d12; }
 @keyframes guide-pulse { 0% { scale: 1; } 40% { scale: 1.06; } 100% { scale: 1; } }
 @keyframes fund-near { from { filter: brightness(1); } to { filter: brightness(1.25) saturate(1.3); } }
 @keyframes menu-hit { 0% { transform: scale(1); } 40% { transform: scale(1.25); } 100% { transform: scale(1); } }
+
+
+/* ---------- Trang trí 20-11 (Ngày Nhà giáo Việt Nam): xóa cả phần này cùng các khối "deco" trong index.html khi hết dịp ---------- */
+.deco { pointer-events: none; }
+/* Băng rôn đỏ chữ vàng nằm trên khung gỗ đỉnh bảng, không chạm hàng chữ chủ đề. */
+#d-ribbon {
+  left: 50%; top: 2px; z-index: 2; height: 42px; padding: 0 14px; transform: translateX(-50%);
+  display: flex; align-items: center; gap: 8px; white-space: nowrap;
+  border: 3px solid var(--gold); border-radius: 10px; background: linear-gradient(#f0485c, #c81f37);
+  color: #ffe680; font: 700 25px var(--bold); text-transform: uppercase; letter-spacing: 1px;
+  text-shadow: 0 2px 0 #7d0f22; box-shadow: 0 4px 0 rgba(90, 20, 20, .35);
+}
+#d-ribbon svg { width: 30px; height: 30px; animation: spin 8s linear infinite; }
+#d-ribbon::before, #d-ribbon::after {
+  content: ""; position: absolute; z-index: -1; top: 10px; width: 34px; height: 34px; background: #a8172d;
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 30% 50%);
+}
+#d-ribbon::before { left: -26px; }
+#d-ribbon::after { right: -26px; transform: scaleX(-1); }
+/* Chùm hoa góc trên bảng, góc phải lật ngang. */
+.d-corner { top: 0; z-index: 2; width: 150px; height: 130px; filter: drop-shadow(0 3px 2px rgba(60, 30, 20, .3)); }
+.d-corner.left { left: 0; }
+.d-corner.right { right: 0; scale: -1 1; }
+/* Lẵng hoa trên bục, giữa bàn cô và chỗ cô đứng; nằm dưới bảng x2 và cô giáo. */
+#d-basket { left: 492px; top: 938px; z-index: 3; width: 120px; height: 104px; transform-origin: 50% 100%; filter: drop-shadow(0 4px 3px rgba(60, 40, 20, .3)); animation: sway 3s ease-in-out infinite alternate; }
+/* Dây hoa viền mép bục giảng: sau khung ảnh, cô giáo và học sinh. */
+#d-garland { left: 0; top: 1040px; z-index: 4; width: 1080px; height: 44px; filter: drop-shadow(0 3px 2px rgba(60, 40, 20, .3)); }
+/* Cánh hoa rơi đứng đầu #stage nên nằm sau mọi thứ, chỉ thấy ở khoảng tường và sàn trống. */
+#d-petals { left: 0; top: 0; z-index: 0; width: 1080px; height: 1920px; overflow: hidden; }
+#d-petals i {
+  position: absolute; left: var(--x); top: -40px; width: 18px; height: 13px; border-radius: 70% 0 70% 0;
+  background: linear-gradient(135deg, #ff9fb8, #e8405f); opacity: .9;
+  animation: d-fall var(--t) linear var(--d) infinite;
+}
+#d-petals i:nth-child(3n) { background: linear-gradient(135deg, #fff1a0, #f5b625); }
+@keyframes d-fall { to { transform: translate(var(--dx), 1990px) rotate(900deg); } }

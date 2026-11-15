@@ -13,7 +13,7 @@
     table { border-collapse: collapse; width: 100%; }
     th, td { padding: 6px 8px; text-align: right; border-bottom: 1px solid #2a4030; }
     th:first-child, td:first-child { text-align: left; }
-    td img { width: 30px; height: 20px; vertical-align: -4px; margin-right: 8px; border-radius: 3px; }
+    .bib { display: inline-flex; align-items: center; justify-content: center; min-width: 26px; height: 22px; padding: 0 3px; box-sizing: border-box; margin-right: 8px; border-radius: 5px; background: var(--c); color: #fff; font-weight: 700; text-shadow: 0 1px 0 rgba(0,0,0,.4); vertical-align: -2px; }
     button { font: inherit; padding: 7px 14px; border-radius: 9px; border: 0; background: #2d5a3a; color: #fff; cursor: pointer; margin: 3px 4px 3px 0; }
     button:hover { background: #3c7a4e; }
     button.warn { background: #7a2b2b; }
@@ -34,12 +34,12 @@
   <section>
     <h2>Vòng đua <span id="clock"></span></h2>
     <table>
-      <thead><tr><th>Nước</th><th>Mét vòng này</th><th>Số vòng thắng</th></tr></thead>
+      <thead><tr><th>Trâu</th><th>Người cổ vũ</th><th>Mét vòng này</th><th>Số vòng thắng</th></tr></thead>
       <tbody id="score"></tbody>
     </table>
     <div class="row">
       <button id="pause">Tạm dừng</button>
-      <button data-control="end" data-ask="Kết thúc vòng này ngay và công bố nước thắng?">Kết thúc vòng ngay</button>
+      <button data-control="end" data-ask="Kết thúc vòng này ngay và công bố trâu thắng?">Kết thúc vòng ngay</button>
       <button class="warn" data-control="restart" data-ask="Chạy lại vòng này từ 0 mét? Số mét vòng này bị bỏ.">Chạy lại vòng</button>
       <button class="warn" data-control="resetWins" data-ask="Xóa hết số vòng thắng, đếm lại từ vòng 1?">Xóa số vòng thắng</button>
     </div>
@@ -50,11 +50,12 @@
     <h2>Chạy thử</h2>
     <div class="row">Tên người xem <input id="name" value="Bạn thử" maxlength="24"> <button id="random">Tên ngẫu nhiên</button></div>
     <div class="row" id="chat"></div>
+    <div class="row" id="like"></div>
     <div class="row" id="gift"></div>
     <div class="row">Số lượng quà <input id="count" type="number" min="1" max="999" value="1" style="width:80px">
       <button id="other">Quà khác (Galaxy)</button>
-      <span class="hint">Quà khác cộng cho nước người đó comment gần nhất.</span></div>
-    <div class="row"><button id="storm">Mưa comment 5 giây</button> <span class="hint">Nhiều tên ngẫu nhiên comment tên nước liên tục.</span></div>
+      <span class="hint">Quà khác cộng cho trâu người đó đã chọn.</span></div>
+    <div class="row"><button id="storm">Mưa tim 10 giây</button> <span class="hint">Nhiều tên ngẫu nhiên comment chọn trâu rồi thả tim liên tục.</span></div>
   </section>
 
   <section>
@@ -63,13 +64,13 @@
   </section>
 
   <script type="module">
-    import { flagUrl } from '/js/flags.js';
     const $ = (id) => document.getElementById(id);
-    let nations = [];
+    let buffaloes = [];
     let paused = false;
     let phase = 'race';
     let endsAt = 0;
-    const nameOf = (id) => nations.find((n) => n.id === id)?.name ?? id;
+    const nameOf = (id) => buffaloes.find((b) => b.id === id)?.name ?? id;
+    const bib = (b) => Object.assign(document.createElement('span'), { className: 'bib', textContent: b.id, style: `--c: ${b.color}` });
     const m = (u) => (u / 10).toFixed(1);
 
     const post = (url, body) => fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then((r) => r.json());
@@ -85,12 +86,12 @@
       if ('paused' in msg) paused = msg.paused;
       if ('left' in msg) endsAt = Date.now() + msg.left;
       $('pause').textContent = paused ? 'Chạy tiếp' : 'Tạm dừng';
-      $('score').replaceChildren(...nations.map((n) => {
+      $('score').replaceChildren(...buffaloes.map((n) => {
         const tr = document.createElement('tr');
         const first = document.createElement('td');
-        first.append(Object.assign(document.createElement('img'), { src: flagUrl(n.id) }), `${n.name}${msg.leader === n.id ? ' 👑' : ''}`);
+        first.append(bib(n), `${n.name}${msg.leader === n.id ? ' 👑' : ''}`);
         tr.append(first);
-        for (const v of [m(msg.scores[n.id]), msg.wins[n.id]]) tr.append(Object.assign(document.createElement('td'), { textContent: v }));
+        for (const v of [msg.teams?.[n.id]?.count ?? 0, m(msg.scores[n.id]), msg.wins[n.id]]) tr.append(Object.assign(document.createElement('td'), { textContent: v }));
         return tr;
       }));
     }
@@ -107,21 +108,27 @@
       return b;
     };
     function buildButtons() {
-      $('chat').replaceChildren('Comment:', ...nations.map((n) => button(n.name, flagUrl(n.id), () => simulate({ kind: 'chat', text: n.name }))));
-      $('gift').replaceChildren('Quà:', ...nations.map((n) => button(`${n.gift.label} → ${n.name}`, n.gift.icon, () => simulate({ kind: 'gift', gift: n.gift.label, count: Number($('count').value) || 1 }))));
+      $('chat').replaceChildren('Comment chọn trâu:', ...buffaloes.map((n) => button(`Số ${n.id}`, '', () => simulate({ kind: 'chat', text: `số ${n.id}` }))));
+      $('like').replaceChildren('Thả tim:', ...[1, 10, 30, 100].map((k) => button(`${k} tim`, '', () => simulate({ kind: 'like', count: k }).then((r) => !r.result && log('Tim chưa tính: chưa chọn trâu, hoặc vòng đua chưa chạy')))));
+      $('gift').replaceChildren('Quà:', ...buffaloes.map((n) => button(`${n.gift.label} → ${n.name}`, n.gift.icon, () => simulate({ kind: 'gift', gift: n.gift.label, count: Number($('count').value) || 1 }))));
     }
 
     const NAMES = ['Lan', 'Tuấn', 'Minh Anh', 'Hùng', 'Thảo', 'Somchai', 'Vy', 'Long', 'Dara', 'Phúc', 'Maria', 'Wei'];
     const randomName = () => `${NAMES[Math.floor(Math.random() * NAMES.length)]} ${Math.floor(Math.random() * 90 + 10)}`;
     $('random').onclick = () => ($('name').value = randomName());
-    $('other').onclick = () => simulate({ kind: 'gift', gift: 'Galaxy', count: Number($('count').value) || 1 }).then((r) => !r.result && log('Quà khác chưa tính: người này chưa comment tên nước nào'));
+    $('other').onclick = () => simulate({ kind: 'gift', gift: 'Galaxy', count: Number($('count').value) || 1 }).then((r) => !r.result && log('Quà khác chưa tính: người này chưa comment chọn trâu'));
+    // Khoảng 30 người xem ngẫu nhiên: comment chọn trâu (trâu số nhỏ được chọn nhiều hơn) rồi thả tim từng đợt.
     $('storm').onclick = () => {
-      const until = Date.now() + 5000;
+      const until = Date.now() + 10_000;
+      const crowd = Array.from({ length: 30 }, randomName);
+      for (const name of crowd) {
+        const n = buffaloes[Math.floor(Math.random() ** 1.6 * buffaloes.length)];
+        simulate({ kind: 'chat', text: `số ${n.id}` }, name);
+      }
       const timer = setInterval(() => {
         if (Date.now() > until) return clearInterval(timer);
-        const n = nations[Math.floor(Math.random() ** 1.6 * nations.length)];
-        simulate({ kind: 'chat', text: `${n.name} oi` }, randomName());
-      }, 90);
+        simulate({ kind: 'like', count: 5 + Math.floor(Math.random() * 11) }, crowd[Math.floor(Math.random() * crowd.length)]);
+      }, 60);
     };
     $('pause').onclick = () => post('/api/control', { action: paused ? 'resume' : 'pause' });
     for (const b of document.querySelectorAll('[data-control]')) {
@@ -130,7 +137,7 @@
 
     const handlers = {
       snapshot(msg) {
-        nations = msg.race.nations;
+        buffaloes = msg.race.buffaloes;
         buildButtons();
         render(msg.race);
         handlers.status(msg.status);
@@ -144,12 +151,13 @@
         $('session').textContent = s.roomId ? `Phiên live: ${s.diamonds.toLocaleString('vi-VN')} kim cương · ${s.gifts} quà` : '';
       },
       boost(msg) {
-        if (msg.kind === 'gift') log(`${msg.who.name} tặng ${msg.giftName || 'quà'} x${msg.count} → ${nameOf(msg.nation)} +${m(msg.units)} m${msg.banked ? ' (để dành)' : ''}`);
+        if (msg.kind === 'gift') log(`${msg.who.name} tặng ${msg.giftName || 'quà'} x${msg.count} → ${nameOf(msg.buffalo)} +${m(msg.units)} m${msg.banked ? ' (để dành)' : ''}`);
         render(msg);
       },
       round(msg) { log(`Vòng ${msg.round} bắt đầu`); render(msg); },
       result(msg) { log(`Vòng ${msg.round}: ${msg.winner ? `${nameOf(msg.winner)} thắng (${m(msg.scores[msg.winner])} m)` : 'không ai chạy'}${msg.top ? ` · tiếp sức nhiều nhất ${msg.top.name}` : ''}`); render(msg); },
       pause(msg) { render(msg); },
+      pick(msg) { if (msg.joined) log(`${msg.who.name} vào đội ${nameOf(msg.buffalo)}`); render(msg); },
     };
     const events = new EventSource('/events');
     events.onmessage = (e) => {

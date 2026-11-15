@@ -269,3 +269,19 @@ test('quỹ lớp gần đủ thì cô báo; đủ thì cô báo phát kẹo', a
   await flush();
   assert.deepEqual(said.map((s) => s.text), [lines.fundNear[0], lines.candy[0]]);
 });
+
+test('20/11: cảm ơn bạn lên chúc cô, đọc "20/11" thành ngày; tên chưa có giọng sẵn thì chỉ hiện chữ', async () => {
+  const a = setup();
+  a.teacher.thankWish({ name: 'Lan Anh 2k5' });
+  await a.flush();
+  const tail = lines.wishThanks[0];
+  assert.deepEqual(a.said[0].clips.map((c) => c.id), ['id:Lan Anh', `id:${a.teacher.spoken(tail)}`]);
+  assert.equal(a.said[0].text, `Lan Anh 2k5, ${tail}`);
+  assert.equal(a.teacher.spoken('chúc cả lớp 20/11 thật vui'), 'chúc cả lớp 20 tháng 11 thật vui');
+
+  const b = setup({ unready: ['Lan Anh'] });
+  b.teacher.thankWish({ name: 'Lan Anh' });
+  await b.flush();
+  assert.deepEqual(b.said[0].clips.map((c) => c.id), [`id:${lines.wishThanks[0]}`]);
+  assert.equal(b.said[0].text, `Lan Anh, ${lines.wishThanks[0]}`);
+});

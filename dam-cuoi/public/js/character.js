@@ -469,6 +469,20 @@ export class Character {
         snap = 30;
         break;
       }
+      case 'lie': {
+        // Nằm ngửa choáng váng sau khi bị đá văng: dang tay, chân hơi co, thỉnh thoảng giật giật.
+        const twitch = Math.max(0, Math.sin(T * 5)) ** 8 * 0.25;
+        q.lz = 1.35 + twitch;
+        q.rz = -1.35 - twitch;
+        q.le = q.re = -0.35;
+        q.hl = 0.25;
+        q.kl = 0.45;
+        q.hr = -0.1 + twitch;
+        q.kr = 0.15;
+        q.nz = Math.sin(T * 1.6) * 0.25;
+        snap = 10;
+        break;
+      }
       case 'bow': {
         // Vái lạy / cúi chào: gập người rồi đứng lên, tay chắp trước ngực.
         const b = Math.max(0, Math.sin(t * 2.3));

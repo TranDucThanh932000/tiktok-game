@@ -2,7 +2,7 @@
   "name": "dua-trau",
   "version": "1.0.0",
   "private": true,
-  "description": "Đua Trâu 5 nước cho TikTok LIVE: comment tên nước +0,1 m, quà của nước +1 m, mỗi vòng 60 giây",
+  "description": "Đua Trâu 5 số báo danh cho TikTok LIVE: comment số để chọn trâu, 30 tim +0,1 m, quà +1 m, mỗi vòng 60 giây",
   "type": "module",
   "scripts": {
     "start": "node --env-file-if-exists=.env server.js",

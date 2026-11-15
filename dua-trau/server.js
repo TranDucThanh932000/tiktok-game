@@ -17,8 +17,13 @@ const meters = (v) => Number.isFinite(v) && v >= 0 && Math.abs(v * 10 - Math.rou
 const problems = [
   [config.roundSeconds >= 10, 'roundSeconds là số giây mỗi vòng, từ 10'],
   [config.resultSeconds >= 2, 'resultSeconds là số giây công bố kết quả, từ 2'],
-  [meters(config.commentMeters) && meters(config.giftMeters) && meters(config.otherGiftMeters ?? 0), 'commentMeters, giftMeters, otherGiftMeters là số mét, lẻ tối đa 1 chữ số (0.1, 1, 2.5...)'],
-  [Array.isArray(config.nations) && config.nations.length >= 2 && config.nations.every((n) => /^[a-z0-9-]+$/.test(n.id ?? '') && n.name && n.gift?.icon), 'nations cần ít nhất 2 nước, mỗi nước có id (chữ thường không dấu), name và gift.icon'],
+  [[config.commentMeters ?? 0, config.likeMeters, config.giftMeters, config.otherGiftMeters ?? 0].every(meters), 'commentMeters, likeMeters, giftMeters, otherGiftMeters là số mét, lẻ tối đa 1 chữ số (0, 0.1, 1, 2.5...)'],
+  [Number.isInteger(config.likesPerStep) && config.likesPerStep >= 1, 'likesPerStep là số tim để trâu đi likeMeters, số nguyên từ 1'],
+  [
+    Array.isArray(config.buffaloes) && config.buffaloes.length >= 2 && new Set(config.buffaloes.map((b) => b.id)).size === config.buffaloes.length &&
+      config.buffaloes.every((b) => /^[1-9][0-9]?$/.test(b.id ?? '') && b.name && b.gift?.icon),
+    'buffaloes cần ít nhất 2 con trâu, mỗi con có id là số báo danh (1-99, không trùng), name và gift.icon',
+  ],
   [!config.voice || (config.voice.repeatGapSeconds >= 0 && Number.isInteger(config.voice.maxQueue) && config.voice.maxQueue >= 1), 'voice cần repeatGapSeconds (giây, từ 0) và maxQueue (số nguyên từ 1)'],
 ].filter(([ok]) => !ok);
 if (problems.length) throw new Error(`config.json: ${problems.map(([, text]) => text).join('; ')}`);
@@ -35,10 +40,10 @@ function setStatus(connected, text) {
 }
 
 // ---------- Cuộc đua ----------
-const nameOf = Object.fromEntries(config.nations.map((n) => [n.id, n.name]));
+const nameOf = Object.fromEntries(config.buffaloes.map((b) => [b.id, b.name]));
 const m = (units) => (units / 10).toLocaleString('vi-VN');
 function logEvent(msg) {
-  if (msg.type === 'boost' && msg.kind === 'gift') console.log(`[Quà] ${msg.who.name}: ${msg.giftName || 'quà'} x${msg.count} → ${nameOf[msg.nation]} +${m(msg.units)} m${msg.banked ? ' (để dành cho vòng sau)' : ''}`);
+  if (msg.type === 'boost' && msg.kind === 'gift') console.log(`[Quà] ${msg.who.name}: ${msg.giftName || 'quà'} x${msg.count} → ${nameOf[msg.buffalo]} +${m(msg.units)} m${msg.banked ? ' (để dành cho vòng sau)' : ''}`);
   if (msg.type === 'round') console.log(`[Vòng ${msg.round}] Bắt đầu`);
   if (msg.type === 'result') {
     const scores = msg.ranking.map((id) => `${nameOf[id]} ${m(msg.scores[id])}`).join(' · ');
@@ -74,7 +79,7 @@ const race = new Race(config, {
 if (existsSync(statePath)) {
   try {
     race.restore(JSON.parse(readFileSync(statePath, 'utf8')));
-    console.log(`[Khôi phục] Vòng ${race.round}, còn ${Math.ceil(race.left() / 1000)} giây · thắng: ${config.nations.map((n) => `${n.name} ${race.wins[n.id]}`).join(' · ')}`);
+    console.log(`[Khôi phục] Vòng ${race.round}, còn ${Math.ceil(race.left() / 1000)} giây · thắng: ${config.buffaloes.map((b) => `${b.name} ${race.wins[b.id]}`).join(' · ')}`);
   } catch (err) {
     console.error(`[Khôi phục] Bỏ qua data/state.json hỏng: ${err.message}`);
   }
@@ -98,7 +103,7 @@ function spriteList() {
   }
 }
 
-// ---------- Giọng đọc tên nước khi có quà ----------
+// ---------- Giọng đọc số trâu khi có quà ----------
 const vbee = vbeeFromEnv();
 // Giọng riêng của game (tiếng Anh) đặt trong config.json, không thì dùng VBEE_VOICE trong .env.
 if (config.voice?.code) vbee.voice = config.voice.code;
@@ -113,10 +118,10 @@ const voiceInfo = () => ({
 function startVoice() {
   if (config.voice?.enabled === false) return console.log('[Giọng] Đang tắt (voice.enabled: false)');
   if (!vbee.enabled) return console.log('[Giọng] Chưa có VBEE_TOKEN/VBEE_APP_ID trong .env, game chạy không có giọng đọc');
-  const lines = Object.fromEntries(config.nations.filter((n) => n.say).map((n) => [n.id, n.say]));
+  const lines = Object.fromEntries(config.buffaloes.filter((b) => b.say).map((b) => [b.id, b.say]));
   prepareLines({ vbee, lines, dir: ttsDir }).then((clips) => {
     voiceClips = clips;
-    console.log(`[Giọng] Đọc tên nước khi có quà: ${Object.keys(clips).length}/${Object.keys(lines).length} nước (giọng ${vbee.voice})`);
+    console.log(`[Giọng] Đọc số trâu khi có quà: ${Object.keys(clips).length}/${Object.keys(lines).length} trâu (giọng ${vbee.voice})`);
     broadcast({ type: 'voice', ...voiceInfo() });
   });
 }
@@ -142,6 +147,7 @@ function connectTikTok() {
   };
 
   conn.on(WebcastEvent.CHAT, receive('comment', (event, who) => race.comment(who, event.message.slice(0, 200))));
+  conn.on(WebcastEvent.LIKE, receive('like', (event, who) => race.like(who, event.count)));
   conn.on(
     WebcastEvent.GIFT,
     receive('gift', (event, who) => {
@@ -149,7 +155,7 @@ function connectTikTok() {
       session.gifts += event.repeatCount;
       broadcast({ type: 'session', ...session });
       if (!race.gift(who, { id: event.giftId, name: event.giftName, coins: event.diamonds }, event.repeatCount)) {
-        console.log(`[Quà chưa tính] ${who.name}: ${event.giftName} #${event.giftId} (${event.diamonds} xu) x${event.repeatCount} · chưa comment tên nước`);
+        console.log(`[Quà chưa tính] ${who.name}: ${event.giftName} #${event.giftId} (${event.diamonds} xu) x${event.repeatCount} · chưa comment chọn trâu`);
       }
     }),
   );
@@ -226,6 +232,7 @@ app.post('/api/simulate', (req, res) => {
   const nickname = Array.from(typeof name === 'string' && name.trim() ? name.trim() : 'Bạn thử').slice(0, 24).join('');
   const who = { id: `sim:${nickname}`, name: nickname, avatar: safeImageUrl(avatar ?? '') };
   if (kind === 'chat') return res.json({ result: race.comment(who, String(text ?? '').slice(0, 200)) });
+  if (kind === 'like') return res.json({ result: race.like(who, clampInt(count, 1, 999)) });
   if (kind === 'gift') return res.json({ result: race.gift(who, { name: String(gift ?? '').slice(0, 40) }, clampInt(count, 1, 999)) });
   res.status(400).json({ error: 'kind không hợp lệ' });
 });
@@ -248,7 +255,7 @@ app.listen(port, host, (err) => {
   if (err) throw err;
   console.log(`Màn hình game:   http://${host}:${port}/`);
   console.log(`Bảng điều khiển: http://${host}:${port}/panel.html`);
-  console.log(`Mỗi vòng ${config.roundSeconds} giây · comment +${config.commentMeters} m · quà +${config.giftMeters} m · ảnh chibi: ${spriteList().length} file`);
+  console.log(`Mỗi vòng ${config.roundSeconds} giây · comment số để chọn trâu · ${config.likesPerStep} tim +${config.likeMeters} m · quà +${config.giftMeters} m · ảnh chibi: ${spriteList().length} file`);
   startVoice();
   if (username) connectTikTok();
   else console.log('Chưa đặt kênh TikTok (npm start -- ten_kenh, hoặc tiktokUsername trong config.json). Đang ở chế độ thử.');

@@ -71,6 +71,7 @@
       <button type="button" data-control="letter">🔤 Mở thêm một chữ</button>
       <button type="button" data-control="skip">⏭️ Sang bước tiếp theo</button>
       <button type="button" data-control="candy">🍬 Thử phát kẹo</button>
+      <button type="button" data-control="wish">💐 Thử học sinh chúc cô 20/11</button>
       <button type="button" id="reset" class="danger">🧹 Xóa bảng điểm</button>
       <button type="button" id="telegram-test">📨 Gửi thử Telegram</button>
     </div>
@@ -254,6 +255,9 @@
           break;
         case 'gift':
           $('log').textContent = `🎁 ${msg.name}: ${msg.coins} xu${msg.count > 1 ? ` (x${msg.count})` : ''}, cảnh "${SCENE_NAMES[msg.scene]}".`;
+          break;
+        case 'wish':
+          $('log').textContent = `💐 ${msg.name} lên chúc cô: "${msg.text}"`;
           break;
         case 'fund':
           fund = msg;

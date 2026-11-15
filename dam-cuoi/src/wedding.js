@@ -2,7 +2,7 @@
 // mỗi lúc chỉ một kịch bản chạy, đủ thời gian rồi mới tới kịch bản sau, nên mọi màn hình đang mở thấy cùng một
 // diễn biến và mở lại trang giữa chừng vẫn đúng trạng thái. Chỉ vàng không xếp hàng: cộng ngay.
 
-export const ACTIONS = ['become_groom', 'become_bride', 'steal_groom', 'steal_bride', 'cancel_wedding', 'gold'];
+export const ACTIONS = ['become_groom', 'become_bride', 'steal_groom', 'steal_bride', 'cancel_wedding', 'bridal_chamber', 'gold'];
 export const ROLE_NAME = { groom: 'chú rể', bride: 'cô dâu' };
 
 export function normalize(text) {
@@ -42,6 +42,9 @@ export class Wedding {
     this.ceremony = null;
     this.restartNext = false;
     this.married = 0;
+    const bc = config.bridalChamber ?? {};
+    this.chamberCfg = { ms: (bc.seconds ?? 10) * 1000, enterMs: bc.enterMs ?? 6500, exitMs: bc.exitMs ?? 5500 };
+    this.chamber = null;
   }
 
   // Mốc vàng: danh sách cố định, hết danh sách thì mỗi mốc cách nhau goalStep.
@@ -109,7 +112,40 @@ export class Wedding {
     if (this.current && now >= this.current.endsAt) this.current = null;
     // Hành động không có kịch bản (người đang giữ vai tặng tiếp) chạy ngay rồi lấy cái sau.
     while (!this.paused && !this.current && this.queue.length) this.start(this.queue.shift(), now);
+    if (!this.paused && !this.current && this.chamber && now >= this.chamber.until) this.endChamber(now);
     if (!this.paused && !this.current) this.runCeremony(now);
+  }
+
+  // ---------------------------------------------------------------- Động phòng
+  // Tặng nước hoa khi đủ đôi: cặp đôi rời sân khấu vào phòng tân hôn, lễ cưới tạm dừng. Tặng thêm thì ở lâu hơn.
+  // Hết giờ thì ra khỏi phòng, quay lại lễ đường và làm lại nghi thức đang dở.
+
+  chamberView(now) {
+    return this.chamber ? { since: this.chamber.since, until: this.chamber.until, left: Math.max(0, this.chamber.until - now) } : null;
+  }
+
+  startChamber(item, base, speed, now) {
+    const { who } = item;
+    const { groom, bride } = this.roles;
+    const add = this.chamberCfg.ms * Math.max(1, item.count || 1);
+    if (!groom || !bride) {
+      this.emit({ type: 'cheer', role: null, action: item.action, who, text: `🚪 ${who.name} muốn cho động phòng nhưng chưa đủ cô dâu chú rể` });
+      return;
+    }
+    if (this.chamber) {
+      this.chamber.until += add;
+      this.emit({ type: 'chamber', who, add, chamber: this.chamberView(now), text: `💋 ${who.name} tặng thêm nước hoa, động phòng thêm ${add / 1000} giây` });
+      return;
+    }
+    if (this.ceremony) this.ceremony.resume = true;
+    this.chamber = { since: now, until: now + Math.round(this.chamberCfg.enterMs / speed) + add };
+    this.play({ ...base, kind: 'chamber_enter', role: null, text: `🚪 ${who.name} tặng nước hoa: ${groom.name} và ${bride.name} vào động phòng!` }, this.chamberCfg.enterMs, speed, now);
+  }
+
+  endChamber(now) {
+    const { groom, bride } = this.roles;
+    this.chamber = null;
+    this.play({ seq: ++this.seq, action: 'chamber_exit', who: pub(groom), kind: 'chamber_exit', role: null, text: `🚪 ${groom.name} và ${bride.name} rời phòng tân hôn, quay lại lễ đường` }, this.chamberCfg.exitMs, this.speed(), now);
   }
 
   // ---------------------------------------------------------------- Nghi lễ cưới
@@ -131,12 +167,20 @@ export class Wedding {
       this.ceremony = null;
       return;
     }
+    if (this.chamber) return;
     if (!this.ceremony) {
       this.ceremony = { step: -1, stepAt: now };
       this.emitRitual(now);
       return;
     }
     const c = this.ceremony;
+    // Vừa động phòng xong: làm lại nghi thức đang dở từ đầu.
+    if (c.resume) {
+      c.resume = false;
+      c.stepAt = now;
+      this.emitRitual(now);
+      return;
+    }
     if (now - c.stepAt < this.stepInfo(c.step).ms) return;
     if (c.step + 1 >= steps.length) return this.finishCeremony(now);
     c.step++;
@@ -147,7 +191,7 @@ export class Wedding {
 
   ritualView(now) {
     const c = this.ceremony;
-    if (!c) return null;
+    if (!c || c.resume || this.chamber) return null;
     const info = this.stepInfo(c.step);
     return { step: c.step, total: this.ceremonyCfg.steps.length, id: info.id, title: info.title, line: info.line, duration: info.ms, elapsed: now - c.stepAt, restart: c.step < 0 && this.restartNext };
   }
@@ -183,6 +227,8 @@ export class Wedding {
     const speed = this.speed();
     const base = { seq: item.seq, action, who, giftName: item.giftName, count: item.count };
 
+    if (action === 'bridal_chamber') return this.startChamber(item, base, speed, now);
+
     if (role) {
       const holder = this.roles[role];
       if (holder && holder.id === who.id) {
@@ -200,11 +246,14 @@ export class Wedding {
         this.ceremony = null;
         this.restartNext = true;
       }
+      // Đang động phòng: người mới xông vào phòng đá văng người cũ, cặp mới ở trong phòng ít nhất một lượt nước hoa.
+      const inChamber = !!this.chamber;
+      if (inChamber) this.chamber.until = Math.max(this.chamber.until, now + Math.round(this.timing.stealMs / speed) + this.chamberCfg.ms);
       this.breakCouple(now);
       this.roles[role] = person(who, now);
       this.joinCouple(now);
       const text = holder ? `⚡ ${who.name} đổi vai ${ROLE_NAME[role]}, đá văng ${holder.name}!` : `${role === 'groom' ? '🤵' : '👰'} ${who.name} trở thành ${ROLE_NAME[role]}`;
-      this.play({ ...base, kind, role, from: pub(holder), text }, kind === 'steal' ? this.timing.stealMs : this.timing.claimMs, speed, now);
+      this.play({ ...base, kind, role, from: pub(holder), inChamber, text }, kind === 'steal' ? this.timing.stealMs : this.timing.claimMs, speed, now);
       return;
     }
 
@@ -214,13 +263,15 @@ export class Wedding {
       this.emit({ type: 'cheer', role: null, who, text: `💔 ${who.name} muốn hủy hôn nhưng sân khấu đang trống` });
       return;
     }
+    const inChamber = !!this.chamber;
+    this.chamber = null;
     this.breakCouple(now);
     this.roles = { groom: null, bride: null };
     this.ceremony = null;
     this.restartNext = false;
     this.promoteWaiting(now);
     const names = [groom?.name, bride?.name].filter(Boolean).join(' và ');
-    this.play({ ...base, kind: 'cancel', role: null, from: { groom: pub(groom), bride: pub(bride) }, text: `💔 ${who.name} đã hủy hôn của ${names}` }, this.timing.cancelMs, speed, now);
+    this.play({ ...base, kind: 'cancel', role: null, from: { groom: pub(groom), bride: pub(bride) }, inChamber, text: `💔 ${who.name} đã hủy hôn của ${names}` }, this.timing.cancelMs, speed, now);
   }
 
   register(role, who) {
@@ -262,7 +313,7 @@ export class Wedding {
   play(scene, ms, speed, now) {
     const duration = Math.round(ms / speed);
     this.current = { ...scene, speed, startedAt: now, endsAt: now + duration, duration };
-    this.emit({ type: 'scene', ...this.current, groom: pub(this.roles.groom), bride: pub(this.roles.bride), coupleSince: this.coupleSince, record: this.record, waiting: this.queue.length });
+    this.emit({ type: 'scene', ...this.current, groom: pub(this.roles.groom), bride: pub(this.roles.bride), coupleSince: this.coupleSince, record: this.record, waiting: this.queue.length, chamber: this.chamberView(now) });
   }
 
   // Thời gian bên nhau tính từ lúc đủ cả chú rể và cô dâu; đổi một người là tính lại.
@@ -284,7 +335,7 @@ export class Wedding {
   pause(on) {
     this.paused = on;
     this.emit({ type: 'paused', paused: on });
-    if (!on && this.ceremony) {
+    if (!on && this.ceremony && !this.ceremony.resume && !this.chamber) {
       // Tiếp tục thì diễn lại nghi thức đang dở từ đầu nghi thức đó.
       this.ceremony.stepAt = this.now();
       this.emitRitual(this.ceremony.stepAt);
@@ -311,6 +362,7 @@ export class Wedding {
     this.ceremony = null;
     this.restartNext = false;
     this.married = 0;
+    this.chamber = null;
     this.emit({ type: 'reset', snapshot: this.snapshot() });
     return true;
   }
@@ -327,6 +379,7 @@ export class Wedding {
       waiting: this.queue.length,
       waitlist: this.waitlistView(),
       ritual: this.ritualView(now),
+      chamber: this.chamberView(now),
       married: this.married,
       paused: this.paused,
       current,

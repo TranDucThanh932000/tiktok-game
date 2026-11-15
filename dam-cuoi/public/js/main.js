@@ -13,6 +13,7 @@ import { sfx, audioReady, unlockAudio, speak } from './audio.js';
 import { Props, RITUALS } from './ritual.js';
 import { loadHumans, humansReady, HumanCharacter, crowdTemplates } from './human.js';
 import { Crowd } from './crowd.js';
+import { Chamber, CH } from './chamber.js';
 
 const W = 1080;
 const H = 1920;
@@ -52,6 +53,7 @@ hall.loadEnvironment(renderer);
 const fx = new Effects(scene);
 fx.onBoom = () => sfx.firework();
 const props = new Props(scene);
+const chamber = new Chamber(scene);
 
 const composer = new EffectComposer(renderer);
 composer.addPass(new RenderPass(scene, camera));
@@ -92,6 +94,30 @@ function cameraTo(target, dur, then = null) {
 // Màn đá văng / hủy hôn / trao nhẫn tự điều khiển camera; MC đang nói thì quay sang MC.
 const shot = (px, py, pz, lx, ly, lz, fov) => ({ pos: new THREE.Vector3(px, py, pz), look: new THREE.Vector3(lx, ly, lz), fov });
 const director = { until: 0, last: '', lock: 0 };
+// Đang ở phòng tân hôn (động phòng): camera chỉ quay quanh cửa phòng.
+let chamberMode = false;
+const CAM_CH = shot(CH.x, 2.1, 14, CH.x, 1.75, CH.z, 32);
+
+function chamberShots() {
+  const x = CH.x;
+  const list = [
+    { name: 'chWide', a: CAM_CH, b: shot(x + 0.5, 2.0, 12.6, x, 1.75, 0, 32), hold: 7, w: 3 },
+    { name: 'chDoor', a: shot(x, 1.55, 7.8, x, 1.55, 0, 34), b: shot(x, 1.6, 6.8, x, 1.6, 0, 34), hold: 6, w: 2 },
+    { name: 'chLow', a: shot(x - 0.9, 0.55, 9.5, x, 1.75, 0, 34), b: shot(x + 0.7, 0.65, 8.8, x, 1.75, 0, 34), hold: 6, w: 1.5 },
+    { name: 'chLeft', a: shot(x - 3.4, 2.0, 10.5, x + 0.2, 1.45, 0, 32), b: shot(x - 2.7, 1.9, 9.6, x + 0.2, 1.45, 0, 32), hold: 6, w: 1.5 },
+    { name: 'chRight', a: shot(x + 3.4, 2.0, 10.5, x - 0.2, 1.45, 0, 32), b: shot(x + 2.7, 1.9, 9.6, x - 0.2, 1.45, 0, 32), hold: 6, w: 1.5 },
+  ];
+  // Có người bị đá văng đang nằm choáng trước cửa: thêm góc thấy cả người nằm lẫn chân cửa.
+  const down = [...lying].at(-1);
+  if (down) list.push({ name: 'chFloor', ...floorShots(down.lieX), hold: 5, w: 3 });
+  return list;
+}
+
+// Góc nhìn xuống sàn trước cửa phòng tân hôn: x là chỗ người nằm.
+function floorShots(x) {
+  const dx = x - CH.x;
+  return { a: shot(CH.x + dx * 0.3, 2.9, 8.2, CH.x + dx * 0.6, 0.55, 1.5, 38), b: shot(CH.x + dx * 0.15, 2.7, 7.6, CH.x + dx * 0.5, 0.6, 1.4, 38) };
+}
 
 // hall: góc bao quát cả nhà hàng (trong lúc làm lễ thì ít dùng hơn để còn thấy rõ cô dâu chú rể).
 // crowd: góc quay quan khách, chỉ dùng lúc không làm lễ.
@@ -123,7 +149,7 @@ function shotList(ceremony) {
 
 // Có sự kiện lớn (mừng vàng nhiều, đạt mốc pháo hoa): cắt sang góc thấy cả sảnh khách đang reo hò.
 function crowdShot() {
-  if (running || clockTime < director.lock) return;
+  if (running || chamberMode || clockTime < director.lock) return;
   const picks = shotList(false).filter((s) => ['reverse', 'crowdL', 'crowdR', 'hallWide'].includes(s.name) && s.name !== director.last);
   const s = picks[Math.floor(Math.random() * picks.length)];
   cameraTo(s.a, 0, { target: s.b, dur: s.hold });
@@ -132,7 +158,7 @@ function crowdShot() {
 }
 
 function nextShot() {
-  const list = shotList(!!ritualToken).filter((s) => s.name !== director.last);
+  const list = (chamberMode ? chamberShots() : shotList(!!ritualToken)).filter((s) => s.name !== director.last);
   let r = Math.random() * list.reduce((n, s) => n + s.w, 0);
   const s = list.find((x) => (r -= x.w) < 0) ?? list[0];
   const cut = Math.random() < 0.5;
@@ -153,7 +179,7 @@ function directorTick() {
 // MC đang nói: camera quay sang MC đó vài giây.
 function focusMC(who) {
   const c = mcs[who];
-  if (!c || running || clockTime < director.lock || Math.random() < 0.35) return;
+  if (!c || running || chamberMode || clockTime < director.lock || Math.random() < 0.35) return;
   const p = c.root.position;
   const side = Math.sign(p.x) || 1;
   cameraTo(shot(p.x - side * 1.2, 1.65, p.z + 3.9, p.x, 1.38, p.z, 27), Math.random() < 0.5 ? 0 : 0.9, { target: shot(p.x - side * 0.7, 1.7, p.z + 3.4, p.x, 1.4, p.z, 27), dur: 5 });
@@ -309,6 +335,7 @@ function renderTogether() {
   $('heart').classList.toggle('broken', !both);
   $('together').innerHTML = both ? `Bên nhau<b>${fmtTime(serverNow() - couple.coupleSince)}</b>` : 'Chờ đủ<br>cô dâu chú rể';
   hall.setCoupleNames(couple.groom?.name, couple.bride?.name);
+  chamber.setNames(couple.groom?.name, couple.bride?.name);
   const r = couple.record;
   const married = couple.married ? `💒 Đã cưới ${couple.married} cặp` : '';
   const rec = r ? `🏆 Kỷ lục bên nhau: ${r.groom} ♥ ${r.bride} · ${fmtTime(r.ms)}` : '';
@@ -454,12 +481,16 @@ function knock(c, v) {
   if (slots[c.role]?.char === c) slots[c.role].char = null;
 }
 
-// Về đúng trạng thái (dùng khi mở trang, khi kịch bản bị cắt ngang).
+// Về đúng trạng thái (dùng khi mở trang, khi kịch bản bị cắt ngang). state.chamber: cặp đôi đang ở phòng tân hôn.
 function snapTo(state) {
   stopRitual();
   for (const c of [...actors]) {
     if (c.flight) despawn(c);
   }
+  const inside = !!(state.chamber && state.groom && state.bride);
+  setChamberView(inside);
+  chamber.setDoor(false, true);
+  chamber.setOccupied(inside, true);
   for (const role of ROLES) {
     const owner = state[role];
     const s = slots[role];
@@ -472,12 +503,15 @@ function snapTo(state) {
       s.char.setFace('happy');
       s.char.play('idle');
     }
+    if (inside) hideInside(s.char);
+    else s.char.root.visible = true;
     renderCard(role, owner);
   }
   for (const c of [...actors]) {
     if (c !== slots.groom.char && c !== slots.bride.char) despawn(c);
   }
-  cameraTo(CAM_MAIN, 0.3);
+  renderChamberTags();
+  cameraTo(inside ? CAM_CH : CAM_MAIN, 0.3);
 }
 
 async function runScene(msg) {
@@ -488,18 +522,23 @@ async function runScene(msg) {
     if (c && !c.flight) {
       c.move?.resolve();
       c.move = null;
+      if (chamberMode && slots[role].owner) {
+        hideInside(c);
+        continue;
+      }
+      c.root.visible = true;
       c.root.position.copy(SLOT[role]);
       c.faceYaw(0);
       c.play('idle');
     }
   }
-  cameraTo(CAM_MAIN, 0.3);
+  cameraTo(chamberMode ? CAM_CH : CAM_MAIN, 0.3);
   if (running) {
     running.cancelled = true;
     waits.splice(0).forEach((w) => w.reject(new Cancelled()));
     snapTo(running.after);
   }
-  const token = { cancelled: false, after: { groom: msg.groom, bride: msg.bride } };
+  const token = { cancelled: false, after: { groom: msg.groom, bride: msg.bride, chamber: msg.chamber } };
   running = token;
   speed = msg.speed || 1;
   const step = (sec) => wait(sec, token).then(() => {
@@ -507,9 +546,11 @@ async function runScene(msg) {
   });
   try {
     if (msg.kind === 'claim') await claimScene(msg, step);
-    else if (msg.kind === 'steal') await stealScene(msg, step);
-    else if (msg.kind === 'cancel') await cancelScene(msg, step);
+    else if (msg.kind === 'steal') await (msg.inChamber ? chamberStealScene : stealScene)(msg, step);
+    else if (msg.kind === 'cancel') await (msg.inChamber ? chamberCancelScene : cancelScene)(msg, step);
     else if (msg.kind === 'farewell') await farewellScene(msg, step);
+    else if (msg.kind === 'chamber_enter') await chamberEnterScene(msg, step);
+    else if (msg.kind === 'chamber_exit') await chamberExitScene(msg, step);
   } catch (err) {
     if (!(err instanceof Cancelled)) console.error(err);
   } finally {
@@ -689,6 +730,340 @@ async function farewellScene(msg, step) {
   renderTogether();
 }
 
+// ---------------------------------------------------------------- Động phòng
+// Cặp đôi rời sân khấu vào phòng tân hôn (chamber.js). Ở trong phòng thì nhân vật ẩn đi, chỉ thấy bóng in lên giấy cửa.
+// Người đổi vai xông vào phòng đá văng người cũ ra ngoài, người cũ nằm choáng trước cửa (sao, chim bay quanh đầu).
+
+let chamberInfo = null;
+const lying = new Set();
+const doorTags = {};
+for (const role of ROLES) {
+  doorTags[role] = Object.assign(document.createElement('div'), { className: `tag door ${role}`, hidden: true });
+  $('tags').append(doorTags[role]);
+}
+
+function setChamberView(on) {
+  if (chamberMode === on) return;
+  chamberMode = on;
+  chamber.active = on;
+  // Sảnh và phòng tân hôn cách xa nhau: đổi chỗ thì cắt cảnh, không lia camera qua khoảng trống.
+  cameraTo(on ? CAM_CH : CAM_MAIN, 0);
+  director.last = on ? 'chWide' : 'wide';
+  director.until = clockTime + 4;
+  if (!on) {
+    clearLying();
+    chamber.setOccupied(false, true);
+    chamber.setDoor(false, true);
+  }
+}
+
+function hideInside(c) {
+  c.move?.resolve();
+  c.move = null;
+  c.root.position.copy(chamber.at(0, 0, -1));
+  c.root.visible = false;
+  c.play('idle');
+}
+
+function clearLying() {
+  for (const c of lying) {
+    chamber.clearDizzy(c);
+    despawn(c);
+  }
+  lying.clear();
+}
+
+// Bay theo đường parabol (trọng lực giống knockAway) tới đúng chỗ "to" sau dur giây.
+function tumble(c, to, dur) {
+  const p = c.root.position;
+  c.knockAway(new THREE.Vector3((to.x - p.x) / dur, (to.y - p.y + 2.5 * dur * dur) / dur, (to.z - p.z) / dur), 99);
+}
+
+// Nằm ngửa, thân nằm ngang màn hình, tâm người ở chỗ "center".
+function layDown(c, center) {
+  c.flight = null;
+  c.done = false;
+  const yaw = center.x > CH.x ? Math.PI / 2 : -Math.PI / 2;
+  c.yaw = c.targetYaw = yaw;
+  c.root.rotation.y = yaw;
+  c.spinner.rotation.set(-Math.PI / 2, 0, 0);
+  c.root.position.set(center.x + Math.sin(yaw) * 0.85, 0.12, center.z);
+  c.lieX = center.x;
+  c.play('lie');
+  c.setFace('dizzy');
+}
+
+function renderChamberTags() {
+  for (const role of ROLES) {
+    const owner = slots[role].owner;
+    const el = doorTags[role];
+    el.replaceChildren();
+    if (!owner) continue;
+    const text = Object.assign(document.createElement('div'), { className: 'who' });
+    text.append(Object.assign(document.createElement('small'), { textContent: role === 'groom' ? '🤵 CHÚ RỂ' : '👰 CÔ DÂU' }), Object.assign(document.createElement('span'), { textContent: owner.name }));
+    el.append(avatarEl(owner), text);
+  }
+}
+
+function renderChamberBar() {
+  const el = $('ritual');
+  el.hidden = false;
+  $('record').hidden = true;
+  const left = Math.max(0, Math.ceil((chamberInfo.until - serverNow()) / 1000));
+  el.querySelector('.title').textContent = `🚪 Động phòng · còn ${left} giây`;
+  el.querySelector('.dots').replaceChildren();
+}
+setInterval(() => chamberInfo && renderChamberBar(), 250);
+
+const doorScreen = () => toScreen(chamber.at(0, 1.5, 0.2));
+
+function popEmoji(text, p) {
+  const el = Object.assign(document.createElement('div'), { className: 'twinkle', textContent: text });
+  el.style.left = `${p.x}px`;
+  el.style.top = `${p.y}px`;
+  $('fx').append(el);
+  setTimeout(() => el.remove(), 1000);
+}
+
+// Nhịp trong vòng diễn bóng người: e thẹn, hôn, tắt đèn.
+chamber.onBeat = (beat) => {
+  if (!chamberMode || running) return;
+  const p = doorScreen();
+  if (beat === 'shy') floatHearts($('fx'), p.x, p.y, 2);
+  if (beat === 'kiss') {
+    floatHearts($('fx'), p.x, p.y, 6);
+    popEmoji('💋', { x: p.x, y: p.y - 120 });
+  }
+  if (beat === 'dark') {
+    floatHearts($('fx'), p.x, p.y, 8);
+    popEmoji('🙈', { x: p.x, y: p.y - 120 });
+  }
+};
+
+async function chamberEnterScene(msg, step) {
+  const g = slots.groom.char;
+  const b = slots.bride.char;
+  announce(msg.text, 'chamber');
+  flashCell('bridal_chamber');
+  sfx.fanfare();
+  if (!g || !b) return;
+  // Ở sảnh: hai người quay sang nhìn nhau, tim bay, cả sảnh reo hò, rồi cùng đi về cánh gà.
+  cameraTo(CAM_PAIR, 0.5 / speed);
+  g.facePoint(b.root.position.x, b.root.position.z);
+  b.facePoint(g.root.position.x, g.root.position.z);
+  for (const c of [g, b]) {
+    const p = toScreen(c.headTop());
+    floatHearts($('fx'), p.x, p.y, 3);
+  }
+  g.play('wave');
+  b.play('cheer');
+  hall.react('cheer', 2.2);
+  sfx.cheer();
+  await step(1.2);
+  g.walkTo(2.3, 0.75, 1.3);
+  b.walkTo(3.0, 0.55, 1.3);
+  await step(1.2);
+
+  // Cắt sang phòng tân hôn: cửa mở sẵn, hai người dắt nhau đi vào.
+  setChamberView(true);
+  chamber.setOccupied(false, true);
+  chamber.setDoor(true, true);
+  g.root.position.copy(chamber.at(-0.35, 0, 4.4));
+  b.root.position.copy(chamber.at(0.4, 0, 4.9));
+  cameraTo(shot(CH.x + 0.5, 1.75, 8.6, CH.x, 1.2, 0, 34), 0, { target: shot(CH.x + 0.2, 1.7, 7.4, CH.x, 1.3, 0, 34), dur: 3 });
+  g.walkTo(CH.x - 0.22, 0.45, 1.5);
+  b.walkTo(CH.x + 0.22, 0.6, 1.6);
+  await step(1.65);
+  g.walkTo(CH.x - 0.15, -1, 0.55);
+  b.walkTo(CH.x + 0.15, -1, 0.55);
+  await step(0.55);
+  hideInside(g);
+  hideInside(b);
+  chamber.setDoor(false);
+  await step(0.45);
+  chamber.setOccupied(true);
+  renderChamberTags();
+  cameraTo(CAM_CH, 0.8 / speed);
+  const p = doorScreen();
+  floatHearts($('fx'), p.x, p.y, 5);
+  await step(0.8);
+}
+
+async function chamberExitScene(msg, step) {
+  const g = slots.groom.char;
+  const b = slots.bride.char;
+  announce(msg.text, 'chamber');
+  if (!g || !b) return;
+  setChamberView(true);
+  chamber.setOccupied(false);
+  cameraTo(shot(CH.x, 1.6, 9, CH.x, 1.3, 0, 34), 0.4 / speed);
+  await step(0.3);
+  chamber.setDoor(true);
+  await step(0.4);
+  for (const [c, x] of [[g, -0.2], [b, 0.2]]) {
+    c.root.position.copy(chamber.at(x, 0, -0.9));
+    c.root.visible = true;
+  }
+  g.walkTo(CH.x - 0.45, 3.2, 1.7);
+  b.walkTo(CH.x + 0.45, 3.4, 1.7);
+  await step(1.75);
+  g.faceYaw(0);
+  b.faceYaw(0);
+  g.play('wave');
+  b.play('cheer');
+  for (const c of [g, b]) {
+    const p = toScreen(c.headTop());
+    floatHearts($('fx'), p.x, p.y, 3);
+  }
+  sfx.cheer();
+  await step(0.9);
+
+  // Về lại sảnh cưới, đi từ hai bên cánh gà vào chỗ đứng.
+  setChamberView(false);
+  cameraTo(CAM_MAIN, 0);
+  for (const role of ROLES) {
+    const c = slots[role].char;
+    c.play('idle');
+    c.root.position.copy(ENTRY[role]);
+    c.walkTo(SLOT[role].x, SLOT[role].z, 1.3);
+  }
+  hall.react('clap', 2.5);
+  await step(1.4);
+  for (const role of ROLES) {
+    const c = slots[role].char;
+    c.root.position.copy(SLOT[role]);
+    c.faceYaw(0);
+    c.play('idle');
+  }
+}
+
+async function chamberStealScene(msg, step) {
+  const role = msg.role;
+  const side = role === 'groom' ? -1 : 1;
+  let old = slots[role].char;
+  if (!old || old.flight) {
+    setSlot(role, msg.from);
+    old = slots[role].char;
+    hideInside(old);
+  }
+  setChamberView(true);
+  flashCell(msg.action);
+  announce(`🚪 ${msg.who.name} xông vào phòng tân hôn…`, 'steal');
+  cameraTo(CAM_CH, 0.3 / speed);
+  const newC = spawn(role, msg.who, chamber.at(side * 1.7, 0, 5));
+  sfx.whoosh();
+  await Promise.race([newC.walkTo(CH.x + side * 0.15, 0.55, 1.4), step(1.45)]);
+  chamber.setOccupied(false);
+  chamber.setDoor(true);
+  cameraTo(shot(CH.x, 1.5, 7.6, CH.x, 1.25, 0.5, 36), 0.4 / speed);
+  await step(0.4);
+  await Promise.race([newC.walkTo(CH.x, -0.9, 0.4), step(0.4)]);
+  hideInside(newC);
+  await step(0.15);
+
+  // Trúng! Người cũ văng ra khỏi phòng.
+  hitstop = 0.12;
+  shake = 1;
+  sfx.kick();
+  const p = toScreen(chamber.at(0, 1.3, 0.2));
+  comicBurst($('fx'), p.x, p.y, ['BỐP!', 'BỊCH!', 'ỐI!', 'BÙM!'][Math.floor(Math.random() * 4)]);
+  fx.burst(chamber.at(0, 1.2, 0.4), 70, { colors: ['#fff3b0', '#ffd166', '#ffffff', '#ff8fab'], speed: 3, life: 0.6 });
+  hideTag(old);
+  old.root.visible = true;
+  old.root.position.copy(chamber.at(0, 0.4, -0.3));
+  const land = chamber.at(-side * 0.9, 0, 2.1);
+  tumble(old, land, 0.75);
+  sfx.fly();
+  slots[role] = { char: newC, owner: msg.who };
+  couple[role] = msg.who;
+  Object.assign(couple, { coupleSince: msg.coupleSince, record: msg.record });
+  renderCard(role, msg.who, 'pop');
+  renderTogether();
+  renderChamberTags();
+  announce(msg.text, 'steal');
+  hall.react('cheer', 1.8);
+  await step(0.35);
+  chamber.setDoor(false);
+  await step(0.4);
+
+  // Nằm choáng trước cửa, sao và chim bay vòng quanh đầu; camera nhìn xuống thấy rõ người nằm.
+  layDown(old, land);
+  shake = 0.45;
+  chamber.dizzy(old);
+  lying.add(old);
+  if (lying.size > 2) {
+    const first = lying.values().next().value;
+    chamber.clearDizzy(first);
+    despawn(first);
+    lying.delete(first);
+  }
+  const floor = floorShots(land.x);
+  cameraTo(floor.a, 0.35 / speed, { target: floor.b, dur: 4 });
+  await step(0.25);
+  chamber.setOccupied(true);
+  await step(1.0);
+  director.last = 'chFloor';
+  director.lock = clockTime + 3;
+}
+
+async function chamberCancelScene(msg, step) {
+  flashCell('cancel_wedding');
+  announce(msg.text, 'cancel');
+  setChamberView(true);
+  cameraTo(CAM_CH, 0.3 / speed);
+  sfx.shock();
+  const mid = doorScreen();
+  const heart = Object.assign(document.createElement('div'), { className: 'broken-heart', textContent: '💔' });
+  heart.style.left = `${mid.x}px`;
+  heart.style.top = `${mid.y}px`;
+  $('fx').append(heart);
+  setTimeout(() => heart.remove(), 1300);
+  setTimeout(() => sfx.sadTrombone(), 250 / speed);
+  await step(0.9);
+
+  // Cửa bật tung, cả hai văng ra khỏi phòng.
+  chamber.setOccupied(false, true);
+  chamber.setDoor(true, true);
+  shake = 1.1;
+  hitstop = 0.1;
+  sfx.boom();
+  comicBurst($('fx'), mid.x, mid.y, 'BÙM!', { fill: '#ffffff', stroke: '#3a3a4a', size: 480 });
+  fx.burst(chamber.at(0, 1.2, 0.4), 120, { colors: ['#ffffff', '#cccccc', '#ff8fab'], speed: 3.5, life: 0.8 });
+  for (const role of ROLES) {
+    const c = slots[role].char;
+    const side = role === 'groom' ? -1 : 1;
+    if (c && slots[role].owner) {
+      c.root.visible = true;
+      c.root.position.copy(chamber.at(side * 0.3, 0.3, -0.3));
+      knock(c, new THREE.Vector3(side * 2.2, 6.5, 3.4));
+    } else if (c) despawn(c);
+    slots[role] = { char: null, owner: null };
+    couple[role] = null;
+    renderCard(role, null, 'out');
+  }
+  Object.assign(couple, { coupleSince: 0, record: msg.record });
+  renderTogether();
+  sfx.fly();
+  hall.react('shock', 1.2);
+  await step(1.4);
+
+  // Về sảnh: sân khấu trống chờ cặp mới.
+  setChamberView(false);
+  cameraTo(CAM_MAIN, 0);
+  const fresh = ROLES.map((role) => {
+    const c = spawn(role, null, ENTRY[role]);
+    slots[role] = { char: c, owner: null };
+    c.walkTo(SLOT[role].x, SLOT[role].z, 1.6);
+    return c;
+  });
+  await step(1.75);
+  fresh.forEach((c) => {
+    c.root.position.copy(SLOT[c.role]);
+    c.faceYaw(0);
+    c.play('idle');
+  });
+}
+
 // ---------------------------------------------------------------- Phụ đề MC
 
 function showSubtitle(lines) {
@@ -744,6 +1119,7 @@ function bigEmoji(text) {
 }
 
 function renderRitual(r) {
+  if (!r && chamberInfo) return renderChamberBar();
   const el = $('ritual');
   el.hidden = !r;
   $('record').hidden = !!r;
@@ -759,7 +1135,7 @@ async function runRitual(r, { quiet = false } = {}) {
   if (!quiet) announce(r.text, r.restart ? 'steal' : 'ritual');
   const groom = slots.groom.char;
   const bride = slots.bride.char;
-  if (!groom || !bride || groom.flight || bride.flight || !slots.groom.owner || !slots.bride.owner || running) return;
+  if (!groom || !bride || groom.flight || bride.flight || !slots.groom.owner || !slots.bride.owner || running || chamberMode) return;
   const token = { dead: false };
   ritualToken = token;
   const ctx = {
@@ -813,6 +1189,7 @@ function spawnMCs() {
 // Kiểu nói theo tình huống; MC nói tay trái làm động tác, tay phải cầm micro. Không lặp kiểu vừa dùng.
 function talkStyles(event = '', who) {
   const toCouple = who === 'nam' ? 'presentL' : 'presentR';
+  if (/^chamber/.test(event)) return ['laugh', 'talk3', 'talk1', 'laugh'];
   if (/^(steal|cancel)/.test(event)) return ['talk3', 'laugh', 'talk3', 'moderate'];
   if (/^(claim|register|ceremony_start|restart|step_ruoc|step_trao|step_giao)/.test(event)) return [toCouple, 'talk1', toCouple, 'moderate'];
   if (/^(goal|farewell|step_cam_on|gold_huge)/.test(event)) return ['talk3', 'moderate', toCouple];
@@ -831,7 +1208,7 @@ function mcTalk(who, event) {
   focusMC(who);
   // MC còn lại nghe: cười khi có chuyện vui, còn không thì đứng nghe.
   const other = mcs[who === 'nam' ? 'nu' : 'nam'];
-  if (other) other.play(/^(steal|cancel|gold_huge)/.test(event) && Math.random() < 0.6 ? 'laugh' : 'idle');
+  if (other) other.play(/^(steal|cancel|gold_huge|chamber)/.test(event) && Math.random() < 0.6 ? 'laugh' : 'idle');
 }
 
 function mcQuiet() {
@@ -847,7 +1224,7 @@ function cheerHolder(msg) {
   if (!c || c.flight || slots[msg.role].owner?.id !== msg.who.id) return;
   c.play('cheer');
   setTimeout(() => c.anim === 'cheer' && c.play('idle'), 1300);
-  const p = toScreen(c.headTop());
+  const p = toScreen(c.root.visible ? c.headTop() : chamber.at(0, 1.5, 0.2));
   floatHearts($('fx'), p.x, p.y, 4);
 }
 
@@ -861,7 +1238,8 @@ function applySnapshot(game) {
     waits.splice(0).forEach((w) => w.reject(new Cancelled()));
     running = null;
   }
-  snapTo({ groom: game.groom, bride: game.bride });
+  chamberInfo = game.chamber ?? null;
+  snapTo({ groom: game.groom, bride: game.bride, chamber: game.chamber });
   renderGold(game.progress);
   renderWaitlist(game.waitlist);
   renderTogether();
@@ -892,7 +1270,19 @@ const handlers = {
   },
   scene(msg) {
     setQueue(msg.waiting);
+    chamberInfo = msg.chamber ?? null;
     runScene(msg);
+  },
+  chamber(msg) {
+    chamberInfo = msg.chamber;
+    renderChamberBar();
+    announce(msg.text, 'chamber');
+    flashCell('bridal_chamber');
+    sfx.cheer();
+    if (!chamberMode) return;
+    const p = doorScreen();
+    floatHearts($('fx'), p.x, p.y, 6);
+    fx.burst(chamber.at(0, 1.5, 0.4), 60, { colors: ['#ff8fab', '#ffd1dc', '#ffffff', '#f72585'], speed: 1.6, gravity: -0.3, life: 1.2 });
   },
   cheer: cheerHolder,
   say(msg) {
@@ -938,7 +1328,7 @@ const handlers = {
     if (msg.withAction) return;
     if (msg.amount >= 10) announce(msg.text, 'gold');
     if (msg.amount >= 30) {
-      fx.confetti(new THREE.Vector3(0, 1.2, 0.4), Math.min(220, 40 + msg.amount), { spread: 2.2, up: 3.8 });
+      fx.confetti(chamberMode ? chamber.at(0, 1.4, 1.2) : new THREE.Vector3(0, 1.2, 0.4), Math.min(220, 40 + msg.amount), { spread: 2.2, up: 3.8 });
       hall.react('cheer', 2.5);
       crowdShot();
     } else if (msg.amount >= 10) hall.crowd?.react('clap', 2.5, 0.5);
@@ -961,7 +1351,7 @@ const handlers = {
     }
   },
   like(msg) {
-    const p = toScreen(new THREE.Vector3(0, 1.6, SLOT.groom.z));
+    const p = toScreen(chamberMode ? chamber.at(0, 1.5, 0.2) : new THREE.Vector3(0, 1.6, SLOT.groom.z));
     floatHearts($('fx'), p.x, p.y, Math.min(3, Math.ceil(msg.count / 10)));
   },
   reset(msg) {
@@ -1031,29 +1421,42 @@ function frame() {
     c.update(dt);
     if (c.done) despawn(c);
   }
-  hall.update(realDt, clockTime);
+  if (!chamberMode) hall.update(realDt, clockTime);
+  chamber.update(dt, clockTime);
   fx.update(dt);
   directorTick();
   updateCamera(dt, realDt);
   scene.updateMatrixWorld();
 
-  // Nhãn tên bám trên đầu nhân vật.
+  // Nhãn tên bám trên đầu nhân vật (ẩn khi nhân vật ở trong phòng tân hôn hoặc ở góc khác với camera).
+  const offCamera = (c) => !c.root.visible || Math.abs(c.root.position.x - camera.position.x) > 30;
   for (const [c, tag] of mcTags) {
     c.update(realDt);
+    tag.style.visibility = offCamera(c) ? 'hidden' : '';
     tmp.copy(c.headTop());
     const p = toScreen(tmp);
     tag.style.transform = `translate(${p.x}px, ${p.y}px) translate(-50%, -100%)`;
   }
   for (const [c, tag] of tags) {
+    tag.style.visibility = offCamera(c) ? 'hidden' : '';
     tmp.copy(c.headTop());
     tmp.y += 0.18;
     const p = toScreen(tmp);
     tag.style.transform = `translate(${p.x}px, ${p.y}px) translate(-50%, -100%)`;
   }
+  // Avatar cô dâu chú rể trên hai cánh cửa phòng tân hôn.
+  const doorShown = chamberMode && chamber.occupied && chamber.doorK < 0.05;
+  for (const role of ROLES) {
+    const el = doorTags[role];
+    el.hidden = !doorShown || !slots[role].owner;
+    if (el.hidden) continue;
+    const p = toScreen(chamber.at(role === 'groom' ? -0.45 : 0.45, 1.74, 0.1));
+    el.style.transform = `translate(${p.x}px, ${p.y}px) translate(-50%, -100%)`;
+  }
   composer.render();
 }
 
-if (params.has('dev')) window.__dbg = { THREE, scene, renderer, hall, bloom, mcTalk, mcs, director, view: (...a) => cameraTo(shot(...a), 0), shotList, cameraTo };
+if (params.has('dev')) window.__dbg = { THREE, scene, renderer, hall, bloom, mcTalk, mcs, director, view: (...a) => cameraTo(shot(...a), 0), shotList, cameraTo, chamber, chamberShots };
 fit();
 trySound();
 frame();

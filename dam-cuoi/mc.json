@@ -144,6 +144,48 @@
     ["nu: Vậy là thêm một cặp đôi về chung một nhà.", "nam: Xin chúc mừng {chure} và {codau}! Sân khấu xin chờ đón cặp đôi mới!"]
   ],
 
+  "chamber_enter": [
+    ["nam: Ối, {ten} vừa tặng lọ nước hoa thơm phức!", "nu: Xin mời chú rể {chure} và cô dâu {codau} vào động phòng!"],
+    ["nu: Nước hoa đã xịt, đèn hồng đã thắp.", "nam: {chure} và {codau} vào phòng tân hôn thôi nào!"],
+    "nam: Cảm ơn {ten}! Cô dâu chú rể xin phép vào động phòng, cả nhà đừng làm phiền nhé!",
+    ["nam: Động phòng hoa chúc rồi cả nhà ơi!", "nu: Cửa phòng tân hôn đóng lại, xin đừng làm phiền!"],
+    ["nu: Thơm quá, {ten} tặng nước hoa cho đôi uyên ương!", "nam: Chú rể {chure} dắt tay cô dâu {codau} vào phòng tân hôn rồi!"]
+  ],
+  "chamber_extend": [
+    "nu: {ten} tặng thêm nước hoa, cho đôi uyên ương ở trong phòng thêm chút nữa!",
+    "nam: Thơm quá {ten} ơi! Phòng tân hôn chưa mở cửa đâu nhé!",
+    "nu: Cảm ơn {ten}, phòng tân hôn lại thơm ngát rồi!",
+    "nam: {ten} xịt thêm nước hoa, cô dâu chú rể chưa muốn ra đâu!"
+  ],
+  "chamber_exit": [
+    ["nam: Cửa phòng tân hôn đã mở!", "nu: Mời {chure} và {codau} quay lại lễ đường nào!"],
+    "nu: Cô dâu chú rể bước ra rồi, ai cũng tươi như hoa!",
+    ["nu: Ơ, sao cô dâu {codau} đỏ mặt thế kia?", "nam: Thôi, mời đôi uyên ương quay lại sân khấu làm lễ tiếp!"],
+    ["nam: Chú rể {chure} ra rồi kìa, cười tít cả mắt!", "nu: Mời hai bạn quay lại lễ đường nhé!"]
+  ],
+  "chamber_need": [
+    "nam: Cảm ơn {ten}! Nhưng phải đủ cô dâu chú rể mới động phòng được nhé!",
+    "nu: {ten} ơi, sân khấu chưa đủ đôi, chưa động phòng được đâu!",
+    "nam: Nước hoa thơm quá {ten} ơi, nhưng phải có đủ cô dâu chú rể đã!"
+  ],
+  "chamber_steal_groom": [
+    ["nam: Đã bảo xin đừng làm phiền mà!", "nu: {ten} vẫn xông vào phòng tân hôn, đá văng chú rể {cu} ra ngoài!"],
+    "nu: Ối, {ten} phá cửa phòng tân hôn, chú rể {cu} bị đá văng nằm sõng soài!",
+    ["nu: Có ai gõ cửa phòng tân hôn kìa!", "nam: {ten} xông vào thay chú rể, {cu} bay ra ngoài rồi!"],
+    "nam: Động phòng mà cũng bị giành! {ten} đá văng {cu}, thành chú rể mới!"
+  ],
+  "chamber_steal_bride": [
+    ["nu: Đã bảo xin đừng làm phiền mà!", "nam: {ten} vẫn xông vào phòng tân hôn, cô dâu {cu} văng ra ngoài!"],
+    "nam: Ối, {ten} phá cửa phòng tân hôn, cô dâu {cu} nằm sõng soài trước cửa!",
+    ["nam: Có ai gõ cửa phòng tân hôn kìa!", "nu: {ten} xông vào thay cô dâu, {cu} bay ra ngoài rồi!"],
+    "nu: Động phòng mà cũng bị giành! {ten} đá văng {cu}, thành cô dâu mới!"
+  ],
+  "chamber_cancel": [
+    ["nam: Bùm! {ten} hủy hôn ngay giữa lúc động phòng!", "nu: Cả cô dâu lẫn chú rể văng ra khỏi phòng luôn rồi!"],
+    "nu: Trời ơi {ten}, đang động phòng mà cũng hủy hôn! Phòng tân hôn tan tành!",
+    ["nu: Chuyện gì vừa nổ trong phòng tân hôn thế?", "nam: {ten} hủy hôn, cô dâu chú rể bay ra ngoài hết rồi!"]
+  ],
+
   "gold_big": [
     "nu: Cảm ơn {ten} đã mừng cưới thật hậu hĩnh!",
     "nam: {ten} mừng vàng cho đôi trẻ, cảm ơn bạn nhiều nhé!",

@@ -1,45 +1,42 @@
 {
   "tiktokUsername": "vui.v5796",
   "port": 3019,
-  "title": "BUFFALO RACE",
+  "title": "ĐUA TRÂU",
 
   "roundSeconds": 60,
-  "resultSeconds": 8,
-  "commentMeters": 0.1,
+  "resultSeconds": 12,
+  "commentMeters": 0,
+  "likesPerStep": 30,
+  "likeMeters": 0.1,
   "giftMeters": 1,
   "otherGiftMeters": 1,
 
-  "voice": { "enabled": true, "code": "en-US-AndrewNeural", "repeatGapSeconds": 2.5, "maxQueue": 3 },
+  "voice": { "enabled": true, "repeatGapSeconds": 2.5, "maxQueue": 3 },
 
-  "nations": [
+  "buffaloes": [
     {
-      "id": "thailand", "name": "THAILAND", "color": "#2f5fd0",
-      "say": "Thailand!",
-      "aliases": ["thailand", "thai land", "thai", "thai lan", "ไทย", "ประเทศไทย", "泰国"],
+      "id": "1", "name": "SỐ 1", "color": "#2f5fd0", "sprite": "thailand",
+      "say": "Trâu số một!",
       "gift": { "label": "TikTok", "names": ["TikTok"], "ids": [], "icon": "/gifts/tiktok.webp" }
     },
     {
-      "id": "vietnam", "name": "VIETNAM", "color": "#e8b923",
-      "say": "Vietnam!",
-      "aliases": ["vietnam", "viet nam", "vn", "vnm", "เวียดนาม", "越南"],
+      "id": "2", "name": "SỐ 2", "color": "#e8b923", "sprite": "vietnam",
+      "say": "Trâu số hai!",
       "gift": { "label": "Rose", "names": ["Rose", "Hoa hồng"], "ids": [], "icon": "/gifts/rose.webp" }
     },
     {
-      "id": "china", "name": "CHINA", "color": "#d6332e",
-      "say": "China!",
-      "aliases": ["china", "trung quoc", "tq", "trung hoa", "chn", "中国", "中國", "จีน"],
+      "id": "3", "name": "SỐ 3", "color": "#d6332e", "sprite": "china",
+      "say": "Trâu số ba!",
       "gift": { "label": "GG", "names": ["GG"], "ids": [], "icon": "/gifts/gg.webp" }
     },
     {
-      "id": "cambodia", "name": "CAMBODIA", "color": "#2fb3a6",
-      "say": "Cambodia!",
-      "aliases": ["cambodia", "campuchia", "cam pu chia", "cambodge", "kampuchea", "khmer", "cpc", "កម្ពុជា", "ខ្មែរ", "กัมพูชา", "柬埔寨"],
+      "id": "4", "name": "SỐ 4", "color": "#2fb3a6", "sprite": "cambodia",
+      "say": "Trâu số bốn!",
       "gift": { "label": "Ice Cream Cone", "names": ["Ice Cream Cone", "Kem ốc quế"], "ids": [], "icon": "/gifts/kem-oc-que.webp" }
     },
     {
-      "id": "philippines", "name": "PHILIPPINES", "color": "#f08a24",
-      "say": "Philippines!",
-      "aliases": ["philippines", "philippine", "philipines", "phillipines", "philippin", "philipin", "phil", "pinas", "pilipinas", "pinoy", "ฟิลิปปินส์", "菲律宾"],
+      "id": "5", "name": "SỐ 5", "color": "#f08a24", "sprite": "philippines",
+      "say": "Trâu số năm!",
       "gift": { "label": "Heart Me", "names": ["Heart Me", "Tim cam"], "ids": [], "icon": "/gifts/heart-me.webp" }
     }
   ]

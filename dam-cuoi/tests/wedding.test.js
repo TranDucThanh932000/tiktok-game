@@ -135,6 +135,91 @@ test('đăng ký khi vai đã có người thì vào hàng chờ, hủy hôn th�
   assert.equal(w.waitlist.groom.length, 0);
 });
 
+function coupleAtStep(t, step) {
+  const { w, advance, who } = t;
+  w.act(who('Huy'), 'become_groom');
+  advance(config.timing.claimMs);
+  w.act(who('Lan'), 'become_bride');
+  advance(config.timing.claimMs);
+  advance(config.ceremony.startDelayMs);
+  for (let i = 0; i < step; i++) advance(config.ceremony.steps[i].ms);
+}
+
+test('nước hoa khi chưa đủ đôi: chỉ cộng vàng, không động phòng', () => {
+  const t = setup();
+  t.w.act(t.who('Huy'), 'become_groom');
+  t.advance(config.timing.claimMs);
+  t.w.act(t.who('Vy'), 'bridal_chamber', { coins: 20 });
+  assert.equal(t.w.chamber, null);
+  assert.equal(t.of('scene').at(-1).kind, 'claim');
+  assert.equal(t.of('cheer').at(-1).action, 'bridal_chamber');
+  assert.equal(t.w.gold, 20);
+});
+
+test('động phòng tạm dừng lễ, tặng thêm thì cộng dồn, ra phòng thì làm lại nghi thức đang dở', () => {
+  const t = setup();
+  const { w, advance, who, of } = t;
+  const { seconds, enterMs, exitMs } = config.bridalChamber;
+  coupleAtStep(t, 1);
+  const step = of('ritual').at(-1);
+  assert.equal(step.step, 1);
+
+  w.act(who('Vy'), 'bridal_chamber', { coins: 20 });
+  assert.equal(of('scene').at(-1).kind, 'chamber_enter');
+  assert.equal(of('scene').at(-1).chamber.left, enterMs + seconds * 1000);
+  assert.equal(w.snapshot().ritual, null);
+  advance(enterMs);
+  w.act(who('Tú'), 'bridal_chamber', { coins: 20, count: 2 });
+  assert.equal(of('chamber').at(-1).add, seconds * 2000);
+
+  // Trong phòng lâu hơn cả nghi thức thì lễ vẫn đứng yên.
+  const ritualsBefore = of('ritual').length;
+  advance(seconds * 3000 - 1);
+  assert.notEqual(w.chamber, null);
+  assert.equal(of('ritual').length, ritualsBefore);
+  advance(1);
+  assert.equal(w.chamber, null);
+  assert.equal(of('scene').at(-1).kind, 'chamber_exit');
+  advance(exitMs);
+  const resumed = of('ritual').at(-1);
+  assert.equal(of('ritual').length, ritualsBefore + 1);
+  assert.equal(resumed.step, step.step);
+  assert.equal(resumed.elapsed, 0);
+});
+
+test('đổi vai lúc động phòng: người mới vào phòng, ra phòng thì làm lễ lại từ đầu', () => {
+  const t = setup();
+  const { w, advance, who, of } = t;
+  coupleAtStep(t, 2);
+  w.act(who('Vy'), 'bridal_chamber', { coins: 20 });
+  advance(config.bridalChamber.enterMs + 2000);
+  w.act(who('Nam'), 'steal_groom');
+  const steal = of('scene').at(-1);
+  assert.equal(steal.kind, 'steal');
+  assert.equal(steal.inChamber, true);
+  assert.equal(steal.from.name, 'Huy');
+  assert.equal(w.roles.groom.name, 'Nam');
+  assert.ok(w.chamber.until >= steal.endsAt + config.bridalChamber.seconds * 1000);
+  advance(w.chamber.until - steal.startedAt);
+  assert.equal(of('scene').at(-1).kind, 'chamber_exit');
+  advance(config.bridalChamber.exitMs);
+  assert.equal(of('ritual').at(-1).step, -1);
+  assert.equal(of('ritual').at(-1).restart, true);
+});
+
+test('hủy hôn lúc động phòng thì ra khỏi phòng luôn', () => {
+  const t = setup();
+  const { w, advance, who, of } = t;
+  coupleAtStep(t, 0);
+  w.act(who('Vy'), 'bridal_chamber', { coins: 20 });
+  advance(config.bridalChamber.enterMs);
+  w.act(who('Phá'), 'cancel_wedding');
+  assert.equal(of('scene').at(-1).kind, 'cancel');
+  assert.equal(of('scene').at(-1).inChamber, true);
+  assert.equal(w.chamber, null);
+  assert.equal(w.snapshot().chamber, null);
+});
+
 test('đủ đôi thì làm lễ lần lượt, đổi vai thì làm lại từ đầu, xong lễ thì người hàng chờ lên', () => {
   const { w, advance, who, of } = setup();
   const steps = config.ceremony.steps;

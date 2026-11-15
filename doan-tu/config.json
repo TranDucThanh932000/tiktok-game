@@ -24,5 +24,16 @@
       { "coins": 5, "scene": "kem", "label": "Kem", "hint": "Cả lớp cười", "icon": "/gifts/kem.webp" },
       { "coins": 10, "scene": "pig", "label": "Heo may mắn", "hint": "Heo chạy", "icon": "/gifts/lucky-pig.webp" }
     ]
+  },
+  "wishes": {
+    "everySeconds": 75,
+    "lines": [
+      "Em chúc cô 20/11 vui vẻ ạ!",
+      "Chúc cô luôn trẻ đẹp, hạnh phúc ạ!",
+      "Em tặng cô bông hoa, chúc mừng ngày Nhà giáo ạ!",
+      "Chúc cô mạnh khỏe, luôn vui ạ!",
+      "Em yêu cô nhiều lắm! Chúc mừng 20/11 ạ!",
+      "Cảm ơn cô đã dạy dỗ tụi em ạ!"
+    ]
   }
 }

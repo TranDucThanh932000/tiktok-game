@@ -7,6 +7,7 @@ import { TikTokLiveConnection, WebcastEvent, ControlEvent } from 'tiktok-live-co
 import { WordGame } from './src/game.js';
 import { Teacher } from './src/teacher.js';
 import { createVoice } from './src/voice.js';
+import { Wishes } from './src/wishes.js';
 import { bankSize, createDeck, validateBank } from './src/words.js';
 
 const root = import.meta.dirname;
@@ -31,6 +32,7 @@ const problems = [
   [Number.isInteger(config.gifts?.fundGoal) && config.gifts.fundGoal >= 1, 'gifts.fundGoal là số xu quỹ lớp, từ 1'],
   [Array.isArray(config.gifts?.photoGift?.names) && Array.isArray(config.gifts.photoGift.ids) && config.gifts.photoGift.label && config.gifts.photoGift.hint && config.gifts.photoGift.icon, 'gifts.photoGift (quà treo ảnh lên bảng) cần label, hint, names, ids, icon'],
   [Array.isArray(scenes) && scenes.length && scenes.every((t) => t.coins >= 1 && ['rose', 'kem', 'pig'].includes(t.scene) && t.label && t.hint && t.icon), 'mỗi mức trong gifts.scenes cần coins, scene (rose, kem hoặc pig), label, hint (chữ ngắn hiện dưới hình quà), icon'],
+  [!config.wishes || (config.wishes.everySeconds >= 0 && Array.isArray(config.wishes.lines) && config.wishes.lines.every((line) => typeof line === 'string' && line.trim())), 'wishes (học sinh lên chúc cô) cần everySeconds từ 0 trở lên (0 là tắt) và lines là danh sách câu chúc'],
 ].filter(([ok]) => !ok);
 if (problems.length) throw new Error(`config.json: ${problems.map(([, text]) => text).join('; ')}`);
 const bankProblems = validateBank(bank);
@@ -154,6 +156,16 @@ const game = new WordGame(config, {
   },
 });
 teacher.attach(game, deck);
+const wishes = new Wishes({
+  game,
+  teacher,
+  everyMs: (config.wishes?.everySeconds ?? 0) * 1000,
+  lines: config.wishes?.lines ?? [],
+  emit(msg) {
+    broadcast(msg);
+    console.log(`[Chúc cô] ${msg.name}: ${msg.text}`);
+  },
+});
 try {
   game.importState(JSON.parse(readFileSync(STATE_FILE, 'utf8')));
   if (game.players.size) console.log(`Đã nạp bảng điểm cũ: ${game.players.size} người chơi`);
@@ -175,6 +187,7 @@ setInterval(saveState, 3000);
 setInterval(() => {
   game.tick();
   teacher.tick();
+  wishes.tick();
 }, 100);
 
 function safeImageUrl(value) {
@@ -433,6 +446,7 @@ const controls = {
   letter: () => game.openLetter(),
   skip: () => game.skip(),
   candy: () => game.candy(),
+  wish: () => Boolean(wishes.fire()),
   reset: () => {
     game.reset();
     return true;

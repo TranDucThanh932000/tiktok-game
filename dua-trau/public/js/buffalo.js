@@ -1,5 +1,5 @@
 // Vẽ con trâu quay mặt sang phải, gốc toạ độ là điểm giữa dưới chân (x, mặt đất).
-// Có ảnh chibi (public/chibi/trau-<nước>-<dáng>.png) thì dùng ảnh, chưa có thì vẽ bằng hình khối.
+// Có ảnh chibi (public/chibi/trau-<sprite>-<dáng>.png, sprite đặt trong config.json) thì dùng ảnh, chưa có thì vẽ bằng hình khối.
 
 // Hai bảng ảnh: trau-chay.png (4 khung chạy) và trau-dang.png (đứng, mừng, buồn), có thể vẽ khác cỡ nhau,
 // nên mỗi bảng lấy một dáng làm chuẩn chiều cao riêng.
@@ -7,12 +7,12 @@ const RUN = ['chay1', 'chay2', 'chay3', 'chay4'];
 const POSES = [...RUN, 'dung', 'mung', 'buon'];
 const sprites = new Map();
 
-export function loadSprites(files, nations) {
+export function loadSprites(files, buffaloes) {
   const have = new Set(files);
-  for (const n of nations) {
+  for (const n of buffaloes) {
     const set = {};
     for (const pose of POSES) {
-      const file = `trau-${n.id}-${pose}.png`;
+      const file = `trau-${n.sprite ?? n.id}-${pose}.png`;
       if (!have.has(file)) continue;
       const img = new Image();
       img.src = `/chibi/${file}`;
@@ -49,20 +49,20 @@ function spriteFor(id, pose, frame) {
 }
 
 // Trả về điểm đỉnh lưng (để cắm cờ) so với gốc.
-export function drawBuffalo(g, { x, y, nation, pose, frame, phase, size = 1 }) {
-  const sprite = spriteFor(nation.id, pose, frame);
+export function drawBuffalo(g, { x, y, buffalo, pose, frame, phase, size = 1 }) {
+  const sprite = spriteFor(buffalo.id, pose, frame);
   if (sprite) {
     const { img, scale } = sprite;
     const w = img.naturalWidth * scale * size;
     const h = img.naturalHeight * scale * size;
-    const bob = pose === 'run' && RUN.filter((k) => ready(sprites.get(nation.id)?.[k])).length < 3 ? Math.abs(Math.sin(phase * Math.PI)) * -6 : 0;
+    const bob = pose === 'run' && RUN.filter((k) => ready(sprites.get(buffalo.id)?.[k])).length < 3 ? Math.abs(Math.sin(phase * Math.PI)) * -6 : 0;
     g.drawImage(img, x - w / 2, y - h + bob, w, h);
     return { backX: x - w * 0.2, backY: y - BUFFALO_H * size * 0.6 + bob };
   }
   g.save();
   g.translate(x, y);
   g.scale(size, size);
-  const back = drawShape(g, nation, pose, phase);
+  const back = drawShape(g, buffalo, pose, phase);
   g.restore();
   return { backX: x + back.x * size, backY: y + back.y * size };
 }
@@ -94,7 +94,7 @@ function leg(g, x, y, angle, len = 44) {
   g.restore();
 }
 
-function drawShape(g, nation, pose, phase) {
+function drawShape(g, buffalo, pose, phase) {
   const run = pose === 'run';
   const lying = pose === 'sad';
   const swing = run ? Math.sin(phase * Math.PI * 2) * 0.55 : 0;
@@ -128,8 +128,8 @@ function drawShape(g, nation, pose, phase) {
   g.beginPath();
   g.ellipse(0, -62, 52, 18, 0, 0, Math.PI * 2);
   g.fill();
-  // Áo yên theo màu nước
-  blob(g, nation.color, () => g.roundRect(-46, -128, 74, 52, 12));
+  // Áo yên theo màu của trâu
+  blob(g, buffalo.color, () => g.roundRect(-46, -128, 74, 52, 12));
   g.fillStyle = '#ffd34d';
   g.fillRect(-46, -86, 74, 8);
   if (!lying) {
@@ -180,7 +180,7 @@ function drawShape(g, nation, pose, phase) {
   g.beginPath();
   g.ellipse(hx - 8, headY + 10, 8, 5, 0, 0, Math.PI * 2);
   g.fill();
-  accessory(g, nation.id, hx, headY);
+  accessory(g, buffalo.sprite ?? buffalo.id, hx, headY);
   g.restore();
   return { x: -20, y: -128 + bob + lift };
 }
