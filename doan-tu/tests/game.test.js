@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { WordGame } from '../src/game.js';
+import { PULL_MS, WordGame } from '../src/game.js';
 
 const config = {
   seats: 40,
@@ -24,11 +24,11 @@ const WORDS = [
   { topic: 'Món ăn', text: 'bánh chưng', hint: 'Lang Liêu' },
 ];
 
-function setup() {
+function setup(extra = {}) {
   let t = 1_000_000;
   let i = 0;
   const events = [];
-  const game = new WordGame(config, {
+  const game = new WordGame({ ...config, ...extra }, {
     deck: { next: () => WORDS[i++ % WORDS.length] },
     emit: (msg) => events.push(msg),
     now: () => t,
@@ -158,11 +158,11 @@ test('quỹ lớp: góp xu từ quà, gần đủ thì báo, đủ thì phát k�
   assert.deepEqual(of('candy')[1].thanks.map((t) => t.name), ['Em', 'Chi'], 'quỹ mới chỉ tính người góp từ sau lần phát trước');
 });
 
-test('treo ảnh trên bảng: chỉ Tim cam (theo tên hoặc mã quà), người gửi cuối cùng được treo', () => {
+test('ghế VIP: chỉ Tim cam (theo tên hoặc mã quà), người gửi cuối cùng được ngồi', () => {
   const { game, of } = setup();
   game.gift(who('An'), 30);
   game.gift(who('An'), 1, 1, { name: 'Rose', id: 5655 });
-  assert.equal(game.snapshot().honor, null, 'quà khác không treo ảnh');
+  assert.equal(game.snapshot().honor, null, 'quà khác không được ngồi ghế VIP');
   assert.equal(game.gift({ id: 'id:Bình', name: 'Bình', avatar: 'https://p16.tiktokcdn.com/b.webp' }, 1, 1, { name: 'Heart Me', id: 7934 }).photo, true);
   assert.deepEqual(game.snapshot().honor, { name: 'Bình', avatar: 'https://p16.tiktokcdn.com/b.webp', look: game.players.get('id:Bình').look });
   assert.equal(of('gift').at(-1).icon, '/gifts/heart-me.webp', 'không có hình quà thật thì dùng hình Tim cam');
@@ -266,4 +266,68 @@ test('xóa bảng điểm và bỏ qua từ từ bảng điều khiển', () => 
   assert.equal(game.players.size, 0);
   assert.equal(of('word').at(-1).no, 1);
   assert.equal(of('snapshot-game').at(-1).game.board.length, 0);
+});
+
+const MONITOR = { sleepWords: 2, perWord: 2, lines: ['Ra ngoài!'], replies: ['Ui da!'] };
+
+test('thầy giám thị: im lặng 1 từ thì ngủ gật, 2 từ liền thì bị kéo ra khỏi lớp (giữ điểm), comment là vào lại', () => {
+  const { game, of, advance } = setup({ monitor: MONITOR });
+  const next = () => {
+    game.skip();
+    game.skip();
+  };
+  game.comment(who('An'), 'mèo');
+  game.comment(who('Bình'), 'mèo');
+  next();
+  game.comment(who('Bình'), 'nói chuyện');
+  next();
+  assert.deepEqual(game.board().map((p) => [p.name, p.sleepy]), [['An', true], ['Bình', false]], 'comment sai cũng là thức');
+  advance(3000);
+  assert.equal(of('monitor').length, 0, 'mới ngủ gật một từ');
+  next();
+  advance(2000);
+  assert.equal(of('monitor').length, 0, 'chờ cô đọc từ mới');
+  advance(1000);
+  assert.deepEqual(of('monitor').map((m) => [m.name, m.line, m.reply, m.first, m.ms]), [['An', 'Ra ngoài!', 'Ui da!', true, PULL_MS]]);
+  assert.deepEqual(game.board().map((p) => p.name), ['An', 'Bình'], 'đang bị kéo thì vẫn giữ chỗ tới khi ra tới cửa');
+  advance(PULL_MS);
+  assert.deepEqual(of('expel').map((e) => [e.name, e.woke]), [['An', false]]);
+  assert.deepEqual(of('board').at(-1).board.map((p) => p.name), ['Bình']);
+  assert.equal(game.players.get('id:An').score, 1, 'vẫn giữ điểm');
+
+  const saved = JSON.parse(JSON.stringify(game.exportState()));
+  const b = setup({ monitor: MONITOR });
+  b.game.importState(saved);
+  assert.deepEqual(b.game.board().map((p) => [p.name, p.sleepy]), [['Bình', false]], 'nạp lại: người bị kéo vẫn ở ngoài, chưa ai ngủ gật');
+
+  game.comment(who('An'), 'chào cô');
+  assert.deepEqual(game.board().map((p) => [p.name, p.sleepy]), [['An', false], ['Bình', true]], 'An vào lại lớp; Bình đã im một từ');
+});
+
+test('thầy giám thị: đang bị kéo mà kịp comment thì được về chỗ; mỗi từ tối đa perWord lần; sleepWords 0 là tắt', () => {
+  const { game, of, advance } = setup({ monitor: { ...MONITOR, sleepWords: 1, perWord: 1 } });
+  for (const name of ['An', 'Bình', 'Chi']) game.comment(who(name), 'mèo');
+  game.skip();
+  game.skip();
+  game.skip();
+  game.skip();
+  advance(3000);
+  const [pull] = of('monitor');
+  assert.equal(pull.name, 'An');
+  advance(1000);
+  game.comment(who('An'), 'em đây');
+  advance(PULL_MS);
+  assert.deepEqual(of('expel').map((e) => [e.name, e.woke]), [['An', true]]);
+  assert.equal(game.board().length, 3);
+  advance(20_000);
+  assert.equal(of('monitor').length, 1, 'đủ perWord lần trong từ này');
+  assert.equal(game.summon(), true, 'bảng điều khiển gọi thầy ngay');
+  assert.equal(of('monitor').at(-1).name, 'Bình');
+
+  const off = setup();
+  off.game.comment(who('An'), 'mèo');
+  for (let n = 0; n < 6; n++) off.game.skip();
+  off.advance(10_000);
+  assert.equal(off.of('monitor').length, 0);
+  assert.equal(off.game.board()[0].sleepy, false);
 });

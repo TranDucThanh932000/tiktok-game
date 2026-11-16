@@ -128,3 +128,34 @@ Morning sunlight from the left, soft light beams, a few dust sparkles.
 Art style: cute chibi 2D mobile-game art, clean outlines, soft cel shading, fresh pastel palette (mint-blue, white, honey wood, touches of peach and pink).
 No characters, no people, no text, no letters, no numbers, no watermark.
 ```
+
+---
+
+## 4. `thay-giam-thi.png`: thầy giám thị 10 dáng (ngang, 1536×1024), không bắt buộc
+
+Thêm sau, khi đã có bộ 3 ảnh trên. Chưa có ảnh này thì game vẽ tạm thầy bằng SVG. Tạo ở lượt mới, **đính kèm `hoc-sinh.png`**. Lưu vào `doan-tu/art-src/thay-giam-thi.png`, chạy lại `node scripts/cat-anh-chibi.cjs` là game tự dùng ảnh (không cần sửa code).
+
+Thứ tự dáng (5 ô mỗi hàng): đi sang trái (2 bước), đi về phía người xem (2 bước), đi ra xa (lưng, 2 bước), chống nạnh, chỉ tay mắng, đi sang trái kéo tai (2 bước). Dáng kéo tai: tay phải duỗi ra phía sau, ngang tầm đầu một bạn nhỏ, như đang nắm tai kéo đi (không vẽ học sinh).
+
+```text
+Generate the image now. The attached image is ONLY an art-style reference: match its line work, colors, shading and chibi proportions exactly, but do not copy its characters or layout.
+One sprite sheet image for a 2D classroom game: the same chibi male school supervisor in 10 poses.
+Layout: an exact grid of 5 columns x 2 rows. All cells are equal size (tall cells), one full-body figure per cell, centered, feet on the same baseline, every figure drawn at the same scale, clear empty space around each figure, do not draw grid lines.
+
+Character (identical in every cell): a strict but funny Vietnamese male school supervisor in his forties, chibi proportions 3 heads tall, short neat black hair with a side part, thick angry eyebrows, round black glasses, small black mustache, white short-sleeve collared shirt tucked in, red tie, a red armband on his left upper arm, dark navy trousers, brown belt, black shoes, a silver whistle on a red cord around his neck.
+
+Poses, numbered left to right, top row first:
+1 = walking to the left (side view facing left), left foot forward, stern face;
+2 = walking to the left, right foot forward;
+3 = walking toward the viewer, left foot forward;
+4 = walking toward the viewer, right foot forward;
+5 = walking away from the viewer (back view), left foot forward;
+6 = walking away from the viewer (back view), right foot forward;
+7 = standing, front view, hands on hips, frowning;
+8 = scolding: body turned 3/4 to the LEFT, pointing down-left with his left index finger, mouth wide open shouting, whistle in the other hand, a small red anger mark on his forehead;
+9 = walking to the left (side view facing left), left foot forward, right arm stretched BACK behind him (toward the right edge of the cell) at the height of his waist, fingers pinching as if pulling a small child's ear, annoyed face;
+10 = same as 9 with the right foot forward.
+
+Art style: cute chibi, polished 2D mobile-game art, clean dark-brown outline of even thickness, soft cel shading, fresh pastel palette, big glossy eyes, rosy cheeks.
+Transparent background (PNG with alpha); if transparency is not supported, use a flat pure green #00FF00 background. No ground shadow, no text, no letters, no numbers, no watermark.
+```

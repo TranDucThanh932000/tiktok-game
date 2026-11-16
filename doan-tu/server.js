@@ -30,9 +30,10 @@ const problems = [
   [Number.isInteger(config.boost?.multiplier) && config.boost.multiplier >= 1, 'boost.multiplier là số lần nhân điểm, số nguyên từ 1'],
   [Number.isInteger(config.boost?.socialTurns) && config.boost.socialTurns >= 0 && config.boost.socialGapSeconds >= 0, 'boost.socialTurns và boost.socialGapSeconds từ 0 trở lên'],
   [Number.isInteger(config.gifts?.fundGoal) && config.gifts.fundGoal >= 1, 'gifts.fundGoal là số xu quỹ lớp, từ 1'],
-  [Array.isArray(config.gifts?.photoGift?.names) && Array.isArray(config.gifts.photoGift.ids) && config.gifts.photoGift.label && config.gifts.photoGift.hint && config.gifts.photoGift.icon, 'gifts.photoGift (quà treo ảnh lên bảng) cần label, hint, names, ids, icon'],
+  [Array.isArray(config.gifts?.photoGift?.names) && Array.isArray(config.gifts.photoGift.ids) && config.gifts.photoGift.label && config.gifts.photoGift.hint && config.gifts.photoGift.icon, 'gifts.photoGift (quà lên ngồi ghế VIP) cần label, hint, names, ids, icon'],
   [Array.isArray(scenes) && scenes.length && scenes.every((t) => t.coins >= 1 && ['rose', 'kem', 'pig'].includes(t.scene) && t.label && t.hint && t.icon), 'mỗi mức trong gifts.scenes cần coins, scene (rose, kem hoặc pig), label, hint (chữ ngắn hiện dưới hình quà), icon'],
   [!config.wishes || (config.wishes.everySeconds >= 0 && Array.isArray(config.wishes.lines) && config.wishes.lines.every((line) => typeof line === 'string' && line.trim())), 'wishes (học sinh lên chúc cô) cần everySeconds từ 0 trở lên (0 là tắt) và lines là danh sách câu chúc'],
+  [!config.monitor || (Number.isInteger(config.monitor.sleepWords) && config.monitor.sleepWords >= 0 && Number.isInteger(config.monitor.perWord) && config.monitor.perWord >= 1 && [config.monitor.lines, config.monitor.replies].every((list) => Array.isArray(list) && list.every((line) => typeof line === 'string' && line.trim()))), 'monitor (thầy giám thị) cần sleepWords là số từ im lặng thì bị kéo ra (0 là tắt), perWord từ 1, lines (lời thầy) và replies (lời học sinh) là danh sách câu'],
 ].filter(([ok]) => !ok);
 if (problems.length) throw new Error(`config.json: ${problems.map(([, text]) => text).join('; ')}`);
 const bankProblems = validateBank(bank);
@@ -141,8 +142,10 @@ function logEvent(msg) {
   if (msg.type === 'correct') console.log(`[Đoán đúng] ${msg.name} +${msg.delta}${msg.boosted ? ' (x2)' : ''} · ${msg.score} điểm${msg.first ? ' · đầu tiên' : ''}`);
   if (msg.type === 'reveal') console.log(`[Từ ${current?.no ?? '?'}] ${msg.answer} · ${msg.count} bạn đoán đúng`);
   if (msg.type === 'boost') console.log(`[x2] ${msg.name} +${msg.added} lượt (${msg.kind}), còn ${msg.turns}`);
-  if (msg.type === 'honor') console.log(`[Tên trên bảng] ${msg.name}`);
+  if (msg.type === 'honor') console.log(`[Ghế VIP] ${msg.name}`);
   if (msg.type === 'candy') console.log(`[Quỹ lớp] Đủ rồi, cô phát kẹo${msg.times > 1 ? ` (${msg.times} lần)` : ''}. Cảm ơn: ${msg.thanks.map((t) => t.name).join(', ')}`);
+  if (msg.type === 'monitor') console.log(`[Giám thị] Kéo tai ${msg.name} vì ngủ gật`);
+  if (msg.type === 'expel') console.log(msg.woke ? `[Giám thị] ${msg.name} kịp tỉnh, được về chỗ` : `[Giám thị] ${msg.name} ra khỏi lớp, comment lại để vào`);
 }
 
 const STATE_FILE = path.join(dataDir, 'board.json');
@@ -447,6 +450,7 @@ const controls = {
   skip: () => game.skip(),
   candy: () => game.candy(),
   wish: () => Boolean(wishes.fire()),
+  monitor: () => game.summon(),
   reset: () => {
     game.reset();
     return true;

@@ -62,6 +62,36 @@ export const sfx = {
   fanfare: () => notes([523, 659, 784, 1047, 784, 1047, 1319], 0.1, 0.42, 0.19, 'triangle'),
   // vào top lớp: tiếng "pop"
   pop: () => tone(520, ctx.currentTime, 0.12, 0.14, 'triangle', 1040),
+  // thầy giám thị thổi còi: "toét toét"
+  whistle: () => {
+    const t = ctx.currentTime;
+    tone(2600, t, 0.16, 0.08, 'square', 2900);
+    tone(2600, t + 0.22, 0.34, 0.08, 'square', 3000);
+  },
+  // bạn ngủ gật bị kéo tai: "ui da"
+  ouch: () => {
+    const t = ctx.currentTime;
+    tone(880, t, 0.14, 0.13, 'triangle', 1320);
+    tone(1100, t + 0.16, 0.3, 0.13, 'triangle', 520);
+  },
+  // bạn mới đá đít bạn mất chỗ: "bốp" rồi tiếng vút bay lên
+  kick: () => {
+    const t = ctx.currentTime;
+    tone(150, t, 0.12, 0.3, 'square', 60);
+    tone(500, t + 0.06, 0.7, 0.09, 'sine', 2400);
+  },
+  // Kem: nhạc nhảy khoảng 5 giây (giai điệu, bass, tiếng gõ nhịp)
+  dance: () => {
+    const t = ctx.currentTime;
+    const step = 0.23;
+    const melody = [784, 0, 659, 784, 880, 784, 659, 0, 698, 0, 587, 698, 784, 698, 587, 0, 659, 784, 1047, 784, 659, 523];
+    const bass = [131, 196, 147, 196, 175, 196, 131, 196, 147, 196, 131];
+    melody.forEach((f, i) => f && tone(f, t + i * step, 0.2, 0.08, 'square'));
+    bass.forEach((f, i) => {
+      tone(f, t + i * step * 2, 0.24, 0.16, 'triangle');
+      tone(2600, t + i * step * 2 + step, 0.035, 0.035, 'square');
+    });
+  },
 };
 
 // ---------- Giọng cô giáo: các mẩu /tts/:id phát nối nhau ----------

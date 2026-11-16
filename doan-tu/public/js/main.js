@@ -1,4 +1,4 @@
-import { KID, KF, TF, TEACHER, kidLook, kidFrame, teacherFrame } from './art.js';
+import { KID, KF, TF, TEACHER, MONITOR, MF, kidLook, kidFrame, teacherFrame, monitorFrame } from './art.js';
 import { sfx, wake, onAudioState, speak, stopSpeech } from './audio.js';
 
 const W = 1080;
@@ -49,8 +49,10 @@ function buildClass(total) {
   rows.length = 0;
   for (const w of walkers.values()) w.node.remove();
   walkers.clear();
+  for (const v of [...victims.values()]) dropVictim(v);
   wisher?.node.remove();
   wisher = null;
+  monitorClear();
   const ROWS = Math.ceil(total / PER_ROW);
   const scales = Array.from({ length: ROWS }, (_, row) => SCALE_BACK + ((SCALE_FRONT - SCALE_BACK) * row) / Math.max(1, ROWS - 1));
   const baseH = (ROWS_BOTTOM - ROWS_TOP) / scales.reduce((sum, s) => sum + s, 0);
@@ -109,8 +111,11 @@ function buildClass(total) {
       Object.assign(badge.style, { left: `${cell / 2}px`, top: `${spriteTop - 14}px`, zIndex: 101 });
       const turns = el('div', 'turns');
       Object.assign(turns.style, { left: '2px', bottom: `${plateH + 2}px`, zIndex: z + 4 });
+      // Ngủ gật: 💤 bay lên trên đầu.
+      const zzz = el('div', 'zzz', '💤');
+      Object.assign(zzz.style, { left: `${cardCenter}px`, top: `${spriteTop - size * 0.3}px`, fontSize: `${size * 0.8}px`, zIndex: 100 });
 
-      seat.append(sprite, plate, score, card, badge, turns);
+      seat.append(sprite, plate, score, card, badge, turns, zzz);
       root.append(seat);
       const entry = { root: seat, sprite, kid, rank, name, score, card, badge, turns, data: null, ghostLook: look, center: { x: x + cell / 2, y: y + rowH * 0.35 }, foot: { x: x + cell / 2, y: y + rowH - spriteBottom } };
       paintKid(entry, look);
@@ -147,17 +152,21 @@ function depthAt(y) {
   return { s, z: a.z + 1 };
 }
 
-function walkTo(key, look, index, from) {
+function walkTo(key, look, index, from, victim = null) {
   const seat = seats[index];
-  // Đang đứng trên bục chúc cô thì không đi đổi chỗ; lúc về sẽ về thẳng chỗ mới.
-  if (wisher?.key === key) {
+  // Đang đứng trên bục chúc cô, hoặc đang bị thầy giám thị kéo ra, thì không đi đổi chỗ; lúc về sẽ về thẳng chỗ mới.
+  if (wisher?.key === key || dragKey === key) {
     seat.root.classList.add('arriving');
     return;
   }
   const old = walkers.get(key);
   const start = old ? { x: old.x, y: old.y } : from ?? { x: DOOR.x, y: DOOR.y };
   const end = seat.foot;
-  const path = [start, { x: AISLE_X, y: start.y }, { x: AISLE_X, y: end.y }, end].filter((p, i, list) => i === 0 || Math.hypot(p.x - list[i - 1].x, p.y - list[i - 1].y) > 1);
+  // Lớp hết chỗ: bạn mới vào ghé chỗ bạn bị mất chỗ, đứng phía lối giữa đá đít bạn ấy, rồi mới về chỗ mình.
+  const kick = victim ?? (old?.kick && !old.kick.done ? old.kick : null);
+  const spot = kick && { x: kick.x + (kick.x < AISLE_X ? KICK_GAP : -KICK_GAP), y: kick.y };
+  const points = spot ? [start, { x: AISLE_X, y: start.y }, { x: AISLE_X, y: spot.y }, spot, { x: AISLE_X, y: spot.y }, { x: AISLE_X, y: end.y }, end] : [start, { x: AISLE_X, y: start.y }, { x: AISLE_X, y: end.y }, end];
+  const path = points.filter((p, i, list) => i === 0 || p === spot || Math.hypot(p.x - list[i - 1].x, p.y - list[i - 1].y) > 1);
   let w = old;
   if (!w) {
     const node = el('div', 'walker');
@@ -168,7 +177,7 @@ function walkTo(key, look, index, from) {
     if (!from) node.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 350 });
     walkers.set(key, w);
   }
-  Object.assign(w, { variant: kidLook(look).variant, path, seg: 1, x: start.x, y: start.y, seatIndex: index, key });
+  Object.assign(w, { variant: kidLook(look).variant, path, seg: 1, x: start.x, y: start.y, seatIndex: index, key, kick, kickAt: spot ? path.indexOf(spot) : -1, hold: 0 });
   seat.root.classList.add('arriving');
   placeWalker(w, 0, 1);
   ensureLoop();
@@ -200,6 +209,11 @@ function arrive(w) {
 function walkersTick(dt) {
   for (const w of [...walkers.values()]) {
     w.t += dt;
+    // Đang đứng đá: đứng yên một nhịp rồi đi tiếp về chỗ.
+    if (w.hold > 0) {
+      w.hold -= dt;
+      continue;
+    }
     const { s } = depthAt(w.y);
     let budget = 330 * s * dt;
     let dx = 0;
@@ -214,15 +228,96 @@ function walkersTick(dt) {
         w.y = p.y;
         budget -= len;
         w.seg++;
+        if (w.kick && w.seg - 1 === w.kickAt) {
+          kickOut(w);
+          budget = 0;
+        }
       } else {
         w.x += (dx / len) * budget;
         w.y += (dy / len) * budget;
         budget = 0;
       }
     }
+    if (w.hold > 0) continue;
     if (w.seg >= w.path.length) arrive(w);
     else placeWalker(w, dx, dy);
   }
+}
+
+// ---------- Lớp hết chỗ: bạn mới vào đá đít bạn bị mất chỗ bay ra khỏi lớp ----------
+// Bạn bị mất chỗ ngồi yên ở chỗ cũ (đã rời bảng điểm) tới khi bạn mới tới đá; bạn mới không đi được (đông quá) thì quá KICK_WAIT_MS tự bay.
+const KICK_GAP = 58;
+const KICK_HOLD = 0.6;
+const KICK_WAIT_MS = 9000;
+const MAX_KICKS = 3;
+const KICK_CRIES = ['Á á á!', 'Oái!', 'Ui da!', 'Bay đây!', 'Chỗ của tui mà!'];
+const victims = new Map(); // key -> bạn đang chờ bị đá
+
+function makeVictim({ key, name, look, x, y, seated }, kickerName) {
+  const node = el('div', 'walker victim');
+  const kid = el('i', 'kid');
+  node.append(kid, el('span', 'visitor-name', name));
+  $('class').append(node);
+  const { variant, flip } = kidLook(look);
+  const v = { key, name, kickerName, node, kid, variant, x, y, done: false };
+  const { s, z } = depthAt(y);
+  const d = KID_SIZE * s;
+  Object.assign(node.style, { left: `${x - (KID.FW * d) / 2}px`, top: `${y - KID.FH * d}px`, width: `${KID.FW * d}px`, height: `${KID.FH * d}px`, zIndex: z });
+  kidFrame(kid, variant, seated ? KF.sit : KF.down[0], flip);
+  v.timer = setTimeout(() => launchVictim(v), KICK_WAIT_MS);
+  victims.set(key, v);
+  return v;
+}
+
+function dropVictim(v) {
+  v.done = true;
+  clearTimeout(v.timer);
+  victims.delete(v.key);
+  v.node.remove();
+}
+
+function kickOut(w) {
+  const v = w.kick;
+  w.kick = null;
+  if (!v || v.done) return;
+  w.hold = KICK_HOLD;
+  // Quay ngang về phía bạn bị đá, nhún tới một cái.
+  const dir = v.x > w.x ? 1 : -1;
+  placeWalker(w, dir, 0);
+  kidFrame(w.kid, w.variant, KF.left[1], dir > 0);
+  w.kid.animate([{ translate: '0 0' }, { translate: `${dir * 22}px -6px`, offset: 0.35 }, { translate: '0 0' }], { duration: 380, easing: 'ease-out' });
+  setTimeout(() => launchVictim(v), 120);
+}
+
+// Bay vòng lên rồi ra khỏi mép lớp phía tường gần nhất, xoay tròn.
+function launchVictim(v) {
+  if (v.done) return;
+  v.done = true;
+  clearTimeout(v.timer);
+  victims.delete(v.key);
+  const dir = v.x < AISLE_X ? -1 : 1;
+  kidFrame(v.kid, v.variant, KF.wave, dir > 0);
+  v.node.style.zIndex = 190;
+  v.node.append(el('div', `kick-say${dir < 0 ? ' right' : ''}`, KICK_CRIES[Math.floor(Math.random() * KICK_CRIES.length)]));
+  sfx.kick();
+  const boom = el('span', 'kick-boom', '💥');
+  Object.assign(boom.style, { left: `${v.x - dir * 30 - 30}px`, top: `${v.y - 90}px` });
+  fx.append(boom);
+  boom.animate([{ transform: 'scale(.3)', opacity: 1 }, { transform: 'scale(1.4)', opacity: 1, offset: 0.4 }, { transform: 'scale(1.6)', opacity: 0 }], { duration: 600, easing: 'ease-out' }).onfinish = () => boom.remove();
+  sparks(v.x, v.y - 60, 14);
+  const dx = dir > 0 ? W - v.x + 240 : -(v.x + 240);
+  const lift = 260 + Math.random() * 120;
+  const ms = 1150;
+  v.kid.animate([{ rotate: '0deg' }, { rotate: `${dir * 720}deg` }], { duration: ms, easing: 'linear', fill: 'forwards' });
+  v.node.animate(
+    [
+      { transform: 'translate(0, 0) scale(1)' },
+      { transform: `translate(${dx * 0.4}px, ${-lift}px) scale(1.2)`, offset: 0.45 },
+      { transform: `translate(${dx}px, ${-lift * 0.5}px) scale(.9)` },
+    ],
+    { duration: ms, easing: 'cubic-bezier(.25,.6,.45,1)', fill: 'forwards' },
+  ).onfinish = () => v.node.remove();
+  if (v.kickerName) toast(['🦶 ', { b: v.kickerName }, ' đá ', { b: v.name }, ' ra khỏi lớp']);
 }
 
 function stopWalker(key) {
@@ -268,6 +363,18 @@ function renderBoard(list, { walk = false } = {}) {
   const before = new Map();
   seats.forEach((seat, i) => seat.data && before.set(seat.data.key, i));
   const keys = new Set(list.map((p) => p.key));
+  for (const v of [...victims.values()]) if (keys.has(v.key)) dropVictim(v);
+  // Bạn rời lớp vì có bạn mới vào (không phải bị thầy giám thị kéo ra, không phải đang lên chúc cô): chờ bị đá.
+  const leavers = walk
+    ? [...before]
+        .filter(([key]) => !keys.has(key) && key !== wisher?.key && key !== dragKey && !expelled.has(key))
+        .map(([key, i]) => {
+          const walking = walkers.get(key);
+          const { name, look } = seats[i].data;
+          return { key, name, look, x: walking?.x ?? seats[i].foot.x, y: walking?.y ?? seats[i].foot.y, seated: !walking };
+        })
+    : [];
+  expelled.clear();
   for (const key of [...walkers.keys()]) if (!keys.has(key)) stopWalker(key);
   const moves = [];
   seats.forEach((seat, i) => {
@@ -287,6 +394,7 @@ function renderBoard(list, { walk = false } = {}) {
     seat.name.textContent = player?.name ?? '';
     seat.score.textContent = player ? player.score : '';
     setTurns(seat, player);
+    seat.root.classList.toggle('sleepy', Boolean(player?.sleepy));
     const top = player && player.score > 0 && i < 3 ? i + 1 : 0;
     for (let n = 1; n <= 3; n++) seat.root.classList.toggle(`top-${n}`, top === n);
     seat.badge.textContent = top ? TITLES[top - 1] : '';
@@ -294,13 +402,21 @@ function renderBoard(list, { walk = false } = {}) {
     else setUp(seat, false);
   });
   // Đông người đổi chỗ cùng lúc thì chỉ vài bạn đi (ưu tiên bạn mới vào lớp), còn lại ngồi luôn.
+  // Bạn mới vào mà có bạn vừa mất chỗ thì ghé đá bạn ấy trước (tối đa MAX_KICKS cảnh cùng lúc, bạn còn lại rời lớp luôn).
   moves.sort((a, b) => (a.from === undefined ? 0 : 1) - (b.from === undefined ? 0 : 1));
+  let kicks = 0;
   moves.forEach(({ index, player, from }, n) => {
-    if (n < MAX_WALKERS || walkers.has(player.key)) walkTo(player.key, player.look, index, from === undefined ? null : seats[from].foot);
-    else restart(seats[index].root, 'popin');
+    if (n < MAX_WALKERS || walkers.has(player.key)) {
+      const victim = from === undefined && kicks < Math.min(MAX_KICKS, leavers.length) ? makeVictim(leavers[kicks++], player.name) : null;
+      walkTo(player.key, player.look, index, from === undefined ? null : seats[from].foot, victim);
+    } else restart(seats[index].root, 'popin');
   });
   if (wisher) {
     const index = seatOf(wisher.key);
+    if (index >= 0) seats[index].root.classList.add('arriving');
+  }
+  if (dragKey) {
+    const index = seatOf(dragKey);
     if (index >= 0) seats[index].root.classList.add('arriving');
   }
   for (const [key, delta] of pendingFloats) {
@@ -496,7 +612,7 @@ function teacherTick(dt, now) {
   // Bong bóng lời cô luôn nằm bên trái cô, mũi nhọn chỉ vào cô.
   const bubble = $('bubble');
   bubble.style.right = `${W - (T.x - 62)}px`;
-  // Không tràn sang khung ảnh treo dưới mép trái bảng (#photo, mép phải khoảng x = 200).
+  // Không tràn sang ghế VIP dưới mép trái bảng (#vip, mép phải khoảng x = 205).
   bubble.style.maxWidth = `${Math.min(860, T.x - 62 - 215)}px`;
 }
 
@@ -509,7 +625,9 @@ function loop(now) {
   teacherTick(dt, now);
   walkersTick(dt);
   visitorsTick(dt);
+  dancerTick(dt);
   wisherTick(dt);
+  monitorTick(dt);
   requestAnimationFrame(loop);
 }
 function ensureLoop() {
@@ -666,16 +784,20 @@ function hideSpotlight(now = false) {
   clearTimeout(spotTimer);
   if (now || box.hidden) {
     box.hidden = true;
+    runScenes();
     return;
   }
   restart(box, 'hide');
-  spotTimer = setTimeout(() => (box.hidden = true), 450);
+  spotTimer = setTimeout(() => {
+    box.hidden = true;
+    runScenes();
+  }, 450);
 }
 
 
 // ---------- Quà: cảnh vui trong lớp (không đụng tới điểm) ----------
-// rose: chibi của người gửi chạy từ cửa lên đưa quà cho cô. kem: như vậy, thêm cả lớp quay lại cười.
-// pig: hình quà chạy một vòng quanh lớp, cô giật mình rồi reo. Xong cảnh, quà bay vào quỹ lớp.
+// rose: chibi của người gửi chạy từ cửa lên đưa quà cho cô. kem: chạy lên giữa bục nhảy một bài khoảng 5 giây, ảnh đại diện hiện trên đầu.
+// pig: người gửi cưỡi heo chạy một vòng quanh lớp, cô giật mình rồi reo. Xong cảnh, quà bay vào quỹ lớp.
 const sceneQueue = [];
 const visitors = new Set();
 const MAX_VISITORS = 3;
@@ -704,13 +826,15 @@ function queueScene(msg) {
 function runScenes() {
   for (let i = 0; i < sceneQueue.length; ) {
     const row = sceneQueue[i];
-    const free = row.scene === 'pig' ? !pigBusy : visitorsOut < MAX_VISITORS;
+    // Kem: chờ khung "bạn nhanh nhất" tắt rồi mới lên nhảy, kẻo bị che.
+    const free = row.scene === 'pig' ? !pigBusy : row.scene === 'kem' ? !dancer && $('spotlight').hidden : visitorsOut < MAX_VISITORS;
     if (!free) {
       i++;
       continue;
     }
     sceneQueue.splice(i, 1);
     if (row.scene === 'pig') pigRun(row);
+    else if (row.scene === 'kem') danceShow(row);
     else {
       visitorsOut++;
       const wait = Math.max(0, lastVisitAt + VISIT_GAP_MS - Date.now());
@@ -786,15 +910,14 @@ function giveGift(v) {
   v.held.hidden = true;
   sfx.gift();
   teacherAct('happy', 1900);
-  if (row.scene === 'kem') classCheer(2600);
   const hand = teacherHand();
   fly(giftImage(row.icon, sceneIcon(row.scene)), from, hand, {
     size: 84,
     ms: 600,
     lift: 70,
     onDone: () => {
-      sparks(hand.x, hand.y, row.scene === 'kem' ? 22 : 12);
-      hearts(hand.x, hand.y - 30, row.scene === 'kem' ? 6 : 3);
+      sparks(hand.x, hand.y, 12);
+      hearts(hand.x, hand.y - 30, 3);
       setTimeout(() => giftToFund(row.icon, row.scene, teacherHand()), 400);
     },
   });
@@ -805,6 +928,119 @@ function leave(v) {
   v.node.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 300 }).onfinish = () => v.node.remove();
   visitorsOut--;
   runScenes();
+}
+
+// ---------- Kem: người gửi chạy lên giữa bục nhảy một bài trước lớp, ảnh đại diện TikTok hiện trên đầu ----------
+// Mỗi lúc một bạn nhảy (người gửi sau chờ tới lượt). Nhảy xong quà bay vào quỹ lớp, bạn chạy ra cửa.
+const DANCE_MS = 5000;
+const DANCER_SIZE = 1;
+const DANCE_X = AISLE_X;
+const DANCE_BEAT = 0.29;
+// Dáng nhảy theo nhịp: giơ tay, nhún, lật trái phải, xoay lưng.
+const DANCE_STEPS = [[KF.wave, false], [KF.down[0], false], [KF.wave, true], [KF.down[1], true], [KF.left[0], false], [KF.left[1], true], [KF.wave, false], [KF.up[0], false]];
+const NOTES = ['♪', '♫', '♬'];
+let dancer = null;
+
+function danceShow(row) {
+  const look = kidLook(row.look);
+  const node = el('div', 'walker visitor dancer');
+  const kid = el('i', 'kid');
+  const held = giftImage(row.icon, sceneIcon(row.scene));
+  held.className = 'held';
+  // Ảnh TikTok, không tải được thì mặt chibi.
+  const face = el('div', 'dance-face');
+  const chibi = el('i', 'kid');
+  kidFrame(chibi, look.variant, KF.wave, look.flip);
+  face.append(chibi);
+  if (row.avatar) {
+    const img = Object.assign(new Image(), { src: row.avatar, alt: '', referrerPolicy: 'no-referrer' });
+    img.onerror = () => img.remove();
+    face.append(img);
+  }
+  const star = el('div', 'dance-star');
+  star.append(face, el('span', 'dance-name', row.count > 1 ? `${row.name} x${row.count}` : row.name));
+  star.hidden = true;
+  node.append(el('i', 'dance-rays'), kid, held, star, el('span', 'visitor-name', row.name));
+  $('class').append(node);
+  node.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 300 });
+  dancer = { row, node, kid, held, star, variant: look.variant, x: DOOR.x, t: 0, stage: 'in', wait: 0, noteAt: 0 };
+  placeDancer(dancer, 1);
+  ensureLoop();
+}
+
+function placeDancer(d, dx) {
+  const width = KID.FW * DANCER_SIZE;
+  const height = KID.FH * DANCER_SIZE;
+  // Nằm trên cả khung "bạn nhanh nhất" nếu lúc đang nhảy thì tới giờ công bố.
+  Object.assign(d.node.style, { left: `${d.x - width / 2}px`, top: `${DOOR.y - height}px`, width: `${width}px`, height: `${height}px`, zIndex: 185 });
+  if (d.stage === 'dance') {
+    const [frame, flip] = DANCE_STEPS[Math.floor(d.t / DANCE_BEAT) % DANCE_STEPS.length];
+    kidFrame(d.kid, d.variant, frame, flip);
+  } else kidFrame(d.kid, d.variant, KF.left[Math.floor(d.t / 0.12) % 2], dx > 0);
+}
+
+function dancerTick(dt) {
+  const d = dancer;
+  if (!d) return;
+  d.t += dt;
+  if (d.stage === 'dance') {
+    d.wait -= dt;
+    if (d.t >= d.noteAt) {
+      d.noteAt = d.t + 0.4;
+      danceNote(d);
+    }
+    placeDancer(d, 0);
+    if (d.wait <= 0) danceEnd(d);
+    return;
+  }
+  const goal = d.stage === 'in' ? DANCE_X : DOOR.x;
+  const dx = goal - d.x;
+  const step = 560 * dt;
+  if (Math.abs(dx) > step) d.x += Math.sign(dx) * step;
+  else if (d.stage === 'in') {
+    d.x = goal;
+    danceStart(d);
+  } else {
+    dancer = null;
+    d.node.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 300 }).onfinish = () => d.node.remove();
+    runScenes();
+    return;
+  }
+  placeDancer(d, dx);
+}
+
+function danceStart(d) {
+  d.stage = 'dance';
+  d.t = 0;
+  d.wait = DANCE_MS / 1000;
+  d.node.classList.add('dancing');
+  d.star.hidden = false;
+  // Lời cô và thông báo nhường chỗ cho bạn đang nhảy.
+  stage.classList.add('dance-on');
+  sfx.dance();
+  teacherAct('happy', 1900);
+  sparks(d.x, DOOR.y - 120, 24);
+}
+
+function danceEnd(d) {
+  d.stage = 'out';
+  d.node.classList.remove('dancing');
+  d.star.hidden = true;
+  d.held.hidden = true;
+  stage.classList.remove('dance-on');
+  const from = { x: d.x + 20, y: DOOR.y - KID.FH * DANCER_SIZE * 0.95 };
+  teacherAct('cheer', 1600);
+  sparks(from.x, from.y, 22);
+  hearts(d.x, from.y - 20, 6);
+  giftToFund(d.row.icon, d.row.scene, from);
+}
+
+function danceNote(d) {
+  const node = el('span', 'dance-note', NOTES[Math.floor(Math.random() * NOTES.length)]);
+  const side = Math.random() < 0.5 ? -1 : 1;
+  Object.assign(node.style, { left: `${d.x + side * (60 + Math.random() * 50)}px`, top: `${DOOR.y - 140 - Math.random() * 60}px`, color: ['#ff6f91', '#ffd84d', '#7bdff2', '#b2f7a1'][Math.floor(Math.random() * 4)] });
+  fx.append(node);
+  node.animate([{ transform: 'translate(0, 0) scale(.5)', opacity: 0 }, { transform: `translate(${side * 10}px, -30px) scale(1.2)`, opacity: 1, offset: 0.25 }, { transform: `translate(${side * 40}px, -130px) scale(1)`, opacity: 0 }], { duration: 1400, easing: 'ease-out' }).onfinish = () => node.remove();
 }
 
 function hearts(x, y, count) {
@@ -827,20 +1063,27 @@ function classCheer(ms) {
   }, ms);
 }
 
-// Heo chạy vòng quanh lớp: từ cửa sang phải, xuống cuối lớp, sang trái, lên lại bục giảng tới chỗ cô.
+// Cưỡi heo: chibi của người gửi ngồi trên lưng heo vẫy tay, chạy vòng quanh lớp: từ cửa sang phải, xuống cuối lớp, sang trái,
+// lên lại bục giảng tới chỗ cô.
 function pigRun(row) {
   pigBusy = true;
-  const size = 140;
+  const size = 160;
   const node = el('div', 'pig');
+  const body = el('div', 'pig-body');
   const img = giftImage(row.icon, sceneIcon('pig'));
-  node.append(img, el('span', 'visitor-name', row.count > 1 ? `${row.name} x${row.count}` : row.name));
+  const rider = el('i', 'kid pig-rider');
+  const look = kidLook(row.look);
+  kidFrame(rider, look.variant, KF.wave, look.flip);
+  body.append(img, rider);
+  node.append(body, el('span', 'visitor-name', row.count > 1 ? `${row.name} x${row.count}` : row.name));
   Object.assign(node.style, { width: `${size}px`, height: `${size}px` });
   fx.append(node);
   const end = { x: Math.max(200, teacher.x - 150), y: 1040 };
-  const points = [{ x: DOOR.x + 30, y: 1050 }, { x: 1010, y: 1090 }, { x: 1010, y: 1850 }, { x: 70, y: 1850 }, { x: 70, y: 1120 }, end];
+  // Hai đoạn chạy dọc cách mép đủ xa để tên trên đầu không bị cắt.
+  const points = [{ x: DOOR.x + 30, y: 1050 }, { x: 945, y: 1090 }, { x: 945, y: 1850 }, { x: 140, y: 1850 }, { x: 140, y: 1120 }, end];
   const lengths = points.slice(1).map((p, i) => Math.hypot(p.x - points[i].x, p.y - points[i].y));
   const total = lengths.reduce((a, b) => a + b, 0);
-  const ms = (total / 760) * 1000;
+  const ms = (total / 640) * 1000;
   let at = 0;
   const moves = points.map((p, i) => {
     if (i > 0) at += lengths[i - 1] / total;
@@ -859,7 +1102,8 @@ function pigRun(row) {
     faces.push({ transform: `scaleX(${face})`, offset: faces.length ? moves[i].offset : 0 });
   });
   faces.push({ transform: `scaleX(${face})`, offset: 1 });
-  img.animate(faces, { duration: ms, fill: 'forwards' });
+  // Heo và bạn cưỡi quay mặt cùng nhau.
+  body.animate(faces, { duration: ms, fill: 'forwards' });
   sfx.oink();
   teacherAct('surprised', 1600);
   classCheer(ms + 1500);
@@ -873,13 +1117,15 @@ function pigRun(row) {
     teacherAct('cheer', 2200);
     sparks(end.x, end.y - 80, 40);
     hearts(end.x, end.y - 120, 8);
+    // Tới chỗ cô: bạn cưỡi heo nhảy lên reo một cái.
+    node.classList.add('arrived');
     setTimeout(() => {
       const from = stagePoint(img);
-      node.remove();
+      node.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 300, fill: 'forwards' }).onfinish = () => node.remove();
       giftToFund(row.icon, 'pig', from);
       pigBusy = false;
       runScenes();
-    }, 900);
+    }, 1100);
   };
 }
 
@@ -905,7 +1151,7 @@ function placeWisher(w, dx, dy) {
 
 function wish(msg) {
   const index = seatOf(msg.key);
-  if (wisher || index < 0 || walkers.has(msg.key)) return;
+  if (wisher || index < 0 || walkers.has(msg.key) || dragKey === msg.key) return;
   const seat = seats[index];
   const node = el('div', 'walker visitor');
   const kid = el('i', 'kid');
@@ -1008,20 +1254,272 @@ function wishHome(w) {
   restart(seats[index].root, 'popin');
 }
 
-// ---------- Ảnh treo trên bảng và quỹ lớp ----------
-// Người gửi Tim cam cuối cùng được treo ảnh TikTok (không tải được thì mặt chibi). Chưa có ai thì khung trống chỉ cách lên.
-function setPhoto(honor, { pop = false } = {}) {
-  const box = $('photo');
+// ---------- Thầy giám thị: kéo tai bạn ngủ gật ra khỏi lớp ----------
+// Server chọn bạn (ngồi trong lớp mà im lặng mấy từ liền) và cho msg.ms để diễn: thầy từ cửa lớp theo lối giữa tới chỗ bạn ấy,
+// thổi còi mắng một câu, rồi kéo tai bạn ra cửa. Hết msg.ms server báo 'expel': kịp comment thì được về chỗ, không thì rời lớp.
+// Hình thầy: ảnh public/chibi/thay-giam-thi.webp nếu có (xem PROMPT-CHIBI.md), chưa có thì vẽ tạm bằng SVG.
+const MON_H = 300; // chiều cao thầy ở độ sâu s = 1, đứng ở cửa lớp thì bằng cô giáo
+const MON_IN = 0.36; // phần thời gian đi tới chỗ bạn ngủ gật
+const MON_GRAB = 0.16; // đứng mắng
+const MON_OUT = 0.4; // kéo ra cửa
+const MON_SVG = `<svg viewBox="0 0 120 170" aria-hidden="true">
+  <g class="m-leg m-leg-l"><path d="M47 116v40" stroke="#5a3a24" stroke-width="17" stroke-linecap="round"/><path d="M47 116v40" stroke="#33405f" stroke-width="13" stroke-linecap="round"/><ellipse cx="44" cy="161" rx="11" ry="6" fill="#2b1d14"/></g>
+  <g class="m-leg m-leg-r"><path d="M73 116v40" stroke="#5a3a24" stroke-width="17" stroke-linecap="round"/><path d="M73 116v40" stroke="#33405f" stroke-width="13" stroke-linecap="round"/><ellipse cx="76" cy="161" rx="11" ry="6" fill="#2b1d14"/></g>
+  <path d="M38 80Q60 71 82 80L87 121Q60 128 33 121Z" fill="#fffdf6" stroke="#5a3a24" stroke-width="2.5" stroke-linejoin="round"/>
+  <path d="M34 113H86L87 123Q60 130 33 123Z" fill="#33405f" stroke="#5a3a24" stroke-width="2" stroke-linejoin="round"/>
+  <rect x="34" y="111" width="52" height="5" fill="#3a2414"/><rect x="56" y="110" width="8" height="7" rx="1" fill="#f0c95a"/>
+  <path d="M57 78h6l2 6-3 22-2 4-2-4-3-22z" fill="#c8323c" stroke="#7a1f25" stroke-width="1.2" stroke-linejoin="round"/>
+  <path d="M49 76l9 8 2-6 2 6 9-8" fill="#fffdf6" stroke="#5a3a24" stroke-width="2" stroke-linejoin="round"/>
+  <g class="m-arm m-arm-l"><path d="M37 84L30 112" stroke="#5a3a24" stroke-width="15" stroke-linecap="round"/><path d="M37 84L30 112" stroke="#fffdf6" stroke-width="10.5" stroke-linecap="round"/><path d="M35.6 92L33.4 101" stroke="#d8343f" stroke-width="11.5"/><path d="M35.2 95.5l-1.2 4" stroke="#ffd84d" stroke-width="2.4"/><circle cx="29" cy="116" r="6" fill="#f9d7b5" stroke="#5a3a24" stroke-width="2"/></g>
+  <g class="m-arm m-arm-r"><path d="M83 84L90 112" stroke="#5a3a24" stroke-width="15" stroke-linecap="round"/><path d="M83 84L90 112" stroke="#fffdf6" stroke-width="10.5" stroke-linecap="round"/><circle cx="91" cy="116" r="6" fill="#f9d7b5" stroke="#5a3a24" stroke-width="2"/></g>
+  <circle cx="29" cy="47" r="6" fill="#f9d7b5" stroke="#5a3a24" stroke-width="2"/><circle cx="91" cy="47" r="6" fill="#f9d7b5" stroke="#5a3a24" stroke-width="2"/>
+  <ellipse cx="60" cy="45" rx="31" ry="30" fill="#f9d7b5" stroke="#5a3a24" stroke-width="2.5"/>
+  <path d="M29 44Q27 12 60 11Q93 12 91 44Q88 28 75 25Q64 33 45 27Q33 31 29 44Z" fill="#2a2320" stroke="#15100e" stroke-width="2" stroke-linejoin="round"/>
+  <path class="m-brow" d="M39 34l15 5M81 34l-15 5" stroke="#2a2320" stroke-width="4.5" stroke-linecap="round"/>
+  <circle cx="47" cy="48" r="3.2" fill="#2a1d14"/><circle cx="73" cy="48" r="3.2" fill="#2a1d14"/>
+  <circle cx="47" cy="48" r="9.5" fill="rgba(255,255,255,.3)" stroke="#3a2a20" stroke-width="2.6"/><circle cx="73" cy="48" r="9.5" fill="rgba(255,255,255,.3)" stroke="#3a2a20" stroke-width="2.6"/><path d="M56.5 48h7" stroke="#3a2a20" stroke-width="2.6"/>
+  <path d="M49 62Q55 57 60 60Q65 57 71 62Q65 65 60 63Q55 65 49 62Z" fill="#2a2320"/>
+  <path class="m-mouth" d="M55 69Q60 66.5 65 69" stroke="#5a3a24" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+  <ellipse class="m-shout" cx="60" cy="69.5" rx="5" ry="4.5" fill="#8a2c2c" stroke="#5a3a24" stroke-width="1.6"/>
+  <path class="m-vein" d="M80 18q3 3 0 6M86 18q-3 3 0 6M80 18q3-3 6 0M80 24q3 3 6 0" stroke="#e8343f" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+</svg>`;
+const monSheet = { size: null }; // { FW, FH } khi tải được ảnh thầy
+{
+  const img = new Image();
+  img.onload = () => (monSheet.size = { FW: img.naturalWidth / MONITOR.COLS, FH: img.naturalHeight / MONITOR.ROWS });
+  img.src = '/chibi/thay-giam-thi.webp';
+}
+let monitor = null; // thầy đang trong lớp
+let dragKey = null; // bạn đang bị kéo: chỗ ngồi để trống tới khi server báo 'expel'
+const expelled = new Set(); // vừa bị thầy kéo ra: bảng điểm tới sau đưa ra khỏi lớp, không phải bị bạn mới đá
+
+// Đứng cạnh chỗ bạn ngủ gật, phía lối giữa.
+const monitorSpot = (foot) => ({ x: foot.x + (foot.x < AISLE_X ? 62 : -62), y: foot.y + 4 });
+
+function monitorCome(msg) {
+  monitorClear();
+  const index = seatOf(msg.key);
+  if (index < 0 || wisher?.key === msg.key) return;
+  const node = el('div', 'monitor');
+  const body = el('div', monSheet.size ? 'mon-sheet' : 'mon-svg');
+  if (!monSheet.size) body.innerHTML = MON_SVG;
+  const say = el('div', 'mon-say', msg.line);
+  say.hidden = true;
+  node.append(body, el('span', 'visitor-name mon-tag', 'Thầy giám thị'), say);
+  $('class').append(node);
+  node.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 300 });
+  const spot = monitorSpot(seats[index].foot);
+  const start = { x: DOOR.x, y: DOOR.y };
+  const path = [start, { x: AISLE_X, y: DOOR.y }, { x: AISLE_X, y: spot.y }, spot];
+  monitor = { msg, node, body, say, path, seg: 1, x: start.x, y: start.y, t: 0, stage: 'in', speed: Math.max(300, pathLength(path) / ((msg.ms * MON_IN) / 1000)), wait: 0, kid: null };
+  placeMonitor(monitor, 1, 0);
+  sfx.whistle();
+  ensureLoop();
+}
+
+function placeMonitor(m, dx, dy) {
+  const { s, z } = depthAt(m.y);
+  const h = MON_H * s;
+  const w = monSheet.size ? (h * monSheet.size.FW) / monSheet.size.FH : h * 0.71;
+  Object.assign(m.node.style, { left: `${m.x - w / 2}px`, top: `${m.y - h}px`, width: `${w}px`, height: `${h}px`, zIndex: z });
+  // Lời thầy nằm bên phía giữa màn hình cho khỏi tràn ra mép.
+  m.say.classList.toggle('right', m.x < W / 2);
+  const horizontal = Math.abs(dx) > Math.abs(dy);
+  const walking = dx || dy;
+  const pulling = m.stage === 'out' && m.kid;
+  // Đứng mắng thì quay về phía bạn ngủ gật (dáng mắng chỉ sang trái, bạn ấy ở bên phải thì lật).
+  const flip = m.stage === 'grab' ? Boolean(m.faceRight) : horizontal && dx > 0;
+  m.node.className = `monitor${walking ? ' walk' : ''}${m.stage === 'grab' ? ' scold' : ''}${pulling && horizontal ? ' pull' : ''}`;
+  if (!monSheet.size) {
+    m.body.style.scale = flip ? '-1 1' : '';
+    return;
+  }
+  const step = Math.floor(m.t / 0.16) % 2;
+  let frame = MF.stand;
+  if (m.stage === 'grab') frame = MF.scold;
+  else if (walking) frame = horizontal ? (pulling ? MF.pull : MF.left)[step] : (dy < 0 ? MF.up : MF.down)[step];
+  monitorFrame(m.body, frame, flip);
+}
+
+// Đi theo đường m.path với tốc độ m.speed, trả về hướng vừa đi.
+function stepPath(m, dt) {
+  let budget = m.speed * dt;
+  let dx = 0;
+  let dy = 0;
+  while (budget > 0 && m.seg < m.path.length) {
+    const p = m.path[m.seg];
+    dx = p.x - m.x;
+    dy = p.y - m.y;
+    const len = Math.hypot(dx, dy);
+    if (len <= budget) {
+      m.x = p.x;
+      m.y = p.y;
+      budget -= len;
+      m.seg++;
+    } else {
+      m.x += (dx / len) * budget;
+      m.y += (dy / len) * budget;
+      budget = 0;
+    }
+  }
+  return { dx, dy };
+}
+
+function monitorTick(dt) {
+  const m = monitor;
+  if (!m || m.stage === 'gone') return;
+  m.t += dt;
+  if (m.stage === 'grab') {
+    m.wait -= dt;
+    placeMonitor(m, 0, 0);
+    if (m.wait <= 0) monitorDrag(m);
+    return;
+  }
+  // Bạn ngủ gật có thể đã đổi chỗ trong lúc thầy đi tới.
+  if (m.stage === 'in') {
+    const index = seatOf(m.msg.key);
+    if (index >= 0) {
+      const spot = monitorSpot(seats[index].foot);
+      m.path[m.path.length - 1] = spot;
+      if (m.seg <= 2) m.path[2].y = spot.y;
+    }
+  }
+  const { dx, dy } = stepPath(m, dt);
+  if (m.kid) dragKid(m, dt);
+  if (m.seg < m.path.length) placeMonitor(m, dx, dy);
+  else if (m.stage === 'in') monitorGrab(m);
+  else monitorLeave(m);
+}
+
+// Tới chỗ: thổi còi, mắng; bạn ngủ gật đứng dậy (chỗ ngồi để trống).
+function monitorGrab(m) {
+  m.stage = 'grab';
+  m.wait = (m.msg.ms * MON_GRAB) / 1000;
+  m.say.hidden = !m.msg.line;
+  const target = seatOf(m.msg.key);
+  m.faceRight = target >= 0 && seats[target].foot.x > m.x;
+  placeMonitor(m, 0, 0);
+  sfx.whistle();
+  const index = seatOf(m.msg.key);
+  if (index < 0) return;
+  const seat = seats[index];
+  const walking = walkers.get(m.msg.key);
+  const from = walking ? { x: walking.x, y: walking.y } : { ...seat.foot };
+  stopWalker(m.msg.key);
+  dragKey = m.msg.key;
+  seat.root.classList.add('arriving');
+  const node = el('div', 'walker dragged');
+  const kid = el('i', 'kid');
+  const cry = el('div', 'drag-say', m.msg.reply);
+  cry.hidden = true;
+  node.append(kid, el('span', 'visitor-name', m.msg.name), cry);
+  $('class').append(node);
+  m.kid = { node, kid, cry, variant: kidLook(seat.look).variant, x: from.x, y: from.y, t: 0 };
+  m.trail = [from, { x: m.x, y: m.y }];
+  placeWalker(m.kid, 0, 1);
+}
+
+function monitorDrag(m) {
+  m.stage = 'out';
+  m.say.hidden = true;
+  const door = { x: DOOR.x - 30, y: DOOR.y };
+  m.path = [{ x: m.x, y: m.y }, { x: AISLE_X, y: m.y }, { x: AISLE_X, y: DOOR.y }, door];
+  m.seg = 1;
+  m.speed = Math.max(300, pathLength(m.path) / ((m.msg.ms * MON_OUT) / 1000));
+  if (m.kid) {
+    m.kid.cry.hidden = !m.msg.reply;
+    m.kid.node.classList.add('caught');
+    sfx.ouch();
+  }
+}
+
+// Bạn bị kéo đi theo sau thầy (theo đúng đường thầy vừa đi), tay thầy nắm tai bạn.
+function dragKid(m, dt) {
+  const k = m.kid;
+  m.trail.push({ x: m.x, y: m.y });
+  let left = MON_H * depthAt(m.y).s * 0.27;
+  let at = m.trail[0];
+  for (let i = m.trail.length - 1; i > 0; i--) {
+    const a = m.trail[i];
+    const b = m.trail[i - 1];
+    const len = Math.hypot(a.x - b.x, a.y - b.y);
+    if (len >= left) {
+      at = { x: a.x + ((b.x - a.x) * left) / len, y: a.y + ((b.y - a.y) * left) / len };
+      break;
+    }
+    left -= len;
+  }
+  const dx = at.x - k.x;
+  const dy = at.y - k.y;
+  k.t += dt;
+  k.x = at.x;
+  k.y = at.y;
+  if (!dx && !dy) return;
+  placeWalker(k, dx, dy);
+  // Đầu nghiêng về phía tay thầy.
+  k.kid.style.rotate = Math.abs(dx) > Math.abs(dy) ? `${dx < 0 ? -12 : 12}deg` : '';
+  k.cry.classList.toggle('right', k.x < W / 2);
+}
+
+function monitorLeave(m) {
+  m.stage = 'gone';
+  const nodes = [m.node, m.kid?.node].filter(Boolean);
+  for (const node of nodes) node.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 300, fill: 'forwards' }).onfinish = () => node.remove();
+  m.kid = null;
+}
+
+// Xoá hết cảnh (mở lại trang, xóa bảng điểm): ai đang bị kéo thì ngồi lại chỗ.
+function monitorClear() {
+  if (monitor) {
+    monitor.node.remove();
+    monitor.kid?.node.remove();
+    monitor = null;
+  }
+  if (dragKey) {
+    const index = seatOf(dragKey);
+    dragKey = null;
+    if (index >= 0 && !walkers.has(seats[index].data.key)) seats[index].root.classList.remove('arriving');
+  }
+}
+
+// Server báo xong: kịp comment thì thầy tha, bạn đi từ chỗ đang đứng (hoặc từ cửa) về chỗ; không thì bảng điểm mới đưa bạn ra khỏi lớp.
+function monitorDone(msg) {
+  if (dragKey === msg.key) dragKey = null;
+  const m = monitor?.msg.key === msg.key ? monitor : null;
+  if (msg.woke) {
+    let from = null;
+    if (m?.kid) {
+      from = { x: m.kid.x, y: m.kid.y };
+      m.kid.node.remove();
+      m.kid = null;
+    }
+    const index = seatOf(msg.key);
+    if (index >= 0) walkTo(msg.key, seats[index].look, index, from);
+    toast(['☀️ ', { b: msg.name }, ' tỉnh rồi, thầy cho về chỗ']);
+  } else {
+    expelled.add(msg.key);
+    toast(['😴 ', { b: msg.name }, ' ngủ gật · thầy mời ra khỏi lớp']);
+  }
+  // Màn hình chậm hơn server (cửa sổ bị ẩn...): thầy chưa kéo ra tới nơi thì thôi khỏi diễn tiếp.
+  if (m && m.stage !== 'out' && m.stage !== 'gone') monitorLeave(m);
+}
+
+// ---------- Ghế VIP và quỹ lớp ----------
+// Người gửi Tim cam cuối cùng ngồi ghế VIP: chibi của bạn ấy quay mặt ra người xem vẫy tay, ảnh TikTok trên lưng ghế
+// (không tải được thì mặt chibi). Chưa có ai thì ghế trống chỉ cách lên.
+function setVip(honor, { pop = false } = {}) {
+  const box = $('vip');
   box.classList.toggle('empty', !honor);
-  $('photo-name').textContent = honor?.name ?? '';
-  const img = $('photo-img');
-  const face = $('photo-face');
+  $('vip-name').textContent = honor?.name ?? '';
+  const img = $('vip-img');
+  const face = $('vip-face');
   if (!honor) {
     img.hidden = true;
     face.hidden = true;
     return;
   }
   const { variant, flip } = kidLook(honor.look);
+  kidFrame($('vip-kid').firstElementChild, variant, KF.wave, flip);
   const faceKid = el('i', 'kid');
   kidFrame(faceKid, variant, KF.wave, flip);
   face.replaceChildren(faceKid);
@@ -1035,8 +1533,9 @@ function setPhoto(honor, { pop = false } = {}) {
   else img.removeAttribute('src');
   if (pop) {
     restart(box, 'pop');
-    const p = stagePoint(box);
-    sparks(p.x, p.y, 30);
+    const p = stagePoint($('vip-kid'));
+    sparks(p.x, p.y, 34);
+    hearts(p.x, p.y - 40, 5);
     sfx.gift();
   }
 }
@@ -1139,7 +1638,8 @@ function applyGame(game) {
   for (const key of game.solved) solved.set(key, 1);
   setPlayers(game.players);
   setFund(game.fund);
-  setPhoto(game.honor);
+  setVip(game.honor);
+  monitorClear();
   renderBoard(game.board);
   if (!game.word) return;
   showWord(game.word);
@@ -1167,8 +1667,7 @@ const handlers = {
     guide = msg.guide;
     buildMenu();
     buildGuide();
-    $('photo-pin').src = guide.photoGift.icon;
-    $('photo-how-icon').src = guide.photoGift.icon;
+    $('vip-how-icon').src = guide.photoGift.icon;
     if (seats.length !== guide.seats) buildClass(guide.seats);
     applyGame(msg.game);
   },
@@ -1197,6 +1696,7 @@ const handlers = {
     const index = seatOf(msg.key);
     if (index >= 0) {
       const seat = seats[index];
+      seat.root.classList.remove('sleepy');
       seat.data.score = msg.score;
       seat.data.turns = msg.turns;
       seat.score.textContent = msg.score;
@@ -1238,14 +1738,14 @@ const handlers = {
     sfx.boost();
     toast([{ b: msg.name }, ` x2 điểm · ${msg.added} lượt`]);
   },
-  // Quà nhỏ: tên đã hiện trên đầu bạn chạy lên đưa quà, không cần thêm thông báo.
+  // Quà nhỏ: tên đã hiện trên đầu bạn chạy lên đưa quà, không cần thêm thông báo. Kem: bạn nhảy đã có ảnh và tên to.
   gift(msg) {
     pulseMenu(msg);
-    if (msg.scene !== 'rose') toast(['❤ ', { b: msg.name }, msg.count > 1 ? ` x${msg.count}` : ''], { big: true, icon: msg.icon, avatar: msg.avatar, first: true });
+    if (msg.scene === 'pig') toast(['❤ ', { b: msg.name }, msg.count > 1 ? ` x${msg.count}` : ''], { big: true, icon: msg.icon, avatar: msg.avatar, first: true });
     queueScene(msg);
   },
   honor(msg) {
-    setPhoto(msg, { pop: true });
+    setVip(msg, { pop: true });
   },
   fund(msg) {
     setFund(msg);
@@ -1254,6 +1754,8 @@ const handlers = {
     candyParty(msg);
   },
   wish,
+  monitor: monitorCome,
+  expel: monitorDone,
 };
 
 const events = new EventSource('/events');

@@ -30,13 +30,13 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #2b1d12; }
 
 /* Dải quà ngay dưới bảng: hình quà to, cạnh là chuyện xảy ra trong lớp. */
 #menu {
-  left: 12px; top: 746px; z-index: 3; width: 1056px; height: 82px; padding: 0 18px;
+  left: 12px; top: 696px; z-index: 3; width: 1056px; height: 82px; padding: 0 18px;
   display: flex; align-items: center; justify-content: space-around;
   border: 4px solid #f0b43a; border-radius: 999px; background: linear-gradient(#fffcef, #ffeeb3);
   box-shadow: 0 5px 0 rgba(90, 50, 20, .3); animation: guide-glow 1.4s ease-in-out infinite alternate;
 }
-.menu-item { display: flex; align-items: center; gap: 6px; font: 700 32px var(--bold); color: #6b3a14; white-space: nowrap; }
-.menu-item img { width: 70px; height: 70px; object-fit: contain; filter: drop-shadow(0 3px 2px rgba(90, 50, 20, .3)); animation: guide-bob 1.2s ease-in-out infinite alternate; }
+.menu-item { display: flex; align-items: center; gap: 4px; font: 700 30px var(--bold); color: #6b3a14; white-space: nowrap; }
+.menu-item img { width: 62px; height: 62px; object-fit: contain; filter: drop-shadow(0 3px 2px rgba(90, 50, 20, .3)); animation: guide-bob 1.2s ease-in-out infinite alternate; }
 .menu-item:nth-child(2) img { animation-delay: .3s; }
 .menu-item:nth-child(3) img { animation-delay: .6s; }
 .menu-item:nth-child(4) img { animation-delay: .9s; }
@@ -44,8 +44,9 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #2b1d12; }
 .menu-item.hit { animation: menu-hit .6s cubic-bezier(.2, 1.6, .4, 1); }
 
 /* ---------- Bảng ---------- */
+/* Bảng thu ngắn 50px (730 → 680) để có chỗ cho ghế VIP dưới mép trái. */
 #board {
-  left: 12px; top: 8px; width: 1056px; height: 730px;
+  left: 12px; top: 8px; width: 1056px; height: 680px;
   padding: 4px 14px 0; display: flex; flex-direction: column;
   /* Khung gỗ và khay phấn cắt từ ảnh lớp, kéo giãn theo chiều dọc cho vừa chữ. */
   border-style: solid; border-width: 38px 40px 68px;
@@ -79,7 +80,7 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #2b1d12; }
 #meta { margin: 6px 0 0; min-height: 40px; text-align: center; font-size: 30px; color: var(--chalk-dim); }
 #meta b { font: 700 34px var(--bold); color: var(--gold); letter-spacing: 2px; }
 
-#solvers { flex: 1; min-height: 0; margin-top: 6px; display: flex; flex-direction: column; align-items: center; }
+#solvers { flex: 1; min-height: 0; margin-top: 6px; display: flex; flex-direction: column; align-items: center; overflow: hidden; }
 #solved-count { font-size: 28px; color: var(--green); }
 #chips { margin-top: 6px; max-height: 104px; overflow: hidden; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 10px; }
 .chip { max-width: 300px; padding: 2px 14px; display: flex; align-items: center; gap: 6px; border: 3px solid var(--green); border-radius: 999px; background: rgba(139, 227, 139, .14); font-size: 30px; line-height: 1.25; white-space: nowrap; animation: tile-pop .4s cubic-bezier(.2, 1.6, .4, 1); }
@@ -101,10 +102,10 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #2b1d12; }
 .doodle.smile { right: -6px; bottom: 2px; animation: bob 1.4s ease-in-out infinite alternate; }
 
 
-/* ---------- Dưới dải quà: ảnh treo, bảng x2 và quỹ lớp, cô giáo ---------- */
+/* ---------- Dưới dải quà: ghế VIP, bảng x2 và quỹ lớp, cô giáo ---------- */
 
 #guide {
-  left: 212px; top: 848px; z-index: 4; transform: scale(.78); transform-origin: 0 0; width: max-content; height: 124px;
+  left: 212px; top: 798px; z-index: 4; transform: scale(.78); transform-origin: 0 0; width: max-content; height: 124px;
   display: flex; align-items: stretch; gap: 18px; padding: 6px 22px;
   border: 5px solid #f0b43a; border-radius: 24px; background: linear-gradient(#fffcef, #ffeeb3); color: #5a3519;
   box-shadow: 0 5px 0 rgba(90, 50, 20, .3); animation: guide-glow 1.4s ease-in-out infinite alternate;
@@ -123,24 +124,36 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #2b1d12; }
 #guide.near .fund-bar i { animation: fund-near .6s ease-in-out infinite alternate; }
 .g-fund small { font: 700 22px var(--bold); color: #8a5a2b; white-space: nowrap; }
 
-/* Ảnh treo dưới mép trái bảng: người gửi Tim cam cuối cùng. Khung trống thì chỉ cách lên. */
-#photo {
-  left: 26px; top: 848px; z-index: 5; width: 172px; display: flex; flex-direction: column; align-items: center;
-  transform: rotate(-3deg); transform-origin: 50% 0; filter: drop-shadow(0 5px 3px rgba(60, 40, 20, .35));
+/* Ghế VIP dưới mép trái bảng: người gửi Tim cam cuối cùng ngồi ghế nhung đỏ viền vàng, quay mặt ra người xem vẫy tay.
+   Ảnh TikTok trong huy hiệu tròn trên lưng ghế (không tải được thì mặt chibi). Ghế trống thì chỉ cách lên. */
+#vip { left: 14px; top: 778px; z-index: 5; width: 190px; height: 274px; }
+#vip > * { position: absolute; }
+#vip.pop { animation: vip-pop .8s cubic-bezier(.2, 1.5, .4, 1); transform-origin: 50% 90%; }
+.vip-label {
+  z-index: 2; left: 50%; top: 0; transform: translateX(-50%); padding: 1px 12px; border-radius: 999px; white-space: nowrap;
+  background: linear-gradient(#e2344f, #9c1630); color: var(--gold); font: 700 19px var(--bold); box-shadow: 0 0 0 3px #f0b43a, 0 0 14px 3px rgba(255, 214, 60, .8);
 }
-#photo.pop { animation: photo-pop .8s cubic-bezier(.2, 1.5, .4, 1); }
-#photo-pin { position: absolute; z-index: 2; left: 50%; top: -22px; width: 50px; height: 50px; margin-left: -25px; object-fit: contain; animation: guide-bob 1.2s ease-in-out infinite alternate; }
-.photo-label { margin-top: 18px; padding: 1px 10px; border-radius: 10px 10px 0 0; background: var(--red); color: var(--gold); font: 700 19px var(--bold); white-space: nowrap; }
-.photo-frame { position: relative; width: 156px; height: 156px; padding: 9px; border-radius: 10px; background: #fffdf6; box-shadow: 0 0 0 4px #f0b43a, 0 0 18px 4px rgba(255, 214, 60, .8); }
-#photo-img, #photo-face { width: 138px; height: 138px; border-radius: 6px; object-fit: cover; background: #ffe9b0; overflow: hidden; position: relative; }
-/* Phóng to khung "quay lại cười" cho đầu vừa khung ảnh. */
-#photo-face .kid { inset: auto; left: 50%; top: -34px; width: 180px; height: 265px; margin-left: -90px; }
-#photo-how { display: none; }
-#photo-name { max-width: 172px; margin-top: 6px; padding: 1px 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; border-radius: 999px; background: #3f2410; color: #fffde0; font: 700 24px var(--bold); box-shadow: 0 0 0 3px var(--glow); }
-#photo.empty .photo-frame { box-shadow: 0 0 0 4px #f0b43a; background: rgba(255, 253, 246, .85); }
-#photo.empty #photo-how { position: absolute; inset: 9px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; border: 3px dashed #e0b25a; border-radius: 6px; color: #8a5a2b; font: 700 24px var(--bold); }
-#photo.empty #photo-how img { width: 70px; height: 70px; object-fit: contain; animation: guide-bob 1.2s ease-in-out infinite alternate; }
-#photo.empty #photo-pin, #photo.empty #photo-name { display: none; }
+.vip-chair { left: 10px; top: 60px; width: 170px; height: 200px; filter: drop-shadow(0 5px 3px rgba(60, 30, 20, .35)); animation: vip-glow 1.6s ease-in-out infinite alternate; }
+#vip-photo { left: 47px; top: 22px; width: 96px; height: 96px; border-radius: 50%; overflow: hidden; background: #ffe9b0; box-shadow: 0 0 0 5px #f0b43a, 0 0 16px 4px rgba(255, 214, 60, .95); }
+#vip-img, #vip-face { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; overflow: hidden; }
+#vip-face .kid { inset: auto; left: 50%; top: -24px; width: 130px; height: 191px; margin-left: -65px; }
+#vip-kid { left: 45px; top: 85px; width: 100px; height: 147px; }
+#vip-kid .kid { animation: wave-arm .6s ease-in-out infinite alternate; transform-origin: 50% 90%; }
+#vip.pop #vip-kid .kid { animation: pop-in .6s cubic-bezier(.2, 1.6, .4, 1); }
+#vip-name {
+  left: 50%; top: 238px; transform: translateX(-50%); max-width: 186px; padding: 1px 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  border-radius: 999px; background: #3f2410; color: #fffde0; font: 700 22px var(--bold); box-shadow: 0 0 0 3px var(--glow);
+}
+#vip-how { display: none; }
+#vip.empty #vip-kid, #vip.empty #vip-photo, #vip.empty #vip-name { display: none; }
+#vip.empty #vip-how {
+  left: 48px; top: 86px; width: 94px; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 0;
+  border: 3px dashed #ffd84d; border-radius: 12px; color: #fff6c8; font: 700 20px var(--bold); text-shadow: 0 1px 2px rgba(0, 0, 0, .5);
+}
+#vip.empty #vip-how img { width: 54px; height: 54px; object-fit: contain; animation: guide-bob 1.2s ease-in-out infinite alternate; }
+@keyframes vip-pop { 0% { transform: scale(.4); opacity: 0; } 60% { transform: scale(1.12); opacity: 1; } 100% { transform: scale(1); } }
+@keyframes vip-glow { from { filter: drop-shadow(0 5px 3px rgba(60, 30, 20, .35)) drop-shadow(0 0 4px rgba(255, 214, 60, .5)); } to { filter: drop-shadow(0 5px 3px rgba(60, 30, 20, .35)) drop-shadow(0 0 14px rgba(255, 214, 60, 1)); } }
+@keyframes pop-in { from { transform: scale(.2); } to { transform: scale(1); } }
 
 /* Cô giáo: kích thước, vị trí và khung hình do main.js đặt (ảnh public/chibi/co-giao.webp). */
 #teacher { z-index: 6; transform-origin: 50% 100%; filter: drop-shadow(0 4px 3px rgba(60, 40, 20, .28)); }
@@ -219,8 +232,15 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #2b1d12; }
 }
 .visitor .visitor-name { bottom: auto; top: -38px; }
 .pig { position: absolute; left: 0; top: 0; pointer-events: none; }
-.pig img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 6px 3px rgba(60, 30, 10, .35)); }
-.pig .visitor-name { bottom: 96%; font-size: 26px; }
+.pig-body { position: absolute; inset: 0; animation: pig-gallop .22s ease-in-out infinite alternate; }
+.pig img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 6px 3px rgba(60, 30, 10, .35)); }
+/* Bạn cưỡi heo: dáng ngồi quay mặt giơ tay, ngồi trên lưng heo, nhún theo nhịp chạy. */
+.pig-rider { inset: auto; left: 50%; bottom: 40%; width: 64%; height: 94%; margin-left: -32%; transform-origin: 50% 100%; filter: drop-shadow(0 3px 2px rgba(60, 30, 10, .3)); animation: ride-bob .22s ease-in-out infinite alternate; }
+.pig.arrived .pig-rider { animation: ride-cheer .5s ease-out 2; }
+.pig .visitor-name { bottom: calc(100% + 72px); font-size: 26px; }
+@keyframes pig-gallop { from { translate: 0 0; rotate: -3deg; } to { translate: 0 -8px; rotate: 3deg; } }
+@keyframes ride-bob { from { translate: 0 0; rotate: -4deg; } to { translate: 0 -10px; rotate: 5deg; } }
+@keyframes ride-cheer { 0%, 100% { translate: 0 0; } 40% { translate: 0 -40px; } }
 .heart { position: absolute; color: #ff4f8b; font-size: 34px; line-height: 1; pointer-events: none; text-shadow: 0 2px 0 #fff; }
 /* 20/11: lời chúc của bạn đứng trước cô, nằm bên trái đầu bạn ấy, ngay trên bong bóng lời cảm ơn của cô. */
 .wish-say {
@@ -230,6 +250,91 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #2b1d12; }
   animation: tile-pop .35s cubic-bezier(.2, 1.6, .4, 1);
 }
 .wish-say::after { content: ""; position: absolute; right: -18px; top: 18px; border: 10px solid transparent; border-left: 18px solid var(--pink); border-right: 0; }
+
+/* Ngủ gật: gục gù, 💤 bay lên. Chỗ đang để trống (bị kéo ra, đi đổi chỗ) thì thôi. */
+.zzz { position: absolute; display: none; line-height: 1; pointer-events: none; transform: translateX(-50%); }
+.seat.sleepy:not(.ghost):not(.up):not(.arriving) .zzz { display: block; animation: zzz 1.8s ease-in-out infinite; }
+.seat.sleepy:not(.up) .sprite .kid { animation: doze 1.8s ease-in-out infinite; transform-origin: 50% 85%; }
+/* Thầy giám thị và bạn bị kéo tai. */
+.monitor { position: absolute; pointer-events: none; filter: drop-shadow(0 4px 3px rgba(60, 40, 20, .3)); }
+.mon-sheet { position: absolute; inset: 0; background: url(/chibi/thay-giam-thi.webp) 0 0 / 500% 200% no-repeat; }
+.mon-svg { position: absolute; inset: 0; }
+.mon-svg svg { width: 100%; height: 100%; overflow: visible; }
+.monitor.walk .mon-svg { animation: m-bob .2s ease-in-out infinite alternate; }
+.mon-svg .m-leg-l { transform-origin: 47px 116px; }
+.mon-svg .m-leg-r { transform-origin: 73px 116px; }
+.monitor.walk .m-leg-l { animation: m-step .32s ease-in-out infinite alternate; }
+.monitor.walk .m-leg-r { animation: m-step .32s ease-in-out infinite alternate-reverse; }
+.mon-svg .m-arm-l { transform-origin: 37px 84px; transition: transform .2s; }
+.mon-svg .m-arm-r { transform-origin: 83px 84px; transition: transform .2s; }
+.monitor.walk:not(.pull) .m-arm-l { animation: m-swing .32s ease-in-out infinite alternate-reverse; }
+.monitor.walk:not(.pull) .m-arm-r { animation: m-swing .32s ease-in-out infinite alternate; }
+.monitor.scold .m-arm-l { transform: rotate(50deg); animation: m-wag .22s ease-in-out infinite alternate; }
+.monitor.pull .m-arm-r { transform: rotate(-62deg); }
+.mon-svg .m-shout, .mon-svg .m-vein { display: none; }
+.monitor.scold .m-shout, .monitor.scold .m-vein, .monitor.pull .m-vein { display: inline; }
+.monitor.scold .m-mouth { display: none; }
+.mon-tag { top: -40px; bottom: auto; background: #33405f; box-shadow: 0 2px 0 #1b2236; }
+.mon-say, .drag-say {
+  position: absolute; top: -6px; right: 80%; width: max-content; max-width: 330px; padding: 6px 16px; border: 4px solid #33405f; border-radius: 22px;
+  background: #fffdf3; color: #2a211c; font-size: 30px; line-height: 1.12; text-align: center; box-shadow: 0 4px 12px rgba(0, 0, 0, .25);
+  animation: tile-pop .35s cubic-bezier(.2, 1.6, .4, 1);
+}
+.mon-say.right, .drag-say.right { right: auto; left: 80%; }
+.drag-say { top: 4px; border-color: var(--pink); font-size: 26px; }
+.dragged { overflow: visible; }
+.dragged .visitor-name { bottom: auto; top: -36px; font-size: 20px; }
+.dragged.caught { animation: m-shake .12s linear infinite alternate; }
+@keyframes zzz { 0% { opacity: 0; translate: 0 10px; scale: .7; } 30% { opacity: 1; } 100% { opacity: 0; translate: 16px -34px; scale: 1.15; } }
+@keyframes doze { 0%, 100% { rotate: 0deg; translate: 0 0; } 50% { rotate: 7deg; translate: 0 4%; } }
+@keyframes m-bob { from { translate: 0 0; } to { translate: 0 -3px; } }
+@keyframes m-step { from { transform: rotate(-16deg); } to { transform: rotate(16deg); } }
+@keyframes m-swing { from { transform: rotate(-20deg); } to { transform: rotate(20deg); } }
+@keyframes m-wag { from { transform: rotate(42deg); } to { transform: rotate(58deg); } }
+@keyframes m-shake { from { translate: -2px 0; } to { translate: 2px 0; } }
+
+/* Lớp hết chỗ: bạn mất chỗ bị bạn mới đá đít bay ra khỏi lớp. */
+.victim { overflow: visible; }
+.victim .kid { transform-origin: 50% 60%; }
+/* Tên nằm ngay trên đầu dáng ngồi (đầu ở khoảng 24% khung từ trên xuống). */
+.victim .visitor-name { bottom: auto; top: calc(24% - 30px); font-size: 18px; background: #8a6a52; box-shadow: 0 2px 0 #5a4030; }
+.kick-say {
+  position: absolute; top: -10px; right: 85%; width: max-content; padding: 4px 14px; border: 4px solid #e8343f; border-radius: 20px;
+  background: #fffdf3; color: #2a211c; font-size: 28px; line-height: 1.1; box-shadow: 0 4px 12px rgba(0, 0, 0, .25);
+}
+.kick-say.right { right: auto; left: 85%; }
+.kick-boom { position: absolute; width: 60px; height: 60px; font-size: 56px; line-height: 1; pointer-events: none; }
+
+/* Kem: bạn gửi quà nhảy giữa bục, ảnh đại diện và tên hiện trên đầu, đèn sân khấu xoay phía sau. */
+.dancer { overflow: visible; }
+.dancer .visitor-name { bottom: auto; top: -38px; }
+.dancer.dancing .visitor-name { display: none; }
+.dancer.dancing > .kid { animation: dance-hop .29s ease-in-out infinite alternate; transform-origin: 50% 100%; }
+.dancer.dancing .held { animation: dance-wave .29s ease-in-out infinite alternate; }
+.dance-rays {
+  position: absolute; display: none; z-index: -1; left: 50%; top: 55%; width: 380px; height: 380px; margin: -190px 0 0 -190px; border-radius: 50%;
+  background: repeating-conic-gradient(rgba(255, 143, 184, .6) 0 12deg, rgba(255, 224, 102, .55) 12deg 24deg, rgba(123, 223, 242, .5) 24deg 36deg, transparent 36deg 48deg);
+  -webkit-mask: radial-gradient(circle, #000 20%, transparent 68%); mask: radial-gradient(circle, #000 20%, transparent 68%);
+  animation: spin 5s linear infinite;
+}
+.dancer.dancing .dance-rays { display: block; }
+.dance-star {
+  position: absolute; left: 50%; bottom: 100%; margin-bottom: 4px; display: flex; flex-direction: column; align-items: center;
+  transform: translateX(-50%); animation: spot-in .5s cubic-bezier(.2, 1.5, .4, 1) both, dance-float 1.16s ease-in-out .5s infinite alternate;
+}
+.dance-face { position: relative; width: 136px; height: 136px; border-radius: 50%; overflow: hidden; background: #ffe9b0; border: 6px solid var(--gold); box-shadow: 0 0 0 4px #ff6f91, 0 0 26px 8px rgba(255, 214, 60, .9); }
+.dance-face img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.dance-face .kid { inset: auto; left: 50%; top: -34px; width: 180px; height: 265px; margin-left: -90px; }
+.dance-name {
+  max-width: 300px; margin-top: -10px; padding: 1px 16px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; border-radius: 999px;
+  background: var(--pink); color: #fff; font: 700 26px var(--bold); box-shadow: 0 2px 0 #b8285a;
+}
+.dance-note { position: absolute; z-index: 170; font: 700 46px var(--bold); line-height: 1; pointer-events: none; -webkit-text-stroke: 2px #fff; paint-order: stroke fill; }
+/* Đang nhảy: lời cô dời xuống dưới bục cho khỏi che bạn nhảy. */
+#stage.dance-on #bubble { top: 1086px; }
+@keyframes dance-hop { 0% { translate: 0 0; rotate: -8deg; } 100% { translate: 0 -9%; rotate: 8deg; } }
+@keyframes dance-wave { from { rotate: -18deg; } to { rotate: 18deg; } }
+@keyframes dance-float { from { translate: 0 0; } to { translate: 0 -10px; } }
 
 
 .card {
@@ -323,7 +428,6 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #2b1d12; }
 @keyframes sway { from { rotate: -6deg; } to { rotate: 6deg; } }
 @keyframes guide-bob { from { transform: translateY(2px) scale(.96); } to { transform: translateY(-4px) scale(1.06); } }
 @keyframes guide-glow { from { box-shadow: 0 5px 0 rgba(90, 50, 20, .3), 0 0 6px 2px rgba(255, 200, 60, .45); } to { box-shadow: 0 5px 0 rgba(90, 50, 20, .3), 0 0 24px 8px rgba(255, 200, 60, .95); } }
-@keyframes photo-pop { 0% { transform: rotate(-20deg) scale(.3); opacity: 0; } 60% { transform: rotate(4deg) scale(1.12); opacity: 1; } 100% { transform: rotate(-3deg) scale(1); } }
 @keyframes guide-pulse { 0% { scale: 1; } 40% { scale: 1.06; } 100% { scale: 1; } }
 @keyframes fund-near { from { filter: brightness(1); } to { filter: brightness(1.25) saturate(1.3); } }
 @keyframes menu-hit { 0% { transform: scale(1); } 40% { transform: scale(1.25); } 100% { transform: scale(1); } }

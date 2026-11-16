@@ -119,16 +119,25 @@
 
     <aside id="guide"></aside>
 
-    <!-- Ảnh treo dưới mép bảng: người gửi Tim cam cuối cùng. -->
-    <div id="photo" class="empty">
-      <img id="photo-pin" alt="">
-      <div class="photo-label">Học sinh ngoan</div>
-      <div class="photo-frame">
-        <img id="photo-img" alt="" referrerpolicy="no-referrer" hidden>
-        <div id="photo-face" hidden></div>
-        <div id="photo-how"><img id="photo-how-icon" alt=""><span>treo ảnh</span></div>
-      </div>
-      <b id="photo-name"></b>
+    <!-- Ghế VIP dưới mép trái bảng: người gửi Tim cam cuối cùng ngồi quay mặt ra người xem. -->
+    <div id="vip" class="empty">
+      <div class="vip-label">👑 HỌC SINH VIP</div>
+      <svg class="vip-chair" viewBox="0 0 170 200" aria-hidden="true">
+        <defs>
+          <linearGradient id="vip-velvet" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e2344f"/><stop offset="1" stop-color="#9c1630"/></linearGradient>
+          <linearGradient id="vip-gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff1a0"/><stop offset=".5" stop-color="#f0b43a"/><stop offset="1" stop-color="#c98a1c"/></linearGradient>
+        </defs>
+        <path d="M34 168l-8 30M136 168l8 30" stroke="url(#vip-gold)" stroke-width="9" stroke-linecap="round"/>
+        <path d="M30 140V44Q30 10 85 6Q140 10 140 44V140Z" fill="url(#vip-velvet)" stroke="url(#vip-gold)" stroke-width="9" stroke-linejoin="round"/>
+        <g fill="#7c0f26"><circle cx="62" cy="62" r="3.5"/><circle cx="108" cy="62" r="3.5"/><circle cx="85" cy="88" r="3.5"/><circle cx="62" cy="112" r="3.5"/><circle cx="108" cy="112" r="3.5"/></g>
+        <path d="M10 112Q10 100 24 100H44V150H24Q10 150 10 138Z" fill="url(#vip-velvet)" stroke="url(#vip-gold)" stroke-width="7" stroke-linejoin="round"/>
+        <path d="M160 112Q160 100 146 100H126V150H146Q160 150 160 138Z" fill="url(#vip-velvet)" stroke="url(#vip-gold)" stroke-width="7" stroke-linejoin="round"/>
+        <rect x="24" y="136" width="122" height="34" rx="12" fill="url(#vip-velvet)" stroke="url(#vip-gold)" stroke-width="7"/>
+      </svg>
+      <div id="vip-photo"><img id="vip-img" alt="" referrerpolicy="no-referrer" hidden><div id="vip-face" hidden></div></div>
+      <div id="vip-kid"><i class="kid"></i></div>
+      <div id="vip-how"><img id="vip-how-icon" alt=""><span>còn trống</span></div>
+      <b id="vip-name"></b>
     </div>
 
     <!-- Lẵng hoa trên bục cạnh bàn cô và dây hoa viền mép bục giảng (trang trí 20-11). -->

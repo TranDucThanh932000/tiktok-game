@@ -1,4 +1,4 @@
-// Cắt 3 ảnh trong art-src thành ảnh cho game (public/chibi). Chạy trong thư mục doan-tu: node scripts/cat-anh-chibi.cjs
+// Cắt ảnh trong art-src thành ảnh cho game (public/chibi). Chạy trong thư mục doan-tu: node scripts/cat-anh-chibi.cjs
 // Cần Edge và playwright-core (D:/tiktok-cache/dev-tools). Xử lý bằng canvas trong Edge ẩn, theo scripts/cat-anh-chibi.page.js.
 const { chromium } = require('D:/tiktok-cache/dev-tools/node_modules/playwright-core');
 const fs = require('fs');
@@ -7,7 +7,8 @@ const path = require('path');
 (async () => {
   const root = path.resolve(__dirname, '..');
   const script = path.join(__dirname, 'cat-anh-chibi.page.js');
-  const images = ['hoc-sinh.png', 'co-giao.png', 'lop-hoc.png'].map((f) => path.join(root, 'art-src', f));
+  // thay-giam-thi.png không bắt buộc: chưa có thì game vẽ tạm thầy giám thị bằng SVG.
+  const images = ['hoc-sinh.png', 'co-giao.png', 'lop-hoc.png', 'thay-giam-thi.png'].map((f) => path.join(root, 'art-src', f)).filter((f, i) => i < 3 || fs.existsSync(f));
   const browser = await chromium.launch({ executablePath: 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe', headless: true });
   const page = await browser.newPage();
   page.on('console', (m) => console.log('[page]', m.text()));

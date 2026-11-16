@@ -18,11 +18,29 @@
   },
   "gifts": {
     "fundGoal": 1000,
-    "photoGift": { "label": "Tim cam", "hint": "Treo ảnh", "names": ["Heart Me", "Tim cam"], "ids": [7934], "icon": "/gifts/heart-me.webp" },
+    "photoGift": { "label": "Tim cam", "hint": "Ghế VIP", "names": ["Heart Me", "Tim cam"], "ids": [7934], "icon": "/gifts/heart-me.webp" },
     "scenes": [
-      { "coins": 1, "scene": "rose", "label": "Hoa hồng", "hint": "Lên chào cô", "icon": "/gifts/rose.webp" },
-      { "coins": 5, "scene": "kem", "label": "Kem", "hint": "Cả lớp cười", "icon": "/gifts/kem.webp" },
-      { "coins": 10, "scene": "pig", "label": "Heo may mắn", "hint": "Heo chạy", "icon": "/gifts/lucky-pig.webp" }
+      { "coins": 1, "scene": "rose", "label": "Hoa hồng", "hint": "Tặng hoa 20/11", "icon": "/gifts/rose.webp" },
+      { "coins": 5, "scene": "kem", "label": "Kem", "hint": "Nhảy trước lớp", "icon": "/gifts/kem.webp" },
+      { "coins": 10, "scene": "pig", "label": "Heo may mắn", "hint": "Cưỡi heo", "icon": "/gifts/lucky-pig.webp" }
+    ]
+  },
+  "monitor": {
+    "sleepWords": 2,
+    "perWord": 2,
+    "lines": [
+      "Ngủ gật trong lớp à? Ra ngoài rửa mặt!",
+      "Lớp học chứ đâu phải phòng ngủ!",
+      "Dậy! Ra ngoài đứng cho tỉnh ngủ!",
+      "Ngủ gật hai từ liền rồi nhé! Ra ngoài!",
+      "Thầy bắt được rồi nhé! Ra ngoài nào!"
+    ],
+    "replies": [
+      "Ui da! Đau tai em!",
+      "Em xin lỗi thầy ạ!",
+      "Em chỉ chợp mắt xíu thôi mà!",
+      "Á á, em tỉnh rồi thầy ơi!",
+      "Em comment liền mà thầy!"
     ]
   },
   "wishes": {

@@ -72,6 +72,7 @@
       <button type="button" data-control="skip">⏭️ Sang bước tiếp theo</button>
       <button type="button" data-control="candy">🍬 Thử phát kẹo</button>
       <button type="button" data-control="wish">💐 Thử học sinh chúc cô 20/11</button>
+      <button type="button" data-control="monitor">👨‍🏫 Thử thầy giám thị kéo tai</button>
       <button type="button" id="reset" class="danger">🧹 Xóa bảng điểm</button>
       <button type="button" id="telegram-test">📨 Gửi thử Telegram</button>
     </div>
@@ -114,7 +115,7 @@
     $('crowd').onclick = () => crowd(10);
     $('crowd40').onclick = () => crowd(40);
     $('reset').onclick = () => {
-      if (confirm('Xóa toàn bộ điểm, lượt x2, quỹ lớp và ảnh trên bảng để bắt đầu buổi mới?')) post('/api/control', { action: 'reset' });
+      if (confirm('Xóa toàn bộ điểm, lượt x2, quỹ lớp và ghế VIP để bắt đầu buổi mới?')) post('/api/control', { action: 'reset' });
     };
     let safeMode = false;
     function showSafeMode(on) {
@@ -131,7 +132,7 @@
     };
 
     // Quà không cho điểm: mỗi mức có một cảnh trong lớp, xu góp vào quỹ lớp.
-    const SCENE_NAMES = { rose: 'chạy lên đưa cô', kem: 'đưa cô, cả lớp quay lại', pig: 'chạy vòng quanh lớp' };
+    const SCENE_NAMES = { rose: 'chạy lên đưa cô', kem: 'nhảy trước lớp 5 giây', pig: 'cưỡi heo chạy quanh lớp' };
     function renderGifts() {
       $('gifts').replaceChildren(
         ...guide.scenes.map((tier) => {
@@ -144,18 +145,18 @@
         photoButton(),
       );
     }
-    // Tim cam: treo ảnh người gửi lên bảng (người gửi cuối cùng).
+    // Tim cam: người gửi lên ngồi ghế VIP (người gửi cuối cùng).
     function photoButton() {
       const button = document.createElement('button');
       button.type = 'button';
-      button.append(Object.assign(new Image(), { className: 'gift-icon', alt: '', src: guide.photoGift.icon }), `${guide.photoGift.label} 1 xu · treo ảnh lên bảng`);
+      button.append(Object.assign(new Image(), { className: 'gift-icon', alt: '', src: guide.photoGift.icon }), `${guide.photoGift.label} 1 xu · ngồi ghế VIP`);
       button.onclick = () => simulate({ kind: 'gift', coins: 1, count: 1, giftName: guide.photoGift.name });
       return button;
     }
     let fund = { coins: 0, goal: 1 };
     let honor = null;
     function showFund() {
-      $('fund').textContent = `🍬 Quỹ lớp: ${fund.coins.toLocaleString('vi-VN')}/${fund.goal.toLocaleString('vi-VN')} xu (đủ thì cô phát kẹo cả lớp) · 🖼️ Ảnh trên bảng: ${honor?.name ?? 'chưa có'}`;
+      $('fund').textContent = `🍬 Quỹ lớp: ${fund.coins.toLocaleString('vi-VN')}/${fund.goal.toLocaleString('vi-VN')} xu (đủ thì cô phát kẹo cả lớp) · 👑 Ghế VIP: ${honor?.name ?? 'còn trống'}`;
     }
 
     function renderBoard(board, players) {
@@ -163,7 +164,7 @@
       $('ranks').replaceChildren(
         ...board.map((p, i) => {
           const tr = document.createElement('tr');
-          const label = [p.name, p.turns > 0 && `· x2 còn ${p.turns} lượt`].filter(Boolean).join(' ');
+          const label = [p.sleepy && '😴', p.name, p.turns > 0 && `· x2 còn ${p.turns} lượt`].filter(Boolean).join(' ');
           for (const text of [`${i + 1}.`, label, p.score]) tr.append(Object.assign(document.createElement('td'), { textContent: text }));
           return tr;
         }),
@@ -258,6 +259,12 @@
           break;
         case 'wish':
           $('log').textContent = `💐 ${msg.name} lên chúc cô: "${msg.text}"`;
+          break;
+        case 'monitor':
+          $('log').textContent = `👨‍🏫 Thầy giám thị đang kéo tai ${msg.name} (ngủ gật).`;
+          break;
+        case 'expel':
+          $('log').textContent = msg.woke ? `☀️ ${msg.name} kịp comment, được về chỗ.` : `😴 ${msg.name} bị mời ra khỏi lớp (vẫn giữ điểm, comment là vào lại).`;
           break;
         case 'fund':
           fund = msg;

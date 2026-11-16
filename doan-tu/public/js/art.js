@@ -10,6 +10,18 @@ export const KF = { down: [0, 1], left: [2, 3], up: [4, 5], sit: 6, wave: 7 };
 export const TEACHER = { FW: 303, FH: 394, COLS: 6, ROWS: 2 };
 export const TF = { walk: [0, 1], idle: 2, blink: 3, talk: [4, 5], point: 6, pointTalk: 7, clap: 8, thumbs: 9, cheer: 10, surprised: 11 };
 
+// Thầy giám thị (public/chibi/thay-giam-thi.webp, nếu có): 10 khung trên lưới 5 × 2. Cỡ khung lấy từ kích thước ảnh.
+// Đi sang trái 0–1 (sang phải thì lật), đi xuống 2–3, đi lên 4–5, chống nạnh 6, chỉ tay mắng 7, đi sang trái kéo tai 8–9.
+export const MONITOR = { COLS: 5, ROWS: 2 };
+export const MF = { left: [0, 1], down: [2, 3], up: [4, 5], stand: 6, scold: 7, pull: [8, 9] };
+
+export function monitorFrame(node, frame, flip = false) {
+  const col = frame % MONITOR.COLS;
+  const row = Math.floor(frame / MONITOR.COLS);
+  node.style.backgroundPosition = `${(col / (MONITOR.COLS - 1)) * 100}% ${(row / (MONITOR.ROWS - 1)) * 100}%`;
+  node.style.scale = flip ? '-1 1' : '';
+}
+
 // Mỗi người chơi một bạn cố định theo look; nửa số người lật ngang cho lớp đỡ giống nhau.
 export function kidLook(look = 0) {
   return { variant: look % KID.ROWS, flip: Math.floor(look / KID.ROWS) % 2 === 1 };

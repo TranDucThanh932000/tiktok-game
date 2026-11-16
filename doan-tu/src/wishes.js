@@ -41,7 +41,8 @@ export class Wishes {
   // Trả về người được chọn, hoặc null nếu lớp chưa có ai. Bảng điều khiển gọi thẳng để thử, bỏ qua điều kiện "rảnh".
   fire() {
     const t = this.now();
-    const board = this.game.board();
+    // Bạn đang ngủ gật hoặc đang bị thầy giám thị kéo ra thì không lên chúc.
+    const board = this.game.board().filter((p) => !p.sleepy && p.key !== this.game.pull?.key);
     if (!board.length) {
       this.nextAt = t + RETRY_MS;
       return null;

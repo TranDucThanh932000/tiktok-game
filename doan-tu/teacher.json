@@ -178,12 +178,12 @@
     "cảm ơn em, ngoan quá đi!"
   ],
   "giftKem": [
-    "cô cảm ơn em! Chúc em học giỏi, ăn mãi không béo!",
-    "cảm ơn em nhiều nha! Chúc em vui cả ngày, đoán từ nào trúng từ đó!",
-    "ôi cô cảm động quá! Chúc em luôn khỏe mạnh, cười thật nhiều!",
-    "cảm ơn em! Chúc em tiền vô như nước, tiền ra nhỏ giọt!",
-    "cô cảm ơn nha! Chúc em gặp toàn chuyện vui, ra đường gặp may!",
-    "cảm ơn em nhé! Chúc em làm gì cũng thành công!"
+    "cô cảm ơn em! Lên nhảy một bài cho cả lớp xem nào!",
+    "cảm ơn em nhiều nha! Mời em lên bục trình diễn, cả lớp vỗ tay nào!",
+    "ôi cô cảm động quá! Em nhảy đẹp quá, chúc em luôn vui nhé!",
+    "cảm ơn em! Sân khấu là của em, quẩy lên nào!",
+    "cô cảm ơn nha! Nhảy hay quá, cả lớp cổ vũ bạn đi!",
+    "cảm ơn em nhé! Ngôi sao của lớp mình lên sân khấu rồi!"
   ],
   "giftPig": [
     "ôi, cô cảm ơn em nhiều lắm! Chúc em phát tài, may mắn ngập tràn! Cả lớp vỗ tay cho bạn nào!",
@@ -214,5 +214,13 @@
     "Hoan hô, quỹ lớp đầy rồi! Kẹo cho tất cả các em đây!",
     "Cả lớp ơi, quỹ lớp đủ rồi! Cô phát kẹo cho mọi người nhé!",
     "Quỹ lớp đủ rồi, cảm ơn các em! Cô mời cả lớp ăn kẹo nào!"
+  ],
+  "monitor": [
+    "Ơ, có bạn ngủ gật kìa! Thầy giám thị tới rồi!",
+    "Ngủ gật trong lớp là thầy giám thị kéo tai đó nha!",
+    "Thầy giám thị đi kiểm tra rồi, các em nhớ comment kẻo bị mời ra ngoài nhé!",
+    "Bạn nào im lặng lâu quá là ngủ gật rồi, thầy mời ra rửa mặt nha!",
+    "Ối, thầy giám thị kìa! Ai ngủ gật ra ngoài đứng nhé!",
+    "Bị mời ra ngoài thì comment một câu là được vào lớp lại nha!"
   ]
 }

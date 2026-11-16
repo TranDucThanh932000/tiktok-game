@@ -112,6 +112,13 @@ async function main(imgs) {
   files[OUT + 'co-giao.webp'] = teacher.out.toDataURL('image/webp', 0.92);
   files['art-src/xem-thu-co-giao.png'] = teacher.prev.toDataURL('image/png');
   json.teacher = { FW: teacher.FW, FH: teacher.FH, heights: teacher.frames.map((f) => f.h) };
+  // Thầy giám thị (không bắt buộc): game tự lấy cỡ khung từ kích thước ảnh, không cần sửa art.js.
+  if (imgs['thay-giam-thi.png']) {
+    const monitor = atlas(imgs['thay-giam-thi.png'], 5, 2, 4);
+    files[OUT + 'thay-giam-thi.webp'] = monitor.out.toDataURL('image/webp', 0.92);
+    files['art-src/xem-thu-thay-giam-thi.png'] = monitor.prev.toDataURL('image/png');
+    json.monitor = { FW: monitor.FW, FH: monitor.FH, heights: monitor.frames.map((f) => f.h) };
+  }
 
   // Nền: ảnh lớp phóng theo bề ngang 1080, dịch xuống để bục giảng ở y ≈ 990; phần trên (sau bảng) tô màu tường, dải cờ đặt lại ở trên cùng.
   const bg = imgs['lop-hoc.png'];

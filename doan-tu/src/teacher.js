@@ -144,6 +144,9 @@ export class Teacher {
     } else if (msg.type === 'candy') {
       const line = this.pick('candy');
       this.say([this.spoken(line)], { text: line, keep: true });
+    } else if (msg.type === 'monitor' && msg.first && this.lines.monitor) {
+      // Mỗi từ chỉ nói một lần, lúc thầy giám thị vào lớp lần đầu.
+      this.sayLine('monitor');
     }
   }
 
